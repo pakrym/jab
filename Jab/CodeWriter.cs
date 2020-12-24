@@ -16,6 +16,7 @@ namespace AutoRest.CSharp.Generation.Writers
     internal class CodeWriter
     {
         private const int DefaultLength = 1024;
+        private const int IndentWidth = 4;
         private static readonly string _newLine = "\n";
         private static readonly string _braceNewLine = "{\n";
 
@@ -26,6 +27,8 @@ namespace AutoRest.CSharp.Generation.Writers
 
         private char[] _builder;
         private int _position;
+        private int _indentLevel;
+        private bool _indent;
 
         public CodeWriter()
         {
@@ -37,11 +40,9 @@ namespace AutoRest.CSharp.Generation.Writers
 
         public CodeWriterScope Scope(FormattableString line, string start = "{", string end = "}", bool newLine = true)
         {
-            CodeWriterScope codeWriterScope = new CodeWriterScope(this, end, newLine);
-            _scopes.Push(codeWriterScope);
             Line(line);
-            LineRaw(start);
-            return codeWriterScope;
+
+            return ScopeRaw(start, end, newLine);
         }
 
         public CodeWriterScope Scope()
@@ -52,7 +53,9 @@ namespace AutoRest.CSharp.Generation.Writers
         private CodeWriterScope ScopeRaw(string start = "{", string end = "}", bool newLine = true)
         {
             LineRaw(start);
+
             CodeWriterScope codeWriterScope = new CodeWriterScope(this, end, newLine);
+            _indentLevel += IndentWidth;
             _scopes.Push(codeWriterScope);
             return codeWriterScope;
         }
@@ -60,8 +63,7 @@ namespace AutoRest.CSharp.Generation.Writers
         public CodeWriterScope Namespace(string @namespace)
         {
             _currentNamespace = @namespace;
-            Line($"namespace {@namespace}");
-            return Scope();
+            return Scope($"namespace {@namespace}");
         }
 
         public CodeWriter Append(FormattableString formattableString)
@@ -351,11 +353,20 @@ namespace AutoRest.CSharp.Generation.Writers
 
             AppendRaw(_newLine);
 
+            _indent = true;
             return this;
         }
 
         public CodeWriter AppendRaw(string str)
         {
+            if (_indent)
+            {
+                EnsureSpace(_indentLevel);
+                _builder.AsSpan().Slice(_position, _indentLevel).Fill(' ');
+                _position += _indentLevel;
+                _indent = false;
+            }
+
             EnsureSpace(str.Length);
             str.AsSpan().CopyTo(_builder.AsSpan().Slice(_position));
             _position += str.Length;
@@ -478,6 +489,7 @@ namespace AutoRest.CSharp.Generation.Writers
 
         private void PopScope(CodeWriterScope expected)
         {
+            _indentLevel -= IndentWidth;
             var actual = _scopes.Pop();
             Debug.Assert(actual == expected);
         }
