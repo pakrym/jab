@@ -19,8 +19,8 @@ namespace Jab
         public CallSiteBuilder(GeneratorExecutionContext context)
         {
             _context = context;
-            _compositionRootAttributeType = context.Compilation.GetTypeByMetadataName(CompositionRootKnownAttribute.MetadataName);
-            _transientAttributeType = context.Compilation.GetTypeByMetadataName(TransientKnownAttribute.MetadataName);
+            _compositionRootAttributeType = context.Compilation.Assembly.GetTypeByMetadataName(CompositionRootKnownAttribute.MetadataName);
+            _transientAttributeType = context.Compilation.Assembly.GetTypeByMetadataName(TransientKnownAttribute.MetadataName);
         }
 
         public CompositionRoot[] BuildRoots()
@@ -155,9 +155,6 @@ namespace Jab
 
         public void Execute(GeneratorExecutionContext context)
         {
-            using var attributes = GetType().Assembly.GetManifestResourceStream("Jab.Attributes.cs");
-            using var streamReader = new StreamReader(attributes);
-            context.AddSource("JabAttributes1.cs", streamReader.ReadToEnd());
             var roots = new CallSiteBuilder(context).BuildRoots();
 
             foreach (var root in roots)
@@ -171,9 +168,9 @@ namespace Jab
                     }
                 }
 
-                context.AddSource($"{root.Type.Name}.Generated.cs", codeWriter.ToString());
+                Console.WriteLine(codeWriter.ToString());
+                //context.AddSource($"{root.Type.Name}.Generated.cs", codeWriter.ToString());
             }
-
         }
     }
 }
