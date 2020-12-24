@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace AutoRest.CSharp.Generation.Writers
 {
+    internal delegate void CodeWriterDelegate(CodeWriter writer);
     internal class CodeWriter
     {
         private const int DefaultLength = 1024;
@@ -94,6 +95,9 @@ namespace AutoRest.CSharp.Generation.Writers
                 var isIdentifier = text.EndsWith(identifierFormatString);
                 switch (argument)
                 {
+                    case CodeWriterDelegate d:
+                        Append(d);
+                        break;
                     case Type t:
                         AppendType(t);
                         break;
@@ -191,6 +195,12 @@ namespace AutoRest.CSharp.Generation.Writers
         {
             UseNamespace(namedTypeSymbol.ContainingNamespace.ToDisplayString());
             AppendRaw(namedTypeSymbol.ToDisplayString());
+        }
+
+        public CodeWriter Append(CodeWriterDelegate writerDelegate)
+        {
+            writerDelegate(this);
+            return this;
         }
 
         private void AppendType(Type type)

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using AutoRest.CSharp.Generation.Writers;
 using Microsoft.CodeAnalysis;
@@ -61,6 +60,8 @@ namespace Jab
             }
 
             Dictionary<INamedTypeSymbol, ServiceCallSite> callSites = new(SymbolEqualityComparer.Default);
+            List<INamedTypeSymbol> services = new();
+
 
             foreach (var attribute in attributes)
             {
@@ -69,11 +70,12 @@ namespace Jab
                     case TransientKnownAttribute transientKnownAttribute:
                         callSites.Add(transientKnownAttribute.ServiceType,
                             new TransientCallSite(transientKnownAttribute.ServiceType, transientKnownAttribute.ImplementationType ?? transientKnownAttribute.ServiceType));
+                        services.Add(transientKnownAttribute.ServiceType);
                         break;
                 }
             }
 
-            compositionRoot = new CompositionRoot(typeSymbol, callSites.Values.ToArray());
+            compositionRoot = new CompositionRoot(typeSymbol, callSites.Values.ToArray(), services.ToArray());
             return true;
         }
 
@@ -121,17 +123,25 @@ namespace Jab
         }
     }
 
-    internal class CompositionRoot
+    internal record CompositionRoot
     {
-        public CompositionRoot(ITypeSymbol type, ServiceCallSite[] callSites)
+        public CompositionRoot(ITypeSymbol type, ServiceCallSite[] callSites, ITypeSymbol[] services)
         {
             CallSites = callSites;
+            Services = services;
             Type = type;
         }
 
         public ITypeSymbol Type { get; }
 
+        public ITypeSymbol[] Services { get; }
+
         public ServiceCallSite[] CallSites { get; }
+
+        public ServiceCallSite GetCallSite(ITypeSymbol service)
+        {
+            return CallSites.First(s => SymbolEqualityComparer.Default.Equals(s.ServiceType, service));
+        }
     }
 
     internal abstract record ServiceCallSite
@@ -153,6 +163,17 @@ namespace Jab
         {
         }
 
+
+        private void GenerateCallSite(CodeWriter codeWriter, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
+        {
+            switch (serviceCallSite)
+            {
+                case TransientCallSite transientCallSite:
+                    valueCallback(codeWriter, w => w.Append($"new {transientCallSite.ImplementationType}()"));
+                    break;
+            }
+        }
+
         public void Execute(GeneratorExecutionContext context)
         {
             var roots = new CallSiteBuilder(context).BuildRoots();
@@ -162,14 +183,21 @@ namespace Jab
                 var codeWriter = new CodeWriter();
                 using (codeWriter.Namespace($"{root.Type.ContainingNamespace.ToDisplayString()}"))
                 {
-                    using (codeWriter.Scope($"{SyntaxFacts.GetText(root.Type.DeclaredAccessibility)} partial {root.Type.Name}"))
+                    using (codeWriter.Scope($"{SyntaxFacts.GetText(root.Type.DeclaredAccessibility)} partial class {root.Type.Name}"))
                     {
+                        foreach (var rootService in root.Services)
+                        {
+                            using (codeWriter.Scope($"{SyntaxFacts.GetText(rootService.DeclaredAccessibility)} {rootService} Get{root.Type.Name}()"))
+                            {
+                                GenerateCallSite(codeWriter,
+                                    root.GetCallSite(rootService),
+                                    (w, v) => w.Line($"return {v};"));
+                            }
+                        }
 
                     }
                 }
-
-                Console.WriteLine(codeWriter.ToString());
-                //context.AddSource($"{root.Type.Name}.Generated.cs", codeWriter.ToString());
+                context.AddSource($"{root.Type.Name}.Generated.cs", codeWriter.ToString());
             }
         }
     }
