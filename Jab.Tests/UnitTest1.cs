@@ -25,8 +25,10 @@ namespace Jab.Tests
     public class UnitTest1
     {
         [Fact]
-        public void Test1()
+        public void CanCreateTransientService()
         {
+            Container c = new Container();
+            Assert.IsType<ServiceImplementation>(c.GetContainer());
         }
     }
 }
