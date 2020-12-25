@@ -3,47 +3,7 @@ using Xunit;
 
 namespace Jab.Tests
 {
-
-    internal interface IService
-    {
-        void M();
-    }
-
-    internal class ServiceImplementation : IService
-    {
-        public void M()
-        {
-        }
-    }
-
-    internal class ServiceImplementationWithParameter : IService
-    {
-        public IAnotherService AnotherService { get; }
-
-        public ServiceImplementationWithParameter(IAnotherService anotherService)
-        {
-            AnotherService = anotherService;
-        }
-        public void M()
-        {
-        }
-    }
-
-    internal interface IAnotherService
-    {
-        public void N()
-        {
-        }
-    }
-
-    internal class AnotherServiceImplementation: IAnotherService
-    {
-        public void N()
-        {
-        }
-    }
-
-    public partial class UnitTest1
+    public partial class ContainerTests
     {
         [Fact]
         public void CanCreateTransientService()
