@@ -30,6 +30,6 @@
   <!-- dotnet build /t:GetCompilerCommandLine /p:SkipCompilerExecution=true -->
   <Target Name="GetCompilerCommandLine" DependsOnTargets="_SetProperties;ResolveAssemblyReferences;CoreCompile">
     <WriteLinesToFile File="$(IntermediateOutputPath)csc.rsp" Lines="@(CscCommandLineArgs)" Overwrite="true" />
-    <Exec Command="pwsh -noprofile -nologo $(MSBuildProjectDirectory)\..\..\eng\CreateLaunchSettings.ps1 $(IntermediateOutputPath)\csc.rsp $(MSBuildProjectDirectory)\..\Jab\Properties\launchSettings.json" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Exec Command="pwsh -noprofile -nologo $(MSBuildProjectDirectory)\..\..\eng\CreateLaunchSettings.ps1 $(IntermediateOutputPath)\csc.rsp $(MSBuildProjectDirectory)\..\Jab\" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 </Project>
