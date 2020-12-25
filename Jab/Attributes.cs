@@ -2,14 +2,17 @@
 
 namespace Jab
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     internal class CompositionRootAttribute: Attribute
     {
     }
 
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     internal class SingletonAttribute: Attribute
     {
     }
 
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     internal class TransientAttribute : Attribute
     {
         public Type ServiceType { get; }
