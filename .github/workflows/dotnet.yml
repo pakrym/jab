@@ -19,6 +19,8 @@ jobs:
       run: dotnet build src
     - name: Test
       run: dotnet test src --no-build --verbosity normal
+    - name: Add GitHub package source
+      run: dotnet nuget add source https://nuget.pkg.github.com/pakrym/index.json --name "github" --username NotUsed --password ${{ secrets.GITHUB_TOKEN }}
     - name: Publish NuGet packages
       run: dotnet nuget push nuget\*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "github" --skip-duplicate --no-symbols true
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
