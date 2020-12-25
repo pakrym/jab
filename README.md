@@ -53,3 +53,8 @@ IService service = c.GetIService();
 ## Features
 
 The plan is to support the minimum feature set Microsoft.Extensions.DependencyInjection.Abstraction requires but *NOT* the `IServiceCollection`-based registration syntax as it is runtime based.
+
+
+## Debugging locally
+
+Run `dotnet build /t:GetCompilerCommandLine /p:SkipCompilerExecution=true` in the `Jab.Tests` directory would update the `Jab\Properties\launchSettings.json` file to include `csc` invocation that allows F5 debugging of the generator targeting the `Jab.Tests` project.

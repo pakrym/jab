@@ -22,6 +22,7 @@
   </ItemGroup>
   <Target Name="_SetProperties">
     <PropertyGroup>
+      <!-- Force CoreCompile execution -->
       <NonExistentFile>__NonExistentSubDir__\__NonExistentFile__</NonExistentFile>
       <ProvideCommandLineArgs>true</ProvideCommandLineArgs>
     </PropertyGroup>
