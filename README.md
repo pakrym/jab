@@ -8,9 +8,16 @@ Jab brings has no runtime dependencies.
 
 Jab is AOT and linker friendly, all code is generated at compile time.
 
-Jab allows easy debugging of service resolution process.
+Jab allows easy debugging of the service resolution process.
 
 ## Example
+
+Add Jab package reference:
+```xml
+<ItemGroup>
+    <PackageReference Include="Jab" Version="0.0.1-beta.1" PrivateAssets="all" />
+</ItemGroup>
+```
 
 Define a service and implementation:
 
