@@ -17,12 +17,42 @@ namespace Jab
         {
         }
 
+        private void GenerateCallSiteWithCache(CodeWriter codeWriter, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
+        {
+            if (serviceCallSite.Singleton)
+            {
+                var cacheLocation = GetCacheLocation(serviceCallSite);
+                using (codeWriter.Scope($"if ({cacheLocation} == default)"))
+                using (codeWriter.Scope($"lock (this)"))
+                using (codeWriter.Scope($"if ({cacheLocation} == default)"))
+                {
+                    GenerateCallSite(
+                        codeWriter,
+                        serviceCallSite,
+                        (w, v) =>
+                        {
+                            w.Line($"{cacheLocation} = {v};");
+                        });
+                }
+
+                valueCallback(codeWriter, w => w.Append($"{cacheLocation}"));
+            }
+            else
+            {
+                GenerateCallSite(codeWriter, serviceCallSite, valueCallback);
+            }
+        }
+
+        private string GetCacheLocation(ServiceCallSite serviceCallSite)
+        {
+            return "_" + serviceCallSite.ServiceType.Name;
+        }
 
         private void GenerateCallSite(CodeWriter codeWriter, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
         {
             switch (serviceCallSite)
             {
-                case TransientCallSite transientCallSite:
+                case ConstructorCallSite transientCallSite:
                     valueCallback(codeWriter, w =>
                     {
                         w.Append($"new {transientCallSite.ImplementationType}(");
@@ -57,10 +87,18 @@ namespace Jab
                         {
                             foreach (var rootService in root.RootCallSites)
                             {
+                                if (rootService.Singleton)
+                                {
+                                    codeWriter.Line($"private {rootService.ServiceType} {GetCacheLocation(rootService)};");
+                                }
+                            }
+
+                            foreach (var rootService in root.RootCallSites)
+                            {
                                 var rootServiceType = rootService.ServiceType;
                                 using (codeWriter.Scope($"{SyntaxFacts.GetText(rootServiceType.DeclaredAccessibility)} {rootServiceType} {GetResolutionServiceName(rootServiceType)}()"))
                                 {
-                                    GenerateCallSite(codeWriter,
+                                    GenerateCallSiteWithCache(codeWriter,
                                         rootService,
                                         (w, v) => w.Line($"return {v};"));
                                 }
