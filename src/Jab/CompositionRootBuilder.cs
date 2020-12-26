@@ -10,17 +10,20 @@ namespace Jab
     internal class CompositionRootBuilder
     {
         public const string TransientAttributeMetadataName = "Jab.TransientAttribute";
+        public const string SingletonAttributeMetadataName = "Jab.SingletonAttribute";
         public const string CompositionRootAttributeMetadataName = "Jab.CompositionRootAttribute";
 
         private readonly GeneratorExecutionContext _context;
         private readonly INamedTypeSymbol _compositionRootAttributeType;
         private readonly INamedTypeSymbol _transientAttributeType;
+        private readonly INamedTypeSymbol _singletonAttribute;
 
         public CompositionRootBuilder(GeneratorExecutionContext context)
         {
             _context = context;
             _compositionRootAttributeType = context.Compilation.Assembly.GetTypeByMetadataName(CompositionRootAttributeMetadataName);
             _transientAttributeType = context.Compilation.Assembly.GetTypeByMetadataName(TransientAttributeMetadataName);
+            _singletonAttribute = context.Compilation.Assembly.GetTypeByMetadataName(SingletonAttributeMetadataName);
         }
 
         public CompositionRoot[] BuildRoots()
@@ -97,10 +100,11 @@ namespace Jab
                             parameters.Add(GetCallSite(parameterSymbol.Type));
                         }
 
-                        TransientCallSite callSite = new(
+                        ConstructorCallSite callSite = new(
                             registration.ServiceType,
                             implementationType,
-                            parameters.ToArray());
+                            parameters.ToArray(),
+                            registration.Lifetime == ServiceLifetime.Singleton);
 
                         callSites.Add(registration.ServiceType, callSite);
                         services.Add(callSite);
@@ -148,9 +152,19 @@ namespace Jab
                 }
                 else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _transientAttributeType))
                 {
-                    registrations.Add(new ServiceRegistration(ExtractType(attributeData.ConstructorArguments[0]),
+                    registrations.Add(new ServiceRegistration(
+                        ServiceLifetime.Transient,
+                        ExtractType(attributeData.ConstructorArguments[0]),
                         attributeData.ConstructorArguments.Length == 2? ExtractType(attributeData.ConstructorArguments[1]) : null)
-                        );
+                    );
+                }
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _singletonAttribute))
+                {
+                    registrations.Add(new ServiceRegistration(
+                        ServiceLifetime.Singleton,
+                        ExtractType(attributeData.ConstructorArguments[0]),
+                        attributeData.ConstructorArguments.Length == 2? ExtractType(attributeData.ConstructorArguments[1]) : null)
+                    );
                 }
             }
 

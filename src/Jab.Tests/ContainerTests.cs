@@ -28,5 +28,23 @@ namespace Jab.Tests
         [Transient(typeof(IService), typeof(ServiceImplementationWithParameter))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         internal partial class CanCreateTransientServiceWithConstructorParametersContainer { }
+
+        [Fact]
+        public void CanCreateSingleton()
+        {
+            CanCreateSingletonContainer c = new();
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
+            var implementationWithParameter2 = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
+            var anotherImplementation = c.GetIAnotherService();
+
+            Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
+            Assert.Same(implementationWithParameter, implementationWithParameter2);
+            Assert.Same(anotherImplementation, implementationWithParameter.AnotherService);
+        }
+
+        [CompositionRoot]
+        [Singleton(typeof(IService), typeof(ServiceImplementationWithParameter))]
+        [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        internal partial class CanCreateSingletonContainer { }
     }
 }
