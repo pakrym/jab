@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using AutoRest.CSharp.Generation.Writers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 

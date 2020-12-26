@@ -10,7 +10,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace AutoRest.CSharp.Generation.Writers
+namespace Jab
 {
     internal delegate void CodeWriterDelegate(CodeWriter writer);
     internal class CodeWriter
