@@ -20,10 +20,14 @@ namespace Jab
 
         public CompositionRootBuilder(GeneratorExecutionContext context)
         {
+            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(GeneratorExecutionContext context, string fullyQualifiedMetadataName) =>
+                context.Compilation.Assembly.GetTypeByMetadataName(fullyQualifiedMetadataName)
+                    ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
+
             _context = context;
-            _compositionRootAttributeType = context.Compilation.Assembly.GetTypeByMetadataName(CompositionRootAttributeMetadataName);
-            _transientAttributeType = context.Compilation.Assembly.GetTypeByMetadataName(TransientAttributeMetadataName);
-            _singletonAttribute = context.Compilation.Assembly.GetTypeByMetadataName(SingletonAttributeMetadataName);
+            _compositionRootAttributeType = GetTypeByMetadataNameOrThrow(context, CompositionRootAttributeMetadataName);
+            _transientAttributeType = GetTypeByMetadataNameOrThrow(context, TransientAttributeMetadataName);
+            _singletonAttribute = GetTypeByMetadataNameOrThrow(context, SingletonAttributeMetadataName);
         }
 
         public CompositionRoot[] BuildRoots()
@@ -74,7 +78,11 @@ namespace Jab
                 return false;
             }
 
-            Dictionary<ITypeSymbol, ServiceCallSite> callSites = new(SymbolEqualityComparer.Default);
+            Dictionary<ITypeSymbol, ServiceCallSite> callSites =
+#pragma warning disable RS1024 // Comparer check currently not working properly
+                new(SymbolEqualityComparer.Default);
+#pragma warning restore RS1024
+
             List<ServiceCallSite> services = new();
 
             ServiceCallSite? GetCallSite(ITypeSymbol serviceType)
@@ -92,12 +100,16 @@ namespace Jab
                     {
                         var implementationType = registration.ImplementationType ??
                                                  registration.ServiceType;
-                        var ctor = SelectConstructor(implementationType);
+                        var ctor = SelectConstructor(implementationType)
+                            ?? throw new InvalidOperationException($"Public constructor not found for type '{implementationType.Name}'");
 
                         var parameters = new List<ServiceCallSite>();
                         foreach (var parameterSymbol in ctor.Parameters)
                         {
-                            parameters.Add(GetCallSite(parameterSymbol.Type));
+                            var parameterCallSite = GetCallSite(parameterSymbol.Type)
+                                ?? throw new InvalidOperationException($"Failed to resolve parameter of type '{parameterSymbol.Type}'");
+
+                            parameters.Add(parameterCallSite);
                         }
 
                         ConstructorCallSite callSite = new(
