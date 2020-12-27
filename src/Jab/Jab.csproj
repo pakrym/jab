@@ -9,6 +9,7 @@
         <IncludeBuildOutput>false</IncludeBuildOutput> <!-- Do not include the generator as a lib dependency -->
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     </PropertyGroup>
 
     <ItemGroup>
