@@ -57,4 +57,4 @@ The plan is to support the minimum feature set Microsoft.Extensions.DependencyIn
 
 ## Debugging locally
 
-Run `dotnet build /t:GetCompilerCommandLine /p:SkipCompilerExecution=true` in the `Jab.Tests` directory would update the `Jab\Properties\launchSettings.json` file to include `csc` invocation that allows F5 debugging of the generator targeting the `Jab.Tests` project.
+Run `dotnet build /t:CreateLaunchSettings` in the `Jab.Tests` directory would update the `Jab\Properties\launchSettings.json` file to include `csc` invocation that allows F5 debugging of the generator targeting the `Jab.Tests` project.
