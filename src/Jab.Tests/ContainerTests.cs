@@ -46,5 +46,26 @@ namespace Jab.Tests
         [Singleton(typeof(IService), typeof(ServiceImplementationWithParameter))]
         [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         internal partial class CanCreateSingletonContainer { }
+
+        [Fact]
+        public void CanUseSingletonInstance()
+        {
+            CanUseSingletonInstanceContainer c = new();
+            c.MyIServiceInstance = new AnotherServiceImplementation();
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
+            var anotherImplementation = c.GetIAnotherService();
+
+            Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
+            Assert.Same(anotherImplementation, implementationWithParameter.AnotherService);
+            Assert.Same(c.MyIServiceInstance, anotherImplementation);
+        }
+
+        [CompositionRoot]
+        [Singleton(typeof(IService), typeof(ServiceImplementationWithParameter))]
+        [Singleton(typeof(IAnotherService), Instance = "MyIServiceInstance")]
+        internal partial class CanUseSingletonInstanceContainer
+        {
+            public IAnotherService MyIServiceInstance { get; set; }
+        }
     }
 }

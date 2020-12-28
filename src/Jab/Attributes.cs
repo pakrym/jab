@@ -1,5 +1,7 @@
 ﻿using System;
 
+#nullable enable
+
 namespace Jab
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
@@ -11,7 +13,9 @@ namespace Jab
     internal class SingletonAttribute: Attribute
     {
         public Type ServiceType { get; }
-        public Type ImplementationType { get; }
+        public Type? ImplementationType { get; }
+
+        public string? Instance { get; set; }
 
         public SingletonAttribute(Type serviceType)
         {
@@ -29,7 +33,7 @@ namespace Jab
     internal class TransientAttribute : Attribute
     {
         public Type ServiceType { get; }
-        public Type ImplementationType { get; }
+        public Type? ImplementationType { get; }
 
         public TransientAttribute(Type serviceType)
         {

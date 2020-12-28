@@ -62,6 +62,13 @@ namespace Jab
                         w.Append($")");
                     });
                     break;
+                case MemberCallSite memberCallSite:
+                    // TODO: support methods
+                    valueCallback(codeWriter, w =>
+                    {
+                        w.AppendRaw(memberCallSite.Member.Name);
+                    });
+                    break;
             }
         }
 

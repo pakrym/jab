@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -9,9 +10,10 @@ namespace Jab
 {
     internal class CompositionRootBuilder
     {
-        public const string TransientAttributeMetadataName = "Jab.TransientAttribute";
-        public const string SingletonAttributeMetadataName = "Jab.SingletonAttribute";
-        public const string CompositionRootAttributeMetadataName = "Jab.CompositionRootAttribute";
+        private const string TransientAttributeMetadataName = "Jab.TransientAttribute";
+        private const string SingletonAttributeMetadataName = "Jab.SingletonAttribute";
+        private const string CompositionRootAttributeMetadataName = "Jab.CompositionRootAttribute";
+        private const string InstanceAttributePropertyName = "Instance";
 
         private readonly GeneratorExecutionContext _context;
         private readonly INamedTypeSymbol _compositionRootAttributeType;
@@ -72,7 +74,7 @@ namespace Jab
         {
             compositionRoot = null;
 
-            var description = GetDescription(typeSymbol.GetAttributes());
+            var description = GetDescription(typeSymbol);
             if (description == null)
             {
                 return false;
@@ -98,25 +100,36 @@ namespace Jab
 
                     if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, serviceType))
                     {
-                        var implementationType = registration.ImplementationType ??
-                                                 registration.ServiceType;
-                        var ctor = SelectConstructor(implementationType)
-                            ?? throw new InvalidOperationException($"Public constructor not found for type '{implementationType.Name}'");
-
-                        var parameters = new List<ServiceCallSite>();
-                        foreach (var parameterSymbol in ctor.Parameters)
+                        ServiceCallSite callSite;
+                        if (registration.InstanceMember != null)
                         {
-                            var parameterCallSite = GetCallSite(parameterSymbol.Type)
-                                ?? throw new InvalidOperationException($"Failed to resolve parameter of type '{parameterSymbol.Type}'");
+                            callSite = new MemberCallSite(registration.ServiceType, registration.InstanceMember);
+                        }
+                        else
+                        {
+                            var implementationType = registration.ImplementationType ??
+                                                     registration.ServiceType;
 
-                            parameters.Add(parameterCallSite);
+                            var ctor = SelectConstructor(implementationType)
+                                       ?? throw new InvalidOperationException($"Public constructor not found for type '{implementationType.Name}'");
+
+                            var parameters = new List<ServiceCallSite>();
+                            foreach (var parameterSymbol in ctor.Parameters)
+                            {
+                                var parameterCallSite = GetCallSite(parameterSymbol.Type)
+                                                        ?? throw new InvalidOperationException($"Failed to resolve parameter of type '{parameterSymbol.Type}'");
+
+                                parameters.Add(parameterCallSite);
+                            }
+
+                            callSite = new ConstructorCallSite(
+                                registration.ServiceType,
+                                implementationType,
+                                parameters.ToArray(),
+                                registration.Lifetime == ServiceLifetime.Singleton);
+
                         }
 
-                        ConstructorCallSite callSite = new(
-                            registration.ServiceType,
-                            implementationType,
-                            parameters.ToArray(),
-                            registration.Lifetime == ServiceLifetime.Singleton);
 
                         callSites.Add(registration.ServiceType, callSite);
                         services.Add(callSite);
@@ -152,10 +165,11 @@ namespace Jab
             return selectedCtor;
         }
 
-        private CompositionRootDescription? GetDescription(ImmutableArray<AttributeData> attributes)
+        private CompositionRootDescription? GetDescription(ITypeSymbol typeSymbol)
         {
             bool isCompositionRoot = false;
             List<ServiceRegistration> registrations = new();
+            ImmutableArray<AttributeData> attributes = typeSymbol.GetAttributes();
             foreach (var attributeData in attributes)
             {
                 if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _compositionRootAttributeType))
@@ -164,19 +178,11 @@ namespace Jab
                 }
                 else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _transientAttributeType))
                 {
-                    registrations.Add(new ServiceRegistration(
-                        ServiceLifetime.Transient,
-                        ExtractType(attributeData.ConstructorArguments[0]),
-                        attributeData.ConstructorArguments.Length == 2? ExtractType(attributeData.ConstructorArguments[1]) : null)
-                    );
+                    registrations.Add(CreateRegistration(typeSymbol, attributeData, ServiceLifetime.Transient));
                 }
                 else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _singletonAttribute))
                 {
-                    registrations.Add(new ServiceRegistration(
-                        ServiceLifetime.Singleton,
-                        ExtractType(attributeData.ConstructorArguments[0]),
-                        attributeData.ConstructorArguments.Length == 2? ExtractType(attributeData.ConstructorArguments[1]) : null)
-                    );
+                    registrations.Add(CreateRegistration(typeSymbol, attributeData, ServiceLifetime.Singleton));
                 }
             }
 
@@ -189,6 +195,44 @@ namespace Jab
                 // TODO: Diagnostic
                 return null;
             }
+        }
+
+        private ServiceRegistration CreateRegistration(ITypeSymbol typeSymbol, AttributeData attributeData, ServiceLifetime serviceLifetime)
+        {
+            string? instanceMemberName = null;
+            foreach (var namedArgument in attributeData.NamedArguments)
+            {
+                if (namedArgument.Key == InstanceAttributePropertyName)
+                {
+                    Debug.Assert(namedArgument.Value.Kind == TypedConstantKind.Primitive);
+                    instanceMemberName = (string?)namedArgument.Value.Value;
+                }
+            }
+
+            ISymbol? instanceMember = null;
+            if (instanceMemberName != null)
+            {
+                var members = typeSymbol.GetMembers(instanceMemberName);
+                if (members.Length == 0)
+                {
+                    throw new InvalidOperationException($"Unable to find a member '{instanceMemberName}' referenced as an instance.");
+                }
+                if (members.Length > 1)
+                {
+                    throw new InvalidOperationException($"Found multiple members with the '{instanceMemberName}' name, referenced as an instance.");
+                }
+
+                instanceMember = members[0];
+            }
+
+            var serviceType = ExtractType(attributeData.ConstructorArguments[0]);
+            var implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
+
+            return new ServiceRegistration(
+                serviceLifetime,
+                serviceType,
+                implementationType,
+                instanceMember);
         }
 
         private INamedTypeSymbol ExtractType(TypedConstant typedConstant)
@@ -205,15 +249,5 @@ namespace Jab
 
             return (INamedTypeSymbol) typedConstant.Value;
         }
-    }
-
-    internal class CompositionRootDescription
-    {
-        public CompositionRootDescription(IReadOnlyList<ServiceRegistration> serviceRegistrations)
-        {
-            ServiceRegistrations = serviceRegistrations;
-        }
-
-        public IReadOnlyList<ServiceRegistration> ServiceRegistrations { get; }
     }
 }
