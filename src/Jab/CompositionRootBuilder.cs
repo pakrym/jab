@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace Jab
@@ -16,14 +15,14 @@ namespace Jab
         private const string InstanceAttributePropertyName = "Instance";
         private const string FactoryAttributePropertyName = "Factory";
 
-        private readonly GeneratorExecutionContext _context;
+        private readonly GeneratorContext _context;
         private readonly INamedTypeSymbol _compositionRootAttributeType;
         private readonly INamedTypeSymbol _transientAttributeType;
         private readonly INamedTypeSymbol _singletonAttribute;
 
-        public CompositionRootBuilder(GeneratorExecutionContext context)
+        public CompositionRootBuilder(GeneratorContext context)
         {
-            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(GeneratorExecutionContext context, string fullyQualifiedMetadataName) =>
+            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(GeneratorContext context, string fullyQualifiedMetadataName) =>
                 context.Compilation.Assembly.GetTypeByMetadataName(fullyQualifiedMetadataName)
                     ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
 
@@ -181,13 +180,15 @@ namespace Jab
                 {
                     isCompositionRoot = true;
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _transientAttributeType))
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _transientAttributeType) &&
+                         CreateRegistration(typeSymbol, attributeData, ServiceLifetime.Transient, out var registration))
                 {
-                    registrations.Add(CreateRegistration(typeSymbol, attributeData, ServiceLifetime.Transient));
+                    registrations.Add(registration);
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _singletonAttribute))
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _singletonAttribute) &&
+                         CreateRegistration(typeSymbol, attributeData, ServiceLifetime.Singleton, out registration))
                 {
-                    registrations.Add(CreateRegistration(typeSymbol, attributeData, ServiceLifetime.Singleton));
+                    registrations.Add(registration);
                 }
             }
 
@@ -202,8 +203,10 @@ namespace Jab
             }
         }
 
-        private ServiceRegistration CreateRegistration(ITypeSymbol typeSymbol, AttributeData attributeData, ServiceLifetime serviceLifetime)
+        private bool CreateRegistration(ITypeSymbol typeSymbol, AttributeData attributeData, ServiceLifetime serviceLifetime, [NotNullWhen(true)] out ServiceRegistration? registration)
         {
+            registration = null;
+
             string? instanceMemberName = null;
             string? factoryMemberName = null;
             foreach (var namedArgument in attributeData.NamedArguments)
@@ -219,46 +222,58 @@ namespace Jab
             }
 
             ISymbol? instanceMember = null;
-            if (instanceMemberName != null)
+            if (instanceMemberName != null &&
+                !TryFindMember(typeSymbol, attributeData, instanceMemberName, InstanceAttributePropertyName, out instanceMember))
             {
-                var members = typeSymbol.GetMembers(instanceMemberName);
-                if (members.Length == 0)
-                {
-                    throw new InvalidOperationException($"Unable to find a member '{instanceMemberName}' referenced as an instance.");
-                }
-                if (members.Length > 1)
-                {
-                    throw new InvalidOperationException($"Found multiple members with the '{instanceMemberName}' name, referenced as an instance.");
-                }
-
-                instanceMember = members[0];
+                return false;
             }
 
             ISymbol? factoryMember = null;
-            if (factoryMemberName != null)
+            if (factoryMemberName != null&&
+                !TryFindMember(typeSymbol, attributeData, factoryMemberName, FactoryAttributePropertyName, out factoryMember))
             {
-                var members = typeSymbol.GetMembers(factoryMemberName);
-                if (members.Length == 0)
-                {
-                    throw new InvalidOperationException($"Unable to find a member '{instanceMemberName}' referenced as a factory.");
-                }
-                if (members.Length > 1)
-                {
-                    throw new InvalidOperationException($"Found multiple members with the '{instanceMemberName}' name, referenced as a factory.");
-                }
-
-                factoryMember = members[0];
+                return false;
             }
 
             var serviceType = ExtractType(attributeData.ConstructorArguments[0]);
             var implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
 
-            return new ServiceRegistration(
+            registration = new ServiceRegistration(
                 serviceLifetime,
                 serviceType,
                 implementationType,
                 instanceMember,
                 factoryMember);
+
+            return true;
+        }
+
+        private bool TryFindMember(ITypeSymbol typeSymbol, AttributeData attributeData, string memberName, string parameterName, [NotNullWhen(true)] out ISymbol? instanceMember)
+        {
+            instanceMember = null;
+
+            var members = typeSymbol.GetMembers(memberName);
+            if (members.Length == 0)
+            {
+                _context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.UnexpectedErrorDescriptor,
+                    attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
+                    $"Unable to find a member '{memberName}' referenced in the '{parameterName}' attribute parameter."
+                ));
+                return false;
+            }
+
+            if (members.Length > 1)
+            {
+                _context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.UnexpectedErrorDescriptor,
+                    attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
+                    $"Found multiple members with the '{memberName}' name, referenced in the '{parameterName}' attribute parameter."
+                ));
+            }
+
+            instanceMember = members[0];
+            return true;
         }
 
         private INamedTypeSymbol ExtractType(TypedConstant typedConstant)
