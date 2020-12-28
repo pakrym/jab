@@ -1,16 +1,23 @@
 ﻿using System;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Jab
 {
-    [Generator]
-    public class DependencyInjectionContainerGenerator : ISourceGenerator
+    internal static class DiagnosticDescriptors
     {
-        private static readonly DiagnosticDescriptor UnexpectedErrorDescriptor = new DiagnosticDescriptor("JAB0001",
+        public static readonly DiagnosticDescriptor UnexpectedErrorDescriptor = new DiagnosticDescriptor("JAB0001",
             "Unexpected error during generation",
             "Unexpected error occurred during code generation: {0}", "Usage", DiagnosticSeverity.Error, true);
+    }
 
+    [Generator]
+    #pragma warning disable RS1001 // We don't want this to be discovered as analyzer but it simplifies testing
+    public class DependencyInjectionContainerGenerator : DiagnosticAnalyzer, ISourceGenerator
+    #pragma warning restore RS1001 // We don't want this to be discovered as analyzer but it simplifies testing
+    {
         public void Initialize(GeneratorInitializationContext context)
         {
         }
@@ -77,6 +84,11 @@ namespace Jab
 
         public void Execute(GeneratorExecutionContext context)
         {
+            Execute(new GeneratorContext(context));
+        }
+
+        private void Execute(GeneratorContext context)
+        {
             try
             {
                 var roots = new CompositionRootBuilder(context).BuildRoots();
@@ -121,10 +133,22 @@ namespace Jab
             }
             catch (Exception e)
             {
-                context.ReportDiagnostic(Diagnostic.Create(UnexpectedErrorDescriptor, Location.None, e.ToString()));
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.UnexpectedErrorDescriptor, Location.None, e.ToString()));
             }
         }
 
         private string GetResolutionServiceName(INamedTypeSymbol rootServiceType) => $"Get{rootServiceType.Name}";
+
+        public override void Initialize(AnalysisContext context)
+        {
+            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
+            context.EnableConcurrentExecution();
+            context.RegisterCompilationAction(compilationContext =>
+            {
+                Execute(new GeneratorContext(compilationContext));
+            });
+        }
+
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = new[] {DiagnosticDescriptors.UnexpectedErrorDescriptor}.ToImmutableArray();
     }
 }

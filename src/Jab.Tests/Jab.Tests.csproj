@@ -18,8 +18,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.0.1-beta1.20623.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" />
+    <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" />
     <Compile Include="..\Jab\Attributes.cs" />
+    <Content Include="..\Jab\Attributes.cs" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="_SetProperties">
     <PropertyGroup>
