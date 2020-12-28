@@ -7,9 +7,9 @@ namespace Jab
     [Generator]
     public class DependencyInjectionContainerGenerator : ISourceGenerator
     {
-        private static DiagnosticDescriptor UnexpectedErrorDescriptor = new DiagnosticDescriptor("JAB0001",
-            "Unexpected error during generation.",
-            "Unexpected error occured during code generation: {0}", "", DiagnosticSeverity.Error, true);
+        private static readonly DiagnosticDescriptor UnexpectedErrorDescriptor = new DiagnosticDescriptor("JAB0001",
+            "Unexpected error during generation",
+            "Unexpected error occurred during code generation: {0}", "Usage", DiagnosticSeverity.Error, true);
 
         public void Initialize(GeneratorInitializationContext context)
         {

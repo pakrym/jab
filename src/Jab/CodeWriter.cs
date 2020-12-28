@@ -76,10 +76,10 @@ namespace Jab
             const string literalFormatString = ":L";
             const string declarationFormatString = ":D"; // :D :)
             const string identifierFormatString = ":I";
-            foreach ((string Text, bool IsLiteral) part in GetPathParts(formattableString.Format))
+            foreach ((string Text, bool IsLiteral) in GetPathParts(formattableString.Format))
             {
-                string text = part.Text;
-                if (part.IsLiteral)
+                string text = Text;
+                if (IsLiteral)
                 {
                     AppendRaw(text);
                     continue;

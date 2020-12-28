@@ -1,13 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <GITHUB_RUN_ID Condition="'$(GITHUB_RUN_ID)' == ''" >1</GITHUB_RUN_ID>
-        <Version>0.0.1-beta.$(GITHUB_RUN_ID)</Version>    
+        <GITHUB_RUN_ID Condition="'$(GITHUB_RUN_ID)' == ''">1</GITHUB_RUN_ID>
+        <Version>0.0.1-beta.$(GITHUB_RUN_ID)</Version>
         <IncludeBuildOutput>false</IncludeBuildOutput> <!-- Do not include the generator as a lib dependency -->
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,11 +20,12 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
         <TfmSpecificPackageFile Include="Attributes.cs" PackagePath="contentFiles\cs\netstandard2.0\" BuildAction="Compile" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <Compile Remove="Attributes.cs" />
     </ItemGroup>
+
 </Project>
