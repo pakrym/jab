@@ -67,5 +67,55 @@ namespace Jab.Tests
         {
             public IAnotherService MyIServiceInstance { get; set; }
         }
+
+        [Fact]
+        public void CanUseSingletonFactory()
+        {
+            CanUseSingletonFactoryContainer c = new();
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
+            var anotherImplementation = c.GetIAnotherService();
+
+            Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
+            Assert.Same(anotherImplementation, implementationWithParameter.AnotherService);
+            Assert.Equal(1, c.FactoryInvocationCount);
+        }
+
+        [CompositionRoot]
+        [Singleton(typeof(IService), typeof(ServiceImplementationWithParameter))]
+        [Singleton(typeof(IAnotherService), Factory = nameof(CreateMyIServiceInstance))]
+        internal partial class CanUseSingletonFactoryContainer
+        {
+            public int FactoryInvocationCount;
+            public IAnotherService CreateMyIServiceInstance()
+            {
+                FactoryInvocationCount++;
+                return new AnotherServiceImplementation();
+            }
+        }
+
+        [Fact]
+        public void CanUseTransientFactory()
+        {
+            CanUseTransientFactoryContainer c = new();
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
+            var anotherImplementation = c.GetIAnotherService();
+
+            Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
+            Assert.NotSame(anotherImplementation, implementationWithParameter.AnotherService);
+            Assert.Equal(2, c.FactoryInvocationCount);
+        }
+
+        [CompositionRoot]
+        [Transient(typeof(IService), typeof(ServiceImplementationWithParameter))]
+        [Transient(typeof(IAnotherService), Factory = nameof(CreateMyIServiceInstance))]
+        internal partial class CanUseTransientFactoryContainer
+        {
+            public int FactoryInvocationCount;
+            public IAnotherService CreateMyIServiceInstance()
+            {
+                FactoryInvocationCount++;
+                return new AnotherServiceImplementation();
+            }
+        }
     }
 }

@@ -14,6 +14,7 @@ namespace Jab
         private const string SingletonAttributeMetadataName = "Jab.SingletonAttribute";
         private const string CompositionRootAttributeMetadataName = "Jab.CompositionRootAttribute";
         private const string InstanceAttributePropertyName = "Instance";
+        private const string FactoryAttributePropertyName = "Factory";
 
         private readonly GeneratorExecutionContext _context;
         private readonly INamedTypeSymbol _compositionRootAttributeType;
@@ -101,33 +102,37 @@ namespace Jab
                     if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, serviceType))
                     {
                         ServiceCallSite callSite;
-                        if (registration.InstanceMember != null)
+
+                        switch (registration)
                         {
-                            callSite = new MemberCallSite(registration.ServiceType, registration.InstanceMember);
-                        }
-                        else
-                        {
-                            var implementationType = registration.ImplementationType ??
-                                                     registration.ServiceType;
+                            case { InstanceMember: {} instanceMember }:
+                                callSite = new MemberCallSite(registration.ServiceType, instanceMember, false);
+                                break;
+                            case { FactoryMember: {} factoryMember }:
+                                callSite = new MemberCallSite(registration.ServiceType, factoryMember, registration.Lifetime == ServiceLifetime.Singleton);
+                                break;
+                            default:
+                                var implementationType = registration.ImplementationType ??
+                                                         registration.ServiceType;
 
-                            var ctor = SelectConstructor(implementationType)
-                                       ?? throw new InvalidOperationException($"Public constructor not found for type '{implementationType.Name}'");
+                                var ctor = SelectConstructor(implementationType)
+                                           ?? throw new InvalidOperationException($"Public constructor not found for type '{implementationType.Name}'");
 
-                            var parameters = new List<ServiceCallSite>();
-                            foreach (var parameterSymbol in ctor.Parameters)
-                            {
-                                var parameterCallSite = GetCallSite(parameterSymbol.Type)
-                                                        ?? throw new InvalidOperationException($"Failed to resolve parameter of type '{parameterSymbol.Type}'");
+                                var parameters = new List<ServiceCallSite>();
+                                foreach (var parameterSymbol in ctor.Parameters)
+                                {
+                                    var parameterCallSite = GetCallSite(parameterSymbol.Type)
+                                                            ?? throw new InvalidOperationException($"Failed to resolve parameter of type '{parameterSymbol.Type}'");
 
-                                parameters.Add(parameterCallSite);
-                            }
+                                    parameters.Add(parameterCallSite);
+                                }
 
-                            callSite = new ConstructorCallSite(
-                                registration.ServiceType,
-                                implementationType,
-                                parameters.ToArray(),
-                                registration.Lifetime == ServiceLifetime.Singleton);
-
+                                callSite = new ConstructorCallSite(
+                                    registration.ServiceType,
+                                    implementationType,
+                                    parameters.ToArray(),
+                                    registration.Lifetime == ServiceLifetime.Singleton);
+                                break;
                         }
 
 
@@ -200,12 +205,16 @@ namespace Jab
         private ServiceRegistration CreateRegistration(ITypeSymbol typeSymbol, AttributeData attributeData, ServiceLifetime serviceLifetime)
         {
             string? instanceMemberName = null;
+            string? factoryMemberName = null;
             foreach (var namedArgument in attributeData.NamedArguments)
             {
                 if (namedArgument.Key == InstanceAttributePropertyName)
                 {
-                    Debug.Assert(namedArgument.Value.Kind == TypedConstantKind.Primitive);
                     instanceMemberName = (string?)namedArgument.Value.Value;
+                }
+                else if (namedArgument.Key == FactoryAttributePropertyName)
+                {
+                    factoryMemberName = (string?)namedArgument.Value.Value;
                 }
             }
 
@@ -225,6 +234,22 @@ namespace Jab
                 instanceMember = members[0];
             }
 
+            ISymbol? factoryMember = null;
+            if (factoryMemberName != null)
+            {
+                var members = typeSymbol.GetMembers(factoryMemberName);
+                if (members.Length == 0)
+                {
+                    throw new InvalidOperationException($"Unable to find a member '{instanceMemberName}' referenced as a factory.");
+                }
+                if (members.Length > 1)
+                {
+                    throw new InvalidOperationException($"Found multiple members with the '{instanceMemberName}' name, referenced as a factory.");
+                }
+
+                factoryMember = members[0];
+            }
+
             var serviceType = ExtractType(attributeData.ConstructorArguments[0]);
             var implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
 
@@ -232,7 +257,8 @@ namespace Jab
                 serviceLifetime,
                 serviceType,
                 implementationType,
-                instanceMember);
+                instanceMember,
+                factoryMember);
         }
 
         private INamedTypeSymbol ExtractType(TypedConstant typedConstant)

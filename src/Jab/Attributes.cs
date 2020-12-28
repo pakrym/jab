@@ -13,9 +13,12 @@ namespace Jab
     internal class SingletonAttribute: Attribute
     {
         public Type ServiceType { get; }
+
         public Type? ImplementationType { get; }
 
         public string? Instance { get; set; }
+
+        public string? Factory { get; set; }
 
         public SingletonAttribute(Type serviceType)
         {
@@ -33,7 +36,10 @@ namespace Jab
     internal class TransientAttribute : Attribute
     {
         public Type ServiceType { get; }
+
         public Type? ImplementationType { get; }
+
+        public string? Factory { get; set; }
 
         public TransientAttribute(Type serviceType)
         {
