@@ -54,6 +54,51 @@ IService service = c.GetIService();
 
 The plan is to support the minimum feature set Microsoft.Extensions.DependencyInjection.Abstraction requires but *NOT* the `IServiceCollection`-based registration syntax as it is runtime based.
 
+### Singleton services
+
+Singleton services are created once per container lifetime in a thread-safe manner and cached.
+To register a singleton service use the `SingletonAttribute`:
+
+```C#
+[CompositionRoot]
+[Singleton(typeof(IService), typeof(ServiceImplementation))]
+internal partial class MyContainer { }
+```
+
+### Singleton Instances
+
+If you want to use an existing object as a service define a property in the container declaration and use the `Instance` property of the `SingletonAttribute` to register the service:
+
+```C#
+[CompositionRoot]
+[Singleton(typeof(IService), Instance = nameof(MyServiceInstance))]
+internal partial class MyContainer {
+    public IService MyServiceInstance { get;set; }
+}
+```
+
+Then initialize the property during the container creation:
+
+```C#
+MyContainer c = new();
+c.MyServiceInstance = new ServiceImplementation();
+```
+
+### Factories
+
+Sometimes it's useful to provide a custom way to create a service instance without using the automatic construction selection.
+To do this define a method in the container declaration and use the `Factory` property of the `SingletonAttribute` or `TransientAttribute` to register the service:
+
+```C#
+[CompositionRoot]
+[Transient(typeof(IService), Factory = nameof(MyServiceFactory))]
+internal partial class MyContainer {
+    public IService MyServiceFactory() => new ServiceImplementation();
+}
+```
+
+When using with `TransientAttribute` the factory method would be invoked for every service resolution.
+When used with `SingletonAttribute` it would only be invoked the first time the service is requested.
 
 ## Debugging locally
 

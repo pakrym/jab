@@ -63,10 +63,13 @@ namespace Jab
                     });
                     break;
                 case MemberCallSite memberCallSite:
-                    // TODO: support methods
                     valueCallback(codeWriter, w =>
                     {
                         w.AppendRaw(memberCallSite.Member.Name);
+                        if (memberCallSite.Member is IMethodSymbol)
+                        {
+                            w.AppendRaw("()");
+                        }
                     });
                     break;
             }
