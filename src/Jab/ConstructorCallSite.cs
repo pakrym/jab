@@ -4,7 +4,7 @@ namespace Jab
 {
     internal record ConstructorCallSite : ServiceCallSite
     {
-        public ConstructorCallSite(INamedTypeSymbol serviceType, INamedTypeSymbol implementationType, ServiceCallSite[] parameters, bool singleton) : base(serviceType, implementationType, singleton)
+        public ConstructorCallSite(INamedTypeSymbol serviceType, INamedTypeSymbol implementationType, ServiceCallSite[] parameters, bool singleton, int reverseIndex) : base(serviceType, implementationType, singleton, reverseIndex)
         {
             Parameters = parameters;
         }
