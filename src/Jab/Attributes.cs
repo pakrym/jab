@@ -53,4 +53,17 @@ namespace Jab
             ImplementationType = implementationType;
         }
     }
+
+    internal static class ServiceProviderOfTExtensions
+    {
+        public static T GetService<T>(this IServiceProvider<T> serviceProvider)
+        {
+            return serviceProvider.GetService();
+        }
+    }
+
+    internal interface IServiceProvider<T>
+    {
+        T GetService();
+    }
 }

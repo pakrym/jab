@@ -16,5 +16,6 @@ namespace Jab
         public INamedTypeSymbol ImplementationType { get; }
         public bool Singleton { get; }
         public int ReverseIndex { get; }
+        public bool IsMainImplementation => ReverseIndex == 0;
     }
 }

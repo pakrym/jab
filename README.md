@@ -47,7 +47,7 @@ Use the container:
 
 ``` C#
 MyContainer c = new();
-IService service = c.GetIService();
+IService service = c.GetService<IService>();
 ```
 
 ## Features
@@ -82,6 +82,8 @@ Then initialize the property during the container creation:
 ```C#
 MyContainer c = new();
 c.MyServiceInstance = new ServiceImplementation();
+
+IService service = c.GetService<IService>();
 ```
 
 ### Factories
@@ -95,6 +97,9 @@ To do this define a method in the container declaration and use the `Factory` pr
 internal partial class MyContainer {
     public IService MyServiceFactory() => new ServiceImplementation();
 }
+
+MyContainer c = new();
+IService service = c.GetService<IService>();
 ```
 
 When using with `TransientAttribute` the factory method would be invoked for every service resolution.
@@ -112,6 +117,9 @@ By default, `IEnumerable<...>` service accessors are only generated when request
 internal partial class MyContainer
 {
 }
+
+MyContainer c = new();
+IService service = c.GetService<IEnumerable<IService>>();
 ```
 
 ## Debugging locally
