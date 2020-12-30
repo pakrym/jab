@@ -2,9 +2,9 @@
 
 namespace Jab
 {
-    internal record CompositionRootDescription
+    internal record ServiceProviderDescription
     {
-        public CompositionRootDescription(IReadOnlyList<ServiceRegistration> serviceRegistrations)
+        public ServiceProviderDescription(IReadOnlyList<ServiceRegistration> serviceRegistrations)
         {
             ServiceRegistrations = serviceRegistrations;
         }

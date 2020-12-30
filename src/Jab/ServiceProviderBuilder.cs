@@ -7,11 +7,11 @@ using Microsoft.CodeAnalysis;
 
 namespace Jab
 {
-    internal class CompositionRootBuilder
+    internal class ServiceProviderBuilder
     {
         private const string TransientAttributeMetadataName = "Jab.TransientAttribute";
         private const string SingletonAttributeMetadataName = "Jab.SingletonAttribute";
-        private const string CompositionRootAttributeMetadataName = "Jab.CompositionRootAttribute";
+        private const string CompositionRootAttributeMetadataName = "Jab.ServiceProviderAttribute";
         private const string InstanceAttributePropertyName = "Instance";
         private const string FactoryAttributePropertyName = "Factory";
 
@@ -20,7 +20,7 @@ namespace Jab
         private readonly INamedTypeSymbol _transientAttributeType;
         private readonly INamedTypeSymbol _singletonAttribute;
 
-        public CompositionRootBuilder(GeneratorContext context)
+        public ServiceProviderBuilder(GeneratorContext context)
         {
             static INamedTypeSymbol GetTypeByMetadataNameOrThrow(GeneratorContext context, string fullyQualifiedMetadataName) =>
                 context.Compilation.Assembly.GetTypeByMetadataName(fullyQualifiedMetadataName)
@@ -32,9 +32,9 @@ namespace Jab
             _singletonAttribute = GetTypeByMetadataNameOrThrow(context, SingletonAttributeMetadataName);
         }
 
-        public CompositionRoot[] BuildRoots()
+        public ServiceProvider[] BuildRoots()
         {
-            List<CompositionRoot> compositionRoots = new();
+            List<ServiceProvider> compositionRoots = new();
 
             void ProcessType(INamedTypeSymbol typeSymbol)
             {
@@ -70,7 +70,7 @@ namespace Jab
             return compositionRoots.ToArray();
         }
 
-        private bool TryCreateCompositionRoot(INamedTypeSymbol typeSymbol, [NotNullWhen(true)] out CompositionRoot? compositionRoot)
+        private bool TryCreateCompositionRoot(INamedTypeSymbol typeSymbol, [NotNullWhen(true)] out ServiceProvider? compositionRoot)
         {
             compositionRoot = null;
 
@@ -150,7 +150,7 @@ namespace Jab
                 GetCallSite(registration.ServiceType);
             }
 
-            compositionRoot = new CompositionRoot(typeSymbol, services.ToArray());
+            compositionRoot = new ServiceProvider(typeSymbol, services.ToArray());
             return true;
         }
 
@@ -169,7 +169,7 @@ namespace Jab
             return selectedCtor;
         }
 
-        private CompositionRootDescription? GetDescription(ITypeSymbol typeSymbol)
+        private ServiceProviderDescription? GetDescription(ITypeSymbol typeSymbol)
         {
             bool isCompositionRoot = false;
             List<ServiceRegistration> registrations = new();
@@ -194,7 +194,7 @@ namespace Jab
 
             if (isCompositionRoot)
             {
-                return new CompositionRootDescription(registrations);
+                return new ServiceProviderDescription(registrations);
             }
             else
             {

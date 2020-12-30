@@ -5,7 +5,7 @@
 namespace Jab
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    internal class CompositionRootAttribute: Attribute
+    internal class ServiceProviderAttribute: Attribute
     {
     }
 
