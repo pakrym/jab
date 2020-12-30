@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace Jab.Tests
@@ -116,6 +117,32 @@ namespace Jab.Tests
                 FactoryInvocationCount++;
                 return new AnotherServiceImplementation();
             }
+        }
+
+        [Fact]
+        public void CanResolveIEnumerableInferredFromParameter()
+        {
+            CanResolveIEnumerableInferredFromParameterContainer c = new();
+            var enumerable = c.GetIEnumerable();
+            var array = Assert.IsType<IAnotherService[]>(enumerable);
+            Assert.Equal(3, array.Length);
+            var service1 = array[0];
+            var service2 = array[1];
+            var service3 = array[2];
+            Assert.NotNull(service1);
+            Assert.NotNull(service2);
+            Assert.NotNull(service3);
+            Assert.NotSame(service1, service2);
+            Assert.NotSame(service2, service3);
+        }
+
+        [ServiceProvider]
+        [Transient(typeof(IService), typeof(ServiceImplementationWithParameter<IEnumerable<IAnotherService>>))]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        internal partial class CanResolveIEnumerableInferredFromParameterContainer
+        {
         }
     }
 }

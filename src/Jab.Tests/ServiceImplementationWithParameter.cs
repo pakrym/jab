@@ -1,10 +1,18 @@
 ﻿namespace Jab.Tests
 {
-    internal class ServiceImplementationWithParameter : IService
+    internal class ServiceImplementationWithParameter : ServiceImplementationWithParameter<IAnotherService>
     {
-        public IAnotherService AnotherService { get; }
+        public ServiceImplementationWithParameter(IAnotherService anotherService) : base(anotherService)
+        {
+        }
+    }
 
-        public ServiceImplementationWithParameter(IAnotherService anotherService)
+    internal class ServiceImplementationWithParameter<T> : IService
+    {
+
+        public T AnotherService { get; }
+
+        public ServiceImplementationWithParameter(T anotherService)
         {
             AnotherService = anotherService;
         }

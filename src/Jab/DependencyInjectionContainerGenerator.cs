@@ -41,11 +41,6 @@ namespace Jab
             }
         }
 
-        private string GetCacheLocation(ServiceCallSite serviceCallSite)
-        {
-            return "_" + serviceCallSite.ServiceType.Name;
-        }
-
         private void GenerateCallSite(CodeWriter codeWriter, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
         {
             switch (serviceCallSite)
@@ -56,7 +51,7 @@ namespace Jab
                         w.Append($"new {transientCallSite.ImplementationType}(");
                         foreach (var parameter in transientCallSite.Parameters)
                         {
-                            w.Append($"{GetResolutionServiceName(parameter.ServiceType)}(), ");
+                            w.Append($"{GetResolutionServiceName(parameter)}(), ");
                         }
                         w.RemoveTrailingComma();
                         w.Append($")");
@@ -69,6 +64,18 @@ namespace Jab
                         if (memberCallSite.Member is IMethodSymbol)
                         {
                             w.AppendRaw("()");
+                        }
+                    });
+                    break;
+                case ArrayServiceCallSite arrayServiceCallSite:
+                    valueCallback(codeWriter, w =>
+                    {
+                        using (w.Scope($"new {arrayServiceCallSite.ItemType}[]", newLine: false))
+                        {
+                            foreach (var item in arrayServiceCallSite.Items)
+                            {
+                                w.Line($"{GetResolutionServiceName(item)}(), ");
+                            }
                         }
                     });
                     break;
@@ -109,7 +116,8 @@ namespace Jab
                             foreach (var rootService in root.RootCallSites)
                             {
                                 var rootServiceType = rootService.ServiceType;
-                                using (codeWriter.Scope($"{SyntaxFacts.GetText(rootServiceType.DeclaredAccessibility)} {rootServiceType} {GetResolutionServiceName(rootServiceType)}()"))
+                                var accessibility = rootService.ReverseIndex == 0 ? rootServiceType.DeclaredAccessibility : Accessibility.Private;
+                                using (codeWriter.Scope($"{SyntaxFacts.GetText(accessibility)} {rootServiceType} {GetResolutionServiceName(rootService)}()"))
                                 {
                                     GenerateCallSiteWithCache(codeWriter,
                                         rootService,
@@ -130,7 +138,24 @@ namespace Jab
             }
         }
 
-        private string GetResolutionServiceName(INamedTypeSymbol rootServiceType) => $"Get{rootServiceType.Name}";
+        private string GetResolutionServiceName(ServiceCallSite serviceCallSite)
+        {
+            if (serviceCallSite.ReverseIndex != 0)
+            {
+                return $"Get{serviceCallSite.ServiceType.Name}_{serviceCallSite.ReverseIndex}";
+            }
+            return $"Get{serviceCallSite.ServiceType.Name}";
+        }
+
+        private string GetCacheLocation(ServiceCallSite serviceCallSite)
+        {
+            if (serviceCallSite.ReverseIndex != 0)
+            {
+                return $"_{serviceCallSite.ServiceType.Name}_{serviceCallSite.ReverseIndex}";
+            }
+
+            return $"_{serviceCallSite.ServiceType.Name}";
+        }
 
         public override void Initialize(AnalysisContext context)
         {
