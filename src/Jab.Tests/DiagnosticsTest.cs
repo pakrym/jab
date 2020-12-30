@@ -11,7 +11,7 @@ namespace Jab.Tests
         public async Task ProducesDiagnosticWhenInstanceMemberNotFound()
         {
             string testCode = @"
-[CompositionRoot]
+[ServiceProvider]
 [{|#1:Singleton(typeof(ICloneable), Instance = ""CreateCloneable"")|}]
 public class Container {}
 ";
@@ -28,7 +28,7 @@ public class Container {}
         public async Task ProducesDiagnosticWhenFactoryMemberNotFound(string attribute)
         {
             string testCode = $@"
-[CompositionRoot]
+[ServiceProvider]
 [{{|#1:{attribute}(typeof(ICloneable), Factory = ""CreateCloneable"")|}}]
 public class Container {{}}
 ";
@@ -45,7 +45,7 @@ public class Container {{}}
         public async Task ProducesDiagnosticWhenFactoryMemberIsAmbiguous(string attribute)
         {
             string testCode = $@"
-[CompositionRoot]
+[ServiceProvider]
 [{{|#1:{attribute}(typeof(ICloneable), Factory = ""CreateCloneable"")|}}]
 public class Container {{
 ICloneable CreateCloneable() => null;

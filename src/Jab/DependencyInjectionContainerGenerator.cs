@@ -84,7 +84,7 @@ namespace Jab
         {
             try
             {
-                var roots = new CompositionRootBuilder(context).BuildRoots();
+                var roots = new ServiceProviderBuilder(context).BuildRoots();
 
                 foreach (var root in roots)
                 {

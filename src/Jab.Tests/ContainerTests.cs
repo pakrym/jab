@@ -12,7 +12,7 @@ namespace Jab.Tests
             Assert.IsType<ServiceImplementation>(c.GetIService());
         }
 
-        [CompositionRoot]
+        [ServiceProvider]
         [Transient(typeof(IService), typeof(ServiceImplementation))]
         internal partial class CanCreateTransientServiceContainer { }
 
@@ -24,7 +24,7 @@ namespace Jab.Tests
             Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
         }
 
-        [CompositionRoot]
+        [ServiceProvider]
         [Transient(typeof(IService), typeof(ServiceImplementationWithParameter))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         internal partial class CanCreateTransientServiceWithConstructorParametersContainer { }
@@ -42,7 +42,7 @@ namespace Jab.Tests
             Assert.Same(anotherImplementation, implementationWithParameter.AnotherService);
         }
 
-        [CompositionRoot]
+        [ServiceProvider]
         [Singleton(typeof(IService), typeof(ServiceImplementationWithParameter))]
         [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         internal partial class CanCreateSingletonContainer { }
@@ -60,7 +60,7 @@ namespace Jab.Tests
             Assert.Same(c.MyIServiceInstance, anotherImplementation);
         }
 
-        [CompositionRoot]
+        [ServiceProvider]
         [Singleton(typeof(IService), typeof(ServiceImplementationWithParameter))]
         [Singleton(typeof(IAnotherService), Instance = "MyIServiceInstance")]
         internal partial class CanUseSingletonInstanceContainer
@@ -80,7 +80,7 @@ namespace Jab.Tests
             Assert.Equal(1, c.FactoryInvocationCount);
         }
 
-        [CompositionRoot]
+        [ServiceProvider]
         [Singleton(typeof(IService), typeof(ServiceImplementationWithParameter))]
         [Singleton(typeof(IAnotherService), Factory = nameof(CreateMyIServiceInstance))]
         internal partial class CanUseSingletonFactoryContainer
@@ -105,7 +105,7 @@ namespace Jab.Tests
             Assert.Equal(2, c.FactoryInvocationCount);
         }
 
-        [CompositionRoot]
+        [ServiceProvider]
         [Transient(typeof(IService), typeof(ServiceImplementationWithParameter))]
         [Transient(typeof(IAnotherService), Factory = nameof(CreateMyIServiceInstance))]
         internal partial class CanUseTransientFactoryContainer

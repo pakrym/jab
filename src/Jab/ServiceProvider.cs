@@ -3,9 +3,9 @@ using Microsoft.CodeAnalysis;
 
 namespace Jab
 {
-    internal record CompositionRoot
+    internal record ServiceProvider
     {
-        public CompositionRoot(ITypeSymbol type, ServiceCallSite[] callSites)
+        public ServiceProvider(ITypeSymbol type, ServiceCallSite[] callSites)
         {
             RootCallSites = callSites;
             Type = type;
