@@ -38,7 +38,7 @@ internal class ServiceImplementation : IService
 Define a composition root and register services:
 
 ```C#
-[CompositionRoot]
+[ServiceProvider]
 [Transient(typeof(IService), typeof(ServiceImplementation))]
 internal partial class MyContainer { }
 ```
@@ -60,7 +60,7 @@ Singleton services are created once per container lifetime in a thread-safe mann
 To register a singleton service use the `SingletonAttribute`:
 
 ```C#
-[CompositionRoot]
+[ServiceProvider]
 [Singleton(typeof(IService), typeof(ServiceImplementation))]
 internal partial class MyContainer { }
 ```
@@ -70,7 +70,7 @@ internal partial class MyContainer { }
 If you want to use an existing object as a service define a property in the container declaration and use the `Instance` property of the `SingletonAttribute` to register the service:
 
 ```C#
-[CompositionRoot]
+[ServiceProvider]
 [Singleton(typeof(IService), Instance = nameof(MyServiceInstance))]
 internal partial class MyContainer {
     public IService MyServiceInstance { get;set; }
@@ -90,7 +90,7 @@ Sometimes it's useful to provide a custom way to create a service instance witho
 To do this define a method in the container declaration and use the `Factory` property of the `SingletonAttribute` or `TransientAttribute` to register the service:
 
 ```C#
-[CompositionRoot]
+[ServiceProvider]
 [Transient(typeof(IService), Factory = nameof(MyServiceFactory))]
 internal partial class MyContainer {
     public IService MyServiceFactory() => new ServiceImplementation();
@@ -99,6 +99,20 @@ internal partial class MyContainer {
 
 When using with `TransientAttribute` the factory method would be invoked for every service resolution.
 When used with `SingletonAttribute` it would only be invoked the first time the service is requested.
+
+## Root services
+
+By default, `IEnumerable<...>` service accessors are only generated when requested by other service constructors. If you would like to have a root `IEnumerable<..>` accessor generated use the `RootService` parameter of the `ServiceProvider` attribute.
+
+``` C#
+[ServiceProvider(RootServices = new [] {typeof(IEnumerable<IService>)})]
+[Singleton(typeof(IService), typeof(ServiceImplementation))]
+[Singleton(typeof(IService), typeof(ServiceImplementation))]
+[Singleton(typeof(IService), typeof(ServiceImplementation))]
+internal partial class MyContainer
+{
+}
+```
 
 ## Debugging locally
 
