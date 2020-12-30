@@ -10,7 +10,7 @@ namespace Jab.Tests
         public void CanCreateTransientService()
         {
             CanCreateTransientServiceContainer c = new();
-            Assert.IsType<ServiceImplementation>(c.GetIService());
+            Assert.IsType<ServiceImplementation>(c.GetService());
         }
 
         [ServiceProvider]
@@ -21,7 +21,7 @@ namespace Jab.Tests
         public void CanCreateTransientServiceWithConstructorParameters()
         {
             CanCreateTransientServiceWithConstructorParametersContainer c = new();
-            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetService<IService>());
             Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
         }
 
@@ -34,9 +34,9 @@ namespace Jab.Tests
         public void CanCreateSingleton()
         {
             CanCreateSingletonContainer c = new();
-            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
-            var implementationWithParameter2 = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
-            var anotherImplementation = c.GetIAnotherService();
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetService<IService>());
+            var implementationWithParameter2 = Assert.IsType<ServiceImplementationWithParameter>(c.GetService<IService>());
+            var anotherImplementation = c.GetService<IAnotherService>();
 
             Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
             Assert.Same(implementationWithParameter, implementationWithParameter2);
@@ -53,8 +53,8 @@ namespace Jab.Tests
         {
             CanUseSingletonInstanceContainer c = new();
             c.MyIServiceInstance = new AnotherServiceImplementation();
-            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
-            var anotherImplementation = c.GetIAnotherService();
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetService<IService>());
+            var anotherImplementation = c.GetService<IAnotherService>();
 
             Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
             Assert.Same(anotherImplementation, implementationWithParameter.AnotherService);
@@ -73,8 +73,8 @@ namespace Jab.Tests
         public void CanUseSingletonFactory()
         {
             CanUseSingletonFactoryContainer c = new();
-            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
-            var anotherImplementation = c.GetIAnotherService();
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetService<IService>());
+            var anotherImplementation = c.GetService<IAnotherService>();
 
             Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
             Assert.Same(anotherImplementation, implementationWithParameter.AnotherService);
@@ -98,8 +98,8 @@ namespace Jab.Tests
         public void CanUseTransientFactory()
         {
             CanUseTransientFactoryContainer c = new();
-            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetIService());
-            var anotherImplementation = c.GetIAnotherService();
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetService<IService>());
+            var anotherImplementation = c.GetService<IAnotherService>();
 
             Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
             Assert.NotSame(anotherImplementation, implementationWithParameter.AnotherService);
@@ -123,7 +123,7 @@ namespace Jab.Tests
         public void CanResolveIEnumerableOfTransients()
         {
             CanResolveIEnumerableOfTransientsContainer c = new();
-            var enumerable = c.GetIEnumerable();
+            var enumerable = c.GetService<IEnumerable<IAnotherService>>();
             var array = Assert.IsType<IAnotherService[]>(enumerable);
             Assert.Equal(3, array.Length);
             var service1 = array[0];
@@ -149,7 +149,7 @@ namespace Jab.Tests
         public void CanResolveIEnumerableOfSingletons()
         {
             CanResolveIEnumerableOfSingletonsContainer c = new();
-            var enumerable = c.GetIEnumerable();
+            var enumerable = c.GetService<IEnumerable<IAnotherService>>();
             var array = Assert.IsType<IAnotherService[]>(enumerable);
             Assert.Equal(3, array.Length);
             var service1 = array[0];
@@ -161,8 +161,8 @@ namespace Jab.Tests
             Assert.NotSame(service1, service2);
             Assert.NotSame(service2, service3);
 
-            Assert.Same(service3, c.GetIAnotherService());
-            Assert.Same(enumerable, c.GetIEnumerable());
+            Assert.Same(service3, c.GetService<IAnotherService>());
+            Assert.Same(enumerable, c.GetService<IEnumerable<IAnotherService>>());
         }
 
         [ServiceProvider(RootServices = new [] {typeof(IEnumerable<IAnotherService>)})]
@@ -177,7 +177,7 @@ namespace Jab.Tests
         public void CanResolveIEnumerableInferredFromParameter()
         {
             CanResolveIEnumerableInferredFromParameterContainer c = new();
-            var enumerable = c.GetIEnumerable();
+            var enumerable = c.GetService<IEnumerable<IAnotherService>>();
             var array = Assert.IsType<IAnotherService[]>(enumerable);
             Assert.Equal(3, array.Length);
             var service1 = array[0];
