@@ -7,6 +7,7 @@ namespace Jab
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     internal class ServiceProviderAttribute: Attribute
     {
+        public Type[]? RootServices { get; set; }
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]

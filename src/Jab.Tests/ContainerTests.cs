@@ -120,6 +120,60 @@ namespace Jab.Tests
         }
 
         [Fact]
+        public void CanResolveIEnumerableOfTransients()
+        {
+            CanResolveIEnumerableOfTransientsContainer c = new();
+            var enumerable = c.GetIEnumerable();
+            var array = Assert.IsType<IAnotherService[]>(enumerable);
+            Assert.Equal(3, array.Length);
+            var service1 = array[0];
+            var service2 = array[1];
+            var service3 = array[2];
+            Assert.NotNull(service1);
+            Assert.NotNull(service2);
+            Assert.NotNull(service3);
+            Assert.NotSame(service1, service2);
+            Assert.NotSame(service2, service3);
+        }
+
+        [ServiceProvider(RootServices = new [] {typeof(IEnumerable<IAnotherService>)})]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        internal partial class CanResolveIEnumerableOfTransientsContainer
+        {
+        }
+
+
+        [Fact]
+        public void CanResolveIEnumerableOfSingletons()
+        {
+            CanResolveIEnumerableOfSingletonsContainer c = new();
+            var enumerable = c.GetIEnumerable();
+            var array = Assert.IsType<IAnotherService[]>(enumerable);
+            Assert.Equal(3, array.Length);
+            var service1 = array[0];
+            var service2 = array[1];
+            var service3 = array[2];
+            Assert.NotNull(service1);
+            Assert.NotNull(service2);
+            Assert.NotNull(service3);
+            Assert.NotSame(service1, service2);
+            Assert.NotSame(service2, service3);
+
+            Assert.Same(service3, c.GetIAnotherService());
+            Assert.Same(enumerable, c.GetIEnumerable());
+        }
+
+        [ServiceProvider(RootServices = new [] {typeof(IEnumerable<IAnotherService>)})]
+        [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        internal partial class CanResolveIEnumerableOfSingletonsContainer
+        {
+        }
+
+        [Fact]
         public void CanResolveIEnumerableInferredFromParameter()
         {
             CanResolveIEnumerableInferredFromParameterContainer c = new();

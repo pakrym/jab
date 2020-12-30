@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -16,6 +15,7 @@ namespace Jab
         private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
         private const string InstanceAttributePropertyName = "Instance";
         private const string FactoryAttributePropertyName = "Factory";
+        private const string RootServicesAttributePropertyName = "RootServices";
 
         private readonly GeneratorContext _context;
         private readonly INamedTypeSymbol _iEnumerableType;
@@ -96,6 +96,11 @@ namespace Jab
                 GetCallSite(description, callSites, services, registration.ServiceType);
             }
 
+            foreach (var rootService in description.RootServices)
+            {
+                GetCallSite(description, callSites, services, rootService);
+            }
+
             compositionRoot = new ServiceProvider(typeSymbol, services.ToArray());
             return true;
         }
@@ -125,12 +130,8 @@ namespace Jab
                         if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, enumerableService))
                         {
                             ServiceCallSite itemCallSite = CreateCallSite(description, callSiteCache, allCallSites, registration, reverseIndex);
-                            if (reverseIndex == 0)
-                            {
-                                callSiteCache.Add(enumerableService, itemCallSite);
-                            }
+
                             reverseIndex++;
-                            allCallSites.Add(itemCallSite);
                             items.Add(itemCallSite);
                         }
                     }
@@ -156,12 +157,7 @@ namespace Jab
 
                 if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, serviceType))
                 {
-                    ServiceCallSite callSite = CreateCallSite(description, callSiteCache, allCallSites, registration, reverseIndex: 0);
-
-                    callSiteCache.Add(serviceType, callSite);
-                    allCallSites.Add(callSite);
-
-                    return callSite;
+                    return CreateCallSite(description, callSiteCache, allCallSites, registration, reverseIndex: 0);
                 }
             }
 
@@ -175,7 +171,11 @@ namespace Jab
             ServiceRegistration registration,
             int reverseIndex)
         {
-            ServiceCallSite callSite;
+            if (reverseIndex == 0 &&
+                callSiteCache.TryGetValue(registration.ServiceType, out ServiceCallSite callSite))
+            {
+                return callSite;
+            }
 
             switch (registration)
             {
@@ -210,6 +210,13 @@ namespace Jab
                     break;
             }
 
+            if (reverseIndex == 0)
+            {
+                callSiteCache.Add(callSite.ServiceType, callSite);
+            }
+
+            allCallSites.Add(callSite);
+
             return callSite;
         }
 
@@ -234,11 +241,23 @@ namespace Jab
             bool isCompositionRoot = false;
             List<ServiceRegistration> registrations = new();
             ImmutableArray<AttributeData> attributes = typeSymbol.GetAttributes();
+            List<ITypeSymbol> rootServices = new();
             foreach (var attributeData in attributes)
             {
                 if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _compositionRootAttributeType))
                 {
                     isCompositionRoot = true;
+                    foreach (var namedArgument in attributeData.NamedArguments)
+                    {
+                        if (namedArgument.Key == RootServicesAttributePropertyName)
+                        {
+                            foreach (var typedConstant in namedArgument.Value.Values)
+                            {
+                                rootServices.Add(ExtractType(typedConstant));
+                            }
+                        }
+                    }
+
                 }
                 else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _transientAttributeType) &&
                          CreateRegistration(typeSymbol, attributeData, ServiceLifetime.Transient, out var registration))
@@ -254,7 +273,7 @@ namespace Jab
 
             if (isCompositionRoot)
             {
-                return new ServiceProviderDescription(registrations);
+                return new ServiceProviderDescription(registrations, rootServices.ToArray());
             }
             else
             {
