@@ -2,6 +2,9 @@
 {
     internal interface IService
     {
-        void M();
+    }
+    internal interface IService<T>
+    {
+        T InnerService { get; }
     }
 }

@@ -2,8 +2,15 @@
 {
     internal class ServiceImplementation : IService
     {
-        public void M()
+    }
+
+    internal class ServiceImplementation<T> : IService<T>
+    {
+        public ServiceImplementation(T innerService)
         {
+            InnerService = innerService;
         }
+
+        public T InnerService { get; }
     }
 }

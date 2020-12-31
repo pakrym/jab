@@ -198,5 +198,42 @@ namespace Jab.Tests
         internal partial class CanResolveIEnumerableInferredFromParameterContainer
         {
         }
+
+        [Fact]
+        public void CanResolveOpenGenericService()
+        {
+            CanResolveOpenGenericServiceContainer c = new();
+            var service = c.GetService<IService<IAnotherService>>();
+            Assert.IsType<ServiceImplementation<IAnotherService>>(service);
+            Assert.IsType<AnotherServiceImplementation>(service.InnerService);
+        }
+
+        [ServiceProvider(RootServices = new [] {typeof(IService<IAnotherService>)})]
+        [Transient(typeof(IService<>), typeof(ServiceImplementation<>))]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        internal partial class CanResolveOpenGenericServiceContainer
+        {
+        }
+
+        [Fact]
+        public void CanResolveEnumerableOfMixedOpenGenericService()
+        {
+            CanResolveEnumerableOfMixedOpenGenericServiceContainer c = new();
+            c.Instance = new ServiceImplementation<IAnotherService>(new AnotherServiceImplementation());
+
+            var services = c.GetService<IEnumerable<IService<IAnotherService>>>();
+            var array = Assert.IsType<IService<IAnotherService>[]>(services);
+            Assert.IsType<ServiceImplementation<IAnotherService>>(array[0]);
+            Assert.Same(c.Instance, array[1]);
+        }
+
+        [ServiceProvider(RootServices = new [] {typeof(IEnumerable<IService<IAnotherService>>)})]
+        [Transient(typeof(IService<>), typeof(ServiceImplementation<>))]
+        [Singleton(typeof(IService<IAnotherService>), Instance = nameof(Instance))]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        internal partial class CanResolveEnumerableOfMixedOpenGenericServiceContainer
+        {
+            public IService<IAnotherService> Instance { get; set; }
+        }
     }
 }
