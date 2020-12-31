@@ -200,6 +200,21 @@ namespace Jab.Tests
         }
 
         [Fact]
+        public void CanResolveEmptyEnumerable()
+        {
+            CanResolveEmptyEnumerableContainer c = new();
+            var enumerable = c.GetService<IEnumerable<IAnotherService>>();
+            var array = Assert.IsType<IAnotherService[]>(enumerable);
+            Assert.Empty(array);
+        }
+
+        [ServiceProvider]
+        [Transient(typeof(IService), typeof(ServiceImplementationWithParameter<IEnumerable<IAnotherService>>))]
+        internal partial class CanResolveEmptyEnumerableContainer
+        {
+        }
+
+        [Fact]
         public void CanResolveOpenGenericService()
         {
             CanResolveOpenGenericServiceContainer c = new();
