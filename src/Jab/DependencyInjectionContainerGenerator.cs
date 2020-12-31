@@ -20,8 +20,8 @@ namespace Jab
             if (serviceCallSite.Singleton)
             {
                 var cacheLocation = GetCacheLocation(serviceCallSite);
-                using (codeWriter.Scope($"if ({cacheLocation} == default)"))
-                using (codeWriter.Scope($"lock (this)"))
+                codeWriter.Line($"if ({cacheLocation} == default)");
+                codeWriter.Line($"lock (this)");
                 using (codeWriter.Scope($"if ({cacheLocation} == default)"))
                 {
                     GenerateCallSite(
