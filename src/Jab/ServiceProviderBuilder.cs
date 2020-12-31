@@ -84,81 +84,137 @@ namespace Jab
                 return false;
             }
 
-            Dictionary<ITypeSymbol, ServiceCallSite> callSites =
-#pragma warning disable RS1024 // Comparer check currently not working properly
-                new(SymbolEqualityComparer.Default);
-#pragma warning restore RS1024
-
-            List<ServiceCallSite> services = new();
+            Dictionary<CallSiteCacheKey, ServiceCallSite> callSites = new();
 
             foreach (var registration in description.ServiceRegistrations)
             {
-                GetCallSite(description, callSites, services, registration.ServiceType);
+                if (registration.ServiceType.IsUnboundGenericType)
+                {
+                    continue;
+                }
+                GetCallSite(description, callSites, registration.ServiceType);
             }
 
             foreach (var rootService in description.RootServices)
             {
-                GetCallSite(description, callSites, services, rootService);
+                GetCallSite(description, callSites, rootService);
             }
 
-            compositionRoot = new ServiceProvider(typeSymbol, services.ToArray());
+            compositionRoot = new ServiceProvider(typeSymbol, callSites.Values.ToArray());
             return true;
         }
 
         private ServiceCallSite? GetCallSite(
             ServiceProviderDescription description,
-            Dictionary<ITypeSymbol, ServiceCallSite> callSiteCache,
-            List<ServiceCallSite> allCallSites,
+            Dictionary<CallSiteCacheKey, ServiceCallSite> callSiteCache,
             ITypeSymbol serviceType)
         {
-            if (callSiteCache.TryGetValue(serviceType, out var cachedCallSite))
+            if (callSiteCache.TryGetValue(new CallSiteCacheKey(serviceType), out var cachedCallSite))
             {
                 return cachedCallSite;
             }
 
-            if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType)
+            return TryCreateExact(description, callSiteCache, serviceType) ??
+                   TryCreateEnumerable(description, callSiteCache, serviceType) ??
+                   TryCreateGeneric(description, callSiteCache, serviceType);
+        }
+
+        private ServiceCallSite? TryCreateGeneric(ServiceProviderDescription description,
+            Dictionary<CallSiteCacheKey, ServiceCallSite> callSiteCache,
+            ITypeSymbol serviceType)
+        {
+            if (serviceType is INamedTypeSymbol { IsGenericType: true })
             {
-                if (SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _iEnumerableType))
+                for (int i = description.ServiceRegistrations.Count - 1; i >= 0; i--)
                 {
-                    var enumerableService = genericType.TypeArguments[0];
-                    var items = new List<ServiceCallSite>();
-                    int reverseIndex = 0;
-                    for (int i = description.ServiceRegistrations.Count - 1; i >= 0; i--)
+                    var registration = description.ServiceRegistrations[i];
+
+                    var callSite = TryCreateGeneric(description, callSiteCache, serviceType, registration, 0);
+                    if (callSite != null)
                     {
-                        var registration = description.ServiceRegistrations[i];
-
-                        if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, enumerableService))
-                        {
-                            ServiceCallSite itemCallSite = CreateCallSite(description, callSiteCache, allCallSites, registration, reverseIndex);
-
-                            reverseIndex++;
-                            items.Add(itemCallSite);
-                        }
+                        return callSite;
                     }
-
-                    var serviceCallSites = items.ToArray();
-                    Array.Reverse(serviceCallSites);
-                    var callSite = new ArrayServiceCallSite(
-                        genericType,
-                        genericType,
-                        enumerableService,
-                        serviceCallSites, items.All(i => i.Singleton));
-
-                    callSiteCache.Add(serviceType, callSite);
-                    allCallSites.Add(callSite);
-
-                    return callSite;
                 }
             }
 
+            return null;
+        }
+
+
+        private ServiceCallSite? TryCreateGeneric(ServiceProviderDescription description,
+            Dictionary<CallSiteCacheKey, ServiceCallSite> callSiteCache,
+            ITypeSymbol serviceType,
+            ServiceRegistration registration,
+            int reverseIndex)
+        {
+            if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
+                registration.ServiceType.IsUnboundGenericType &&
+                SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, genericType.ConstructedFrom))
+            {
+                var implementationType = registration.ImplementationType!.ConstructedFrom.Construct(genericType.TypeArguments, genericType.TypeArgumentNullableAnnotations);
+                return CreateConstructorCallSite(description, callSiteCache, registration, genericType, implementationType, reverseIndex);
+            }
+
+            return null;
+        }
+
+        private ServiceCallSite? TryCreateEnumerable(ServiceProviderDescription description, Dictionary<CallSiteCacheKey, ServiceCallSite> callSiteCache, ITypeSymbol serviceType)
+        {
+            if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
+                SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _iEnumerableType))
+            {
+                var enumerableService = genericType.TypeArguments[0];
+                var items = new List<ServiceCallSite>();
+                int reverseIndex = 0;
+                for (int i = description.ServiceRegistrations.Count - 1; i >= 0; i--)
+                {
+                    var registration = description.ServiceRegistrations[i];
+
+                    var itemCallSite = TryCreateGeneric(description, callSiteCache, enumerableService, registration, reverseIndex) ??
+                                       TryCreateExact(description, callSiteCache, enumerableService, registration, reverseIndex);
+                    if (itemCallSite != null)
+                    {
+                        reverseIndex++;
+                        items.Add(itemCallSite);
+                    }
+                }
+
+                var serviceCallSites = items.ToArray();
+                Array.Reverse(serviceCallSites);
+                var callSite = new ArrayServiceCallSite(
+                    genericType,
+                    genericType,
+                    enumerableService,
+                    serviceCallSites, items.All(i => i.Singleton));
+
+                callSiteCache[new CallSiteCacheKey(reverseIndex, serviceType)] = callSite;
+
+                return callSite;
+            }
+
+            return null;
+        }
+
+        private ServiceCallSite? TryCreateExact(ServiceProviderDescription description, Dictionary<CallSiteCacheKey, ServiceCallSite> callSiteCache, ITypeSymbol serviceType)
+        {
             for (int i = description.ServiceRegistrations.Count - 1; i >= 0; i--)
             {
                 var registration = description.ServiceRegistrations[i];
 
-                if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, serviceType))
+                if (TryCreateExact(description, callSiteCache, serviceType, registration, 0) is { } callSite)
                 {
-                    return CreateCallSite(description, callSiteCache, allCallSites, registration, reverseIndex: 0);
+                    return callSite;
                 }
+            }
+
+            return null;
+        }
+
+        private ServiceCallSite? TryCreateExact(ServiceProviderDescription description, Dictionary<CallSiteCacheKey, ServiceCallSite> callSiteCache, ITypeSymbol serviceType, ServiceRegistration registration, int reverseIndex)
+        {
+            if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, serviceType))
+            {
+                return CreateCallSite(description, callSiteCache, registration, reverseIndex: reverseIndex);
             }
 
             return null;
@@ -166,13 +222,13 @@ namespace Jab
 
         private ServiceCallSite CreateCallSite(
             ServiceProviderDescription description,
-            Dictionary<ITypeSymbol, ServiceCallSite> callSiteCache,
-            List<ServiceCallSite> allCallSites,
+            Dictionary<CallSiteCacheKey, ServiceCallSite> callSiteCache,
             ServiceRegistration registration,
             int reverseIndex)
         {
-            if (reverseIndex == 0 &&
-                callSiteCache.TryGetValue(registration.ServiceType, out ServiceCallSite callSite))
+            var cacheKey = new CallSiteCacheKey(reverseIndex, registration.ServiceType);
+
+            if (callSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
             {
                 return callSite;
             }
@@ -189,33 +245,52 @@ namespace Jab
                     var implementationType = registration.ImplementationType ??
                                              registration.ServiceType;
 
-                    var ctor = SelectConstructor(implementationType)
-                               ?? throw new InvalidOperationException($"Public constructor not found for type '{implementationType.Name}'");
-
-                    var parameters = new List<ServiceCallSite>();
-                    foreach (var parameterSymbol in ctor.Parameters)
-                    {
-                        var parameterCallSite = GetCallSite(description, callSiteCache, allCallSites, parameterSymbol.Type)
-                                                ?? throw new InvalidOperationException($"Failed to resolve parameter of type '{parameterSymbol.Type}'");
-
-                        parameters.Add(parameterCallSite);
-                    }
-
-                    callSite = new ConstructorCallSite(
-                        registration.ServiceType,
-                        implementationType,
-                        parameters.ToArray(),
-                        registration.Lifetime == ServiceLifetime.Singleton,
-                        reverseIndex);
+                    callSite = CreateConstructorCallSite(description, callSiteCache, registration, registration.ServiceType, implementationType, reverseIndex);
                     break;
             }
 
-            if (reverseIndex == 0)
+            callSiteCache[cacheKey] = callSite;
+
+            return callSite;
+        }
+
+        private ServiceCallSite CreateConstructorCallSite(ServiceProviderDescription description,
+            Dictionary<CallSiteCacheKey, ServiceCallSite> callSiteCache,
+            ServiceRegistration registration,
+            INamedTypeSymbol serviceType,
+            INamedTypeSymbol implementationType,
+            int reverseIndex)
+        {
+
+            var cacheKey = new CallSiteCacheKey(reverseIndex, registration.ServiceType);
+
+            if (callSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
             {
-                callSiteCache.Add(callSite.ServiceType, callSite);
+                return callSite;
             }
 
-            allCallSites.Add(callSite);
+            var ctor = SelectConstructor(implementationType)
+                       ?? throw new InvalidOperationException(
+                           $"Public constructor not found for type '{implementationType.Name}'");
+
+            var parameters = new List<ServiceCallSite>();
+            foreach (var parameterSymbol in ctor.Parameters)
+            {
+                var parameterCallSite = GetCallSite(description, callSiteCache, parameterSymbol.Type)
+                                        ?? throw new InvalidOperationException(
+                                            $"Failed to resolve parameter of type '{parameterSymbol.Type}'");
+
+                parameters.Add(parameterCallSite);
+            }
+
+            callSite = new ConstructorCallSite(
+                serviceType,
+                implementationType,
+                parameters.ToArray(),
+                registration.Lifetime == ServiceLifetime.Singleton,
+                reverseIndex);
+
+            callSiteCache[cacheKey] = callSite;
 
             return callSite;
         }
@@ -368,6 +443,40 @@ namespace Jab
             }
 
             return (INamedTypeSymbol) typedConstant.Value;
+        }
+
+        private readonly struct CallSiteCacheKey : IEquatable<CallSiteCacheKey>
+        {
+            public CallSiteCacheKey(ITypeSymbol type) : this(0, type)
+            {
+            }
+
+            public CallSiteCacheKey(int reverseIndex, ITypeSymbol type)
+            {
+                ReverseIndex = reverseIndex;
+                Type = type;
+            }
+
+            public int ReverseIndex { get; }
+            public ITypeSymbol Type { get; }
+
+            public bool Equals(CallSiteCacheKey other)
+            {
+                return ReverseIndex == other.ReverseIndex && SymbolEqualityComparer.Default.Equals(Type, other.Type);
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is CallSiteCacheKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (ReverseIndex * 397) ^ SymbolEqualityComparer.Default.GetHashCode(Type);
+                }
+            }
         }
     }
 }
