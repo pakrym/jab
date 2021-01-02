@@ -111,6 +111,7 @@ namespace Jab
                 foreach (var root in roots)
                 {
                     var codeWriter = new CodeWriter();
+                    codeWriter.UseNamespace("Jab");
                     using (codeWriter.Namespace($"{root.Type.ContainingNamespace.ToDisplayString()}"))
                     {
                         // TODO: implement infinite nesting
