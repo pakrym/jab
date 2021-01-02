@@ -128,8 +128,8 @@ namespace Jab
                     }
                 } memberAccessExpression)
                 {
-                    var containerTypeInfo = ModelExtensions.GetTypeInfo(semanticModel, memberAccessExpression.Expression);
-                    var serviceInfo = ModelExtensions.GetSymbolInfo(semanticModel, arguments[0]);
+                    var containerTypeInfo = semanticModel.GetTypeInfo(memberAccessExpression.Expression);
+                    var serviceInfo = semanticModel.GetSymbolInfo(arguments[0]);
 
                     if (SymbolEqualityComparer.Default.Equals(containerTypeInfo.Type, typeSymbol) &&
                         serviceInfo.Symbol is INamedTypeSymbol serviceSymbol)
