@@ -14,6 +14,8 @@ namespace Jab
         private const string TransientAttributeMetadataName = "Jab.TransientAttribute";
         private const string SingletonAttributeMetadataName = "Jab.SingletonAttribute";
         private const string CompositionRootAttributeMetadataName = "Jab.ServiceProviderAttribute";
+        private const string ServiceProviderModuleAttributeMetadataName = "Jab.ServiceProviderModuleAttribute";
+        private const string ImportAttributeMetadataName = "Jab.ImportAttribute";
         private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
         private const string InstanceAttributePropertyName = "Instance";
         private const string FactoryAttributePropertyName = "Factory";
@@ -24,6 +26,8 @@ namespace Jab
         private readonly INamedTypeSymbol _compositionRootAttributeType;
         private readonly INamedTypeSymbol _transientAttributeType;
         private readonly INamedTypeSymbol _singletonAttribute;
+        private readonly INamedTypeSymbol _importAttribute;
+        private readonly INamedTypeSymbol _moduleAttribute;
 
         public ServiceProviderBuilder(GeneratorContext context)
         {
@@ -36,6 +40,8 @@ namespace Jab
             _compositionRootAttributeType = GetTypeByMetadataNameOrThrow(context, CompositionRootAttributeMetadataName);
             _transientAttributeType = GetTypeByMetadataNameOrThrow(context, TransientAttributeMetadataName);
             _singletonAttribute = GetTypeByMetadataNameOrThrow(context, SingletonAttributeMetadataName);
+            _importAttribute = GetTypeByMetadataNameOrThrow(context, ImportAttributeMetadataName);
+            _moduleAttribute = GetTypeByMetadataNameOrThrow(context, ServiceProviderModuleAttributeMetadataName);
         }
 
         public ServiceProvider[] BuildRoots()
@@ -86,19 +92,7 @@ namespace Jab
                 return false;
             }
 
-            foreach (var declaringSyntaxReference in typeSymbol.DeclaringSyntaxReferences)
-            {
-                if (declaringSyntaxReference.GetSyntax() is ClassDeclarationSyntax typeDeclarationSyntax &&
-                    !typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
-                {
-                    _context.ReportDiagnostic(Diagnostic.Create(
-                        DiagnosticDescriptors.UnexpectedErrorDescriptor,
-                        typeDeclarationSyntax.Identifier.GetLocation(),
-                        "The type marked with the ServiceProvider attribute has to be marked partial."
-                    ));
-                }
-
-            }
+            EmitTypeDiagnostics(typeSymbol);
 
             Dictionary<CallSiteCacheKey, ServiceCallSite> callSites = new();
 
@@ -142,6 +136,22 @@ namespace Jab
 
             compositionRoot = new ServiceProvider(typeSymbol, callSites.Values.ToArray());
             return true;
+        }
+
+        private void EmitTypeDiagnostics(INamedTypeSymbol typeSymbol)
+        {
+            foreach (var declaringSyntaxReference in typeSymbol.DeclaringSyntaxReferences)
+            {
+                if (declaringSyntaxReference.GetSyntax() is ClassDeclarationSyntax typeDeclarationSyntax &&
+                    !typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
+                {
+                    _context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.UnexpectedErrorDescriptor,
+                        typeDeclarationSyntax.Identifier.GetLocation(),
+                        "The type marked with the ServiceProvider attribute has to be marked partial."
+                    ));
+                }
+            }
         }
 
         private ServiceCallSite? GetCallSite(
@@ -351,13 +361,12 @@ namespace Jab
             return selectedCtor;
         }
 
-        private ServiceProviderDescription? GetDescription(ITypeSymbol typeSymbol)
+        private ServiceProviderDescription? GetDescription(ITypeSymbol serviceProviderType)
         {
             bool isCompositionRoot = false;
             List<ServiceRegistration> registrations = new();
-            ImmutableArray<AttributeData> attributes = typeSymbol.GetAttributes();
             List<ITypeSymbol> rootServices = new();
-            foreach (var attributeData in attributes)
+            foreach (var attributeData in serviceProviderType.GetAttributes())
             {
                 if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _compositionRootAttributeType))
                 {
@@ -372,15 +381,12 @@ namespace Jab
                             }
                         }
                     }
-
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _transientAttributeType) &&
-                         CreateRegistration(typeSymbol, attributeData, ServiceLifetime.Transient, out var registration))
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _importAttribute))
                 {
-                    registrations.Add(registration);
+                    ProcessModule(serviceProviderType, registrations, ExtractType(attributeData.ConstructorArguments[0]), attributeData);
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _singletonAttribute) &&
-                         CreateRegistration(typeSymbol, attributeData, ServiceLifetime.Singleton, out registration))
+                else if (TryCreateRegistration(serviceProviderType, attributeData, out var registration))
                 {
                     registrations.Add(registration);
                 }
@@ -397,7 +403,56 @@ namespace Jab
             }
         }
 
-        private bool CreateRegistration(ITypeSymbol typeSymbol, AttributeData attributeData, ServiceLifetime serviceLifetime, [NotNullWhen(true)] out ServiceRegistration? registration)
+        private void ProcessModule(ITypeSymbol serviceProviderType, List<ServiceRegistration> registrations, INamedTypeSymbol moduleType, AttributeData importAttributeData)
+        {
+            // TODO: idempotency
+            bool isModule = false;
+            foreach (var attributeData in moduleType.GetAttributes())
+            {
+                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _moduleAttribute))
+                {
+                    isModule = true;
+                }
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _importAttribute))
+                {
+                    ProcessModule(serviceProviderType, registrations, ExtractType(attributeData.ConstructorArguments[0]), importAttributeData);
+                }
+                else if (TryCreateRegistration(serviceProviderType, attributeData, out var registration))
+                {
+                    registrations.Add(registration);
+                }
+            }
+
+            if (!isModule)
+            {
+                _context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.UnexpectedErrorDescriptor,
+                    importAttributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
+                    $"The imported type '{moduleType}' is not marked with the '{_moduleAttribute}'."
+                ));
+            }
+        }
+
+        private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, [NotNullWhen(true)] out ServiceRegistration? registration)
+        {
+            registration = null;
+
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _transientAttributeType) &&
+                TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Transient, out registration))
+            {
+                return true;
+            }
+
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _singletonAttribute) &&
+                TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Singleton, out registration))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, ServiceLifetime serviceLifetime, [NotNullWhen(true)] out ServiceRegistration? registration)
         {
             registration = null;
 
@@ -417,14 +472,14 @@ namespace Jab
 
             ISymbol? instanceMember = null;
             if (instanceMemberName != null &&
-                !TryFindMember(typeSymbol, attributeData, instanceMemberName, InstanceAttributePropertyName, out instanceMember))
+                !TryFindMember(serviceProviderType, attributeData, instanceMemberName, InstanceAttributePropertyName, out instanceMember))
             {
                 return false;
             }
 
             ISymbol? factoryMember = null;
             if (factoryMemberName != null&&
-                !TryFindMember(typeSymbol, attributeData, factoryMemberName, FactoryAttributePropertyName, out factoryMember))
+                !TryFindMember(serviceProviderType, attributeData, factoryMemberName, FactoryAttributePropertyName, out factoryMember))
             {
                 return false;
             }

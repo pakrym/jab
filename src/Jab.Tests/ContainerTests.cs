@@ -140,9 +140,7 @@ namespace Jab.Tests
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
-        internal partial class CanResolveIEnumerableOfTransientsContainer
-        {
-        }
+        internal partial class CanResolveIEnumerableOfTransientsContainer { }
 
 
         [Fact]
@@ -169,9 +167,7 @@ namespace Jab.Tests
         [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
-        internal partial class CanResolveIEnumerableOfSingletonsContainer
-        {
-        }
+        internal partial class CanResolveIEnumerableOfSingletonsContainer { }
 
         [Fact]
         public void CanResolveIEnumerableInferredFromParameter()
@@ -195,9 +191,7 @@ namespace Jab.Tests
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
-        internal partial class CanResolveIEnumerableInferredFromParameterContainer
-        {
-        }
+        internal partial class CanResolveIEnumerableInferredFromParameterContainer { }
 
         [Fact]
         public void CanResolveEmptyEnumerable()
@@ -210,9 +204,7 @@ namespace Jab.Tests
 
         [ServiceProvider]
         [Transient(typeof(IService), typeof(ServiceImplementationWithParameter<IEnumerable<IAnotherService>>))]
-        internal partial class CanResolveEmptyEnumerableContainer
-        {
-        }
+        internal partial class CanResolveEmptyEnumerableContainer { }
 
         [Fact]
         public void CanResolveOpenGenericService()
@@ -226,9 +218,7 @@ namespace Jab.Tests
         [ServiceProvider(RootServices = new [] {typeof(IService<IAnotherService>)})]
         [Transient(typeof(IService<>), typeof(ServiceImplementation<>))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
-        internal partial class CanResolveOpenGenericServiceContainer
-        {
-        }
+        internal partial class CanResolveOpenGenericServiceContainer { }
 
         [Fact]
         public void CanResolveEnumerableOfMixedOpenGenericService()
@@ -260,8 +250,76 @@ namespace Jab.Tests
         }
 
         [ServiceProvider]
-        internal partial class CanInferRootServiceFromGetServiceCallContainer
+        internal partial class CanInferRootServiceFromGetServiceCallContainer { }
+
+        [Fact]
+        public void CanUseModules()
         {
+            CanUseModulesContainer c = new();
+            Assert.IsType<ServiceImplementation>(c.GetService<IService>());
         }
+
+        [ServiceProviderModule]
+        [Transient(typeof(IService), typeof(ServiceImplementation))]
+        internal interface ICanUseModulesModule { }
+
+        [ServiceProvider]
+        [Import(typeof(ICanUseModulesModule))]
+        internal partial class CanUseModulesContainer { }
+
+        [Fact]
+        public void CanExtendModules()
+        {
+            CanExtendModulesContainer c = new();
+            var serviceImplementation =  Assert.IsType<ServiceImplementation<IAnotherService>>(c.GetService<IService<IAnotherService>>());
+            Assert.IsType<AnotherServiceImplementation>(serviceImplementation.InnerService);
+        }
+
+        [ServiceProviderModule]
+        [Transient(typeof(IService<>), typeof(ServiceImplementation<>))]
+        internal interface ICanExtendModulesModule { }
+
+        [ServiceProvider]
+        [Import(typeof(ICanExtendModulesModule))]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        internal partial class CanExtendModulesContainer { }
+
+        [Fact]
+        public void CanOverrideModules()
+        {
+            CanOverrideModulesContainer c = new();
+            var serviceImplementation =  Assert.IsType<ServiceImplementation>(c.GetService<IService>());
+        }
+
+        [ServiceProviderModule]
+        [Transient(typeof(IService), typeof(ServiceImplementation<IAnotherService>))]
+        internal interface ICanOverrideModulesModule { }
+
+        [ServiceProvider]
+        [Import(typeof(ICanUseModulesModule))]
+        [Transient(typeof(IService), typeof(ServiceImplementation))]
+        internal partial class CanOverrideModulesContainer { }
+
+
+        [Fact]
+        public void CanChainModules()
+        {
+            CanChainModulesModule c = new();
+            var serviceImplementation = Assert.IsType<ServiceImplementation<IAnotherService>>(c.GetService<IService<IAnotherService>>());
+            Assert.IsType<AnotherServiceImplementation>(serviceImplementation.InnerService);
+        }
+
+        [ServiceProviderModule]
+        [Transient(typeof(IService<>), typeof(ServiceImplementation<>))]
+        internal interface ICanChainModulesModule1 { }
+
+        [ServiceProviderModule]
+        [Import(typeof(ICanChainModulesModule1))]
+        [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        internal interface ICanChainModulesModule2 { }
+
+        [ServiceProvider]
+        [Import(typeof(ICanChainModulesModule2))]
+        internal partial class CanChainModulesModule { }
     }
 }

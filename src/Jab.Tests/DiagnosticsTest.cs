@@ -8,6 +8,25 @@ namespace Jab.Tests
     public class DiagnosticsTest
     {
         [Fact]
+        public async Task ProducesDiagnosticWhenModuleNotMarkedWithAttribute()
+        {
+            string testCode = @"
+
+[Singleton(typeof(Object))]
+public interface IModule {}
+
+[ServiceProvider]
+[{|#1:Import(typeof(IModule))|}]
+public partial class Container {}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0001")
+                    .WithLocation(1)
+                    .WithArguments("The imported type 'IModule' is not marked with the 'Jab.ServiceProviderModuleAttribute'."));
+        }
+
+        [Fact]
         public async Task ProducesDiagnosticWhenServiceProviderIsNotPartial()
         {
             string testCode = @"
