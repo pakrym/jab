@@ -13,6 +13,7 @@ namespace Jab
     {
         public void Initialize(GeneratorInitializationContext context)
         {
+            context.RegisterForSyntaxNotifications(() => new GetServiceSyntaxCollector());
         }
 
         private void GenerateCallSiteWithCache(CodeWriter codeWriter, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
@@ -205,5 +206,6 @@ namespace Jab
         }
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = new[] {DiagnosticDescriptors.UnexpectedErrorDescriptor}.ToImmutableArray();
+
     }
 }

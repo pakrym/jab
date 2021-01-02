@@ -250,5 +250,18 @@ namespace Jab.Tests
         {
             public IService<IAnotherService> Instance { get; set; }
         }
+
+        [Fact]
+        public void CanInferRootServiceFromGetServiceCall()
+        {
+            var c = new CanInferRootServiceFromGetServiceCallContainer();
+            var ss = c.GetService<IEnumerable<string>>();
+            Assert.Empty(ss);
+        }
+
+        [ServiceProvider]
+        internal partial class CanInferRootServiceFromGetServiceCallContainer
+        {
+        }
     }
 }

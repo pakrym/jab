@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Jab
 {
@@ -98,6 +99,30 @@ namespace Jab
             foreach (var rootService in description.RootServices)
             {
                 GetCallSite(description, callSites, rootService);
+            }
+
+            foreach (var candidateGetServiceCall in _context.CandidateGetServiceCalls)
+            {
+                var semanticModel = _context.Compilation.GetSemanticModel(candidateGetServiceCall.SyntaxTree);
+                if (candidateGetServiceCall.Expression is MemberAccessExpressionSyntax
+                {
+                    Name: GenericNameSyntax
+                    {
+                        IsUnboundGenericName: false,
+                        TypeArgumentList: { Arguments: { Count: 1 } arguments }
+                    }
+                } memberAccessExpression)
+                {
+                    var containerTypeInfo = semanticModel.GetTypeInfo(memberAccessExpression.Expression);
+                    var serviceInfo = semanticModel.GetSymbolInfo(arguments[0]);
+
+                    if (SymbolEqualityComparer.Default.Equals(containerTypeInfo.Type, typeSymbol) &&
+                        serviceInfo.Symbol is INamedTypeSymbol serviceSymbol)
+                    {
+                        GetCallSite(description, callSites, serviceSymbol);
+                    }
+
+                }
             }
 
             compositionRoot = new ServiceProvider(typeSymbol, callSites.Values.ToArray());

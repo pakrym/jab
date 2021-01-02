@@ -107,7 +107,7 @@ When used with `SingletonAttribute` it would only be invoked the first time the 
 
 ## Root services
 
-By default, `IEnumerable<...>` service accessors are only generated when requested by other service constructors. If you would like to have a root `IEnumerable<..>` accessor generated use the `RootService` parameter of the `ServiceProvider` attribute.
+By default, `IEnumerable<...>` service accessors are only generated when requested by other service constructors. If you would like to have a root `IEnumerable<..>` accessor generated use the `RootService` parameter of the `ServiceProvider` attribute. The generator also scans all the `GetService<...>` usages and tries to all collected type arguments as the root service.
 
 ``` C#
 [ServiceProvider(RootServices = new [] {typeof(IEnumerable<IService>)})]
