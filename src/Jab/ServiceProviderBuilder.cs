@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Jab
@@ -83,6 +84,20 @@ namespace Jab
             if (description == null)
             {
                 return false;
+            }
+
+            foreach (var declaringSyntaxReference in typeSymbol.DeclaringSyntaxReferences)
+            {
+                if (declaringSyntaxReference.GetSyntax() is ClassDeclarationSyntax typeDeclarationSyntax &&
+                    !typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
+                {
+                    _context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.UnexpectedErrorDescriptor,
+                        typeDeclarationSyntax.Identifier.GetLocation(),
+                        "The type marked with the ServiceProvider attribute has to be marked partial."
+                    ));
+                }
+
             }
 
             Dictionary<CallSiteCacheKey, ServiceCallSite> callSites = new();

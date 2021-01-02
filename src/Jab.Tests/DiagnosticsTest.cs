@@ -8,12 +8,27 @@ namespace Jab.Tests
     public class DiagnosticsTest
     {
         [Fact]
+        public async Task ProducesDiagnosticWhenServiceProviderIsNotPartial()
+        {
+            string testCode = @"
+[ServiceProvider]
+[Singleton(typeof(Object))]
+public class {|#1:Container|} {}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0001")
+                    .WithLocation(1)
+                    .WithArguments("The type marked with the ServiceProvider attribute has to be marked partial."));
+        }
+
+        [Fact]
         public async Task ProducesDiagnosticWhenInstanceMemberNotFound()
         {
             string testCode = @"
 [ServiceProvider]
 [{|#1:Singleton(typeof(ICloneable), Instance = ""CreateCloneable"")|}]
-public class Container {}
+public partial class Container {}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
@@ -30,7 +45,7 @@ public class Container {}
             string testCode = $@"
 [ServiceProvider]
 [{{|#1:{attribute}(typeof(ICloneable), Factory = ""CreateCloneable"")|}}]
-public class Container {{}}
+public partial class Container {{}}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
@@ -47,7 +62,7 @@ public class Container {{}}
             string testCode = $@"
 [ServiceProvider]
 [{{|#1:{attribute}(typeof(ICloneable), Factory = ""CreateCloneable"")|}}]
-public class Container {{
+public partial class Container {{
 ICloneable CreateCloneable() => null;
 ICloneable CreateCloneable(int why) => null;
 }}

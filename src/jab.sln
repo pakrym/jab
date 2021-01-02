@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab", "Jab\Jab.csproj", "{9
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab.Tests", "Jab.Tests\Jab.Tests.csproj", "{53977B67-1A0D-4DE5-8E95-53928263A801}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleSample", "samples\ConsoleSample\ConsoleSample.csproj", "{9659360E-9F62-4932-A611-4874C295F472}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,5 +46,17 @@ Global
 		{53977B67-1A0D-4DE5-8E95-53928263A801}.Release|x64.Build.0 = Release|Any CPU
 		{53977B67-1A0D-4DE5-8E95-53928263A801}.Release|x86.ActiveCfg = Release|Any CPU
 		{53977B67-1A0D-4DE5-8E95-53928263A801}.Release|x86.Build.0 = Release|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Debug|x64.Build.0 = Debug|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Debug|x86.Build.0 = Debug|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Release|x64.ActiveCfg = Release|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Release|x64.Build.0 = Release|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Release|x86.ActiveCfg = Release|Any CPU
+		{9659360E-9F62-4932-A611-4874C295F472}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
