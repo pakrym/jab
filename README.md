@@ -15,7 +15,7 @@ Jab allows easy debugging of the service resolution process.
 Add Jab package reference:
 ```xml
 <ItemGroup>
-    <PackageReference Include="Jab" Version="0.0.1-beta.1" PrivateAssets="all" />
+    <PackageReference Include="Jab" Version="0.0.2-beta.38" PrivateAssets="all" />
 </ItemGroup>
 ```
 
