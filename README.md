@@ -6,7 +6,7 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 
 Jab brings has no runtime dependencies.
 
-Jab is AOT and linker friendly, all code is generated at compile time.
+Jab is AOT and linker friendly, all code is generated during project compilation.
 
 Jab allows easy debugging of the service resolution process.
 
