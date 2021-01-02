@@ -40,13 +40,13 @@ Define a composition root and register services:
 ```C#
 [ServiceProvider]
 [Transient(typeof(IService), typeof(ServiceImplementation))]
-internal partial class MyContainer { }
+internal partial class MyServiceProvider { }
 ```
 
 Use the container:
 
 ``` C#
-MyContainer c = new();
+MyServiceProvider c = new();
 IService service = c.GetService<IService>();
 ```
 
@@ -68,7 +68,7 @@ To register a singleton service use the `SingletonAttribute`:
 ```C#
 [ServiceProvider]
 [Singleton(typeof(IService), typeof(ServiceImplementation))]
-internal partial class MyContainer { }
+internal partial class MyServiceProvider { }
 ```
 
 ### Singleton Instances
@@ -78,7 +78,7 @@ If you want to use an existing object as a service define a property in the cont
 ```C#
 [ServiceProvider]
 [Singleton(typeof(IService), Instance = nameof(MyServiceInstance))]
-internal partial class MyContainer {
+internal partial class MyServiceProvider {
     public IService MyServiceInstance { get;set; }
 }
 ```
@@ -86,7 +86,7 @@ internal partial class MyContainer {
 Then initialize the property during the container creation:
 
 ```C#
-MyContainer c = new();
+MyServiceProvider c = new();
 c.MyServiceInstance = new ServiceImplementation();
 
 IService service = c.GetService<IService>();
@@ -100,16 +100,44 @@ To do this define a method in the container declaration and use the `Factory` pr
 ```C#
 [ServiceProvider]
 [Transient(typeof(IService), Factory = nameof(MyServiceFactory))]
-internal partial class MyContainer {
+internal partial class MyServiceProvider {
     public IService MyServiceFactory() => new ServiceImplementation();
 }
 
-MyContainer c = new();
+MyServiceProvider c = new();
 IService service = c.GetService<IService>();
 ```
 
 When using with `TransientAttribute` the factory method would be invoked for every service resolution.
 When used with `SingletonAttribute` it would only be invoked the first time the service is requested.
+
+## Modules
+
+Often, a set of service registrations would represent a distinct set of functionality that can be included into arbitrary 
+service provider. Modules are used to implement registration sharing. To define a module create an interface and mark it with `ServiceProviderModuleAttribute`. Service registrations can be listed in module the same way they are in the service provider.
+
+```C#
+[ServiceProviderModule]
+[Singleton(typeof(IService), typeof(ServiceImplementation))]
+public interface IMyModule
+{
+}
+```
+
+To use the module apply the `Import` attribute to the service provider type:
+
+```C#
+[ServiceProvider]
+[Import(typeof(IMyModule))]
+internal partial class MyServiceProvider
+{
+}
+
+MyServiceProvider c = new();
+IService service = c.GetService<IEnumerable<IService>>();
+```
+
+**NOTE**: module service and implementation types have to be accessible from the project where service provider is generated.
 
 ## Root services
 
@@ -120,11 +148,11 @@ By default, `IEnumerable<...>` service accessors are only generated when request
 [Singleton(typeof(IService), typeof(ServiceImplementation))]
 [Singleton(typeof(IService), typeof(ServiceImplementation))]
 [Singleton(typeof(IService), typeof(ServiceImplementation))]
-internal partial class MyContainer
+internal partial class MyServiceProvider
 {
 }
 
-MyContainer c = new();
+MyServiceProvider c = new();
 IService service = c.GetService<IEnumerable<IService>>();
 ```
 
