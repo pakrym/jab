@@ -52,6 +52,12 @@ IService service = c.GetService<IService>();
 
 ## Features
 
+- No runtime dependency, safe to use in libraries
+- Transient, Singleton service registration
+- Factory registration
+- Instance registration
+- IEnumerable resolution
+
 The plan is to support the minimum feature set Microsoft.Extensions.DependencyInjection.Abstraction requires but *NOT* the `IServiceCollection`-based registration syntax as it is runtime based.
 
 ### Singleton services
