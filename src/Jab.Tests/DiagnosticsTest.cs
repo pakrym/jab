@@ -8,6 +8,21 @@ namespace Jab.Tests
     public class DiagnosticsTest
     {
         [Fact]
+        public async Task ProducesDiagnosticWhenServiceProviderIsNotPartial()
+        {
+            string testCode = @"
+[ServiceProvider]
+[Singleton(typeof(Object))]
+public class {|#1:Container|} {}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0001")
+                    .WithLocation(1)
+                    .WithArguments("The type marked with the ServiceProvider attribute has to be marked partial."));
+        }
+
+        [Fact]
         public async Task ProducesDiagnosticWhenInstanceMemberNotFound()
         {
             string testCode = @"

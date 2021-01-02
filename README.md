@@ -128,6 +128,12 @@ MyContainer c = new();
 IService service = c.GetService<IEnumerable<IService>>();
 ```
 
+## Samples
+
+### Console application
+
+Sample Jab usage in console application can be found in [src/samples/ConsoleSample](src/samples/ConsoleSample)
+
 ## Debugging locally
 
 Run `dotnet build /t:CreateLaunchSettings` in the `Jab.Tests` directory would update the `Jab\Properties\launchSettings.json` file to include `csc` invocation that allows F5 debugging of the generator targeting the `Jab.Tests` project.
