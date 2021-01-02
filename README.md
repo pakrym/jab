@@ -137,6 +137,8 @@ MyServiceProvider c = new();
 IService service = c.GetService<IEnumerable<IService>>();
 ```
 
+Modules can import other modules as well.
+
 **NOTE**: module service and implementation types have to be accessible from the project where service provider is generated.
 
 ## Root services
