@@ -28,7 +28,7 @@ public class {|#1:Container|} {}
             string testCode = @"
 [ServiceProvider]
 [{|#1:Singleton(typeof(ICloneable), Instance = ""CreateCloneable"")|}]
-public class Container {}
+public partial class Container {}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
@@ -45,7 +45,7 @@ public class Container {}
             string testCode = $@"
 [ServiceProvider]
 [{{|#1:{attribute}(typeof(ICloneable), Factory = ""CreateCloneable"")|}}]
-public class Container {{}}
+public partial class Container {{}}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
@@ -62,7 +62,7 @@ public class Container {{}}
             string testCode = $@"
 [ServiceProvider]
 [{{|#1:{attribute}(typeof(ICloneable), Factory = ""CreateCloneable"")|}}]
-public class Container {{
+public partial class Container {{
 ICloneable CreateCloneable() => null;
 ICloneable CreateCloneable(int why) => null;
 }}
