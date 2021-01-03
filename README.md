@@ -166,7 +166,7 @@ Sample Jab usage in console application can be found in [src/samples/ConsoleSamp
 
 ## Performance
 
-The performance benchmark project is available at [src/Jab.Performance/Jab.Performance.csproj](src/Jab.Performance/Jab.Performance.csproj).
+The performance benchmark project is available in [src/Jab.Performance/](src/Jab.Performance/).
 
 ### Startup time
 
