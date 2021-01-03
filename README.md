@@ -7,7 +7,7 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 - Fast startup (200x faster than Microsoft.Extensions.DependencyInjection). [Details](#Startup-Time).
 - Fast resolution (7x faster than Microsoft.Extensions.DependencyInjection). [Details](#GetService).
 - No runtime dependencies.
-- Jab is AOT and linker friendly, all code is generated during project compilation.
+- AOT and linker friendly, all code is generated during project compilation.
 - Easy debugging of the service resolution process.
 
 ## Example
