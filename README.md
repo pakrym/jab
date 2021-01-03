@@ -4,11 +4,11 @@
 
 Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/introducing-c-source-generators/) based dependency injection container implementation.
 
-Jab brings has no runtime dependencies.
-
-Jab is AOT and linker friendly, all code is generated during project compilation.
-
-Jab allows easy debugging of the service resolution process.
+- Fast startup (200x faster than Microsoft.Extensions.DependencyInjection). [Details](#Startup%20Time).
+- Fast resolution (7x faster than Microsoft.Extensions.DependencyInjection). [Details](#GetService).
+- No runtime dependencies.
+- Jab is AOT and linker friendly, all code is generated during project compilation.
+- Easy debugging of the service resolution process.
 
 ## Example
 
@@ -163,6 +163,30 @@ IService service = c.GetService<IEnumerable<IService>>();
 ### Console application
 
 Sample Jab usage in console application can be found in [src/samples/ConsoleSample](src/samples/ConsoleSample)
+
+## Performance
+
+### Startup time
+
+The startup time benchmark measures time between application startup and the first service being resolved.
+
+```
+| Method |        Mean |     Error |    StdDev |  Ratio | RatioSD |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
+|------- |------------:|----------:|----------:|-------:|--------:|-------:|-------:|------:|----------:|
+|   MEDI | 2,437.88 ns | 14.565 ns | 12.163 ns | 220.91 |    2.72 | 0.6332 | 0.0114 |     - |    6632 B |
+|    Jab |    11.03 ns |  0.158 ns |  0.123 ns |   1.00 |    0.00 | 0.0046 |      - |     - |      48 B |
+```
+
+### GetService
+
+The `GetService` benchmark measures the `provider.GetService<IService>()` call.
+
+```
+| Method |      Mean |     Error |    StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------- |----------:|----------:|----------:|------:|--------:|-------:|------:|------:|----------:|
+|   MEDI | 39.340 ns | 0.2419 ns | 0.2263 ns |  7.01 |    0.09 | 0.0023 |     - |     - |      24 B |
+|    Jab |  5.619 ns | 0.0770 ns | 0.0643 ns |  1.00 |    0.00 | 0.0023 |     - |     - |      24 B |
+```
 
 ## Debugging locally
 
