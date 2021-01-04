@@ -4,8 +4,8 @@ namespace Jab
 {
     internal record ArrayServiceCallSite: ServiceCallSite
     {
-        public ArrayServiceCallSite(INamedTypeSymbol serviceType, INamedTypeSymbol implementationType, ITypeSymbol itemType, ServiceCallSite[] items, bool singleton)
-            : base(serviceType, implementationType, singleton, 0)
+        public ArrayServiceCallSite(INamedTypeSymbol serviceType, INamedTypeSymbol implementationType, ITypeSymbol itemType, ServiceCallSite[] items, ServiceLifetime lifetime)
+            : base(serviceType, implementationType, lifetime, 0)
         {
             ItemType = itemType;
             Items = items;

@@ -13,6 +13,7 @@ namespace Jab
     {
         private const string TransientAttributeMetadataName = "Jab.TransientAttribute";
         private const string SingletonAttributeMetadataName = "Jab.SingletonAttribute";
+        private const string ScopedAttributeMetadataName = "Jab.ScopedAttribute";
         private const string CompositionRootAttributeMetadataName = "Jab.ServiceProviderAttribute";
         private const string ServiceProviderModuleAttributeMetadataName = "Jab.ServiceProviderModuleAttribute";
         private const string ImportAttributeMetadataName = "Jab.ImportAttribute";
@@ -28,6 +29,7 @@ namespace Jab
         private readonly INamedTypeSymbol _singletonAttribute;
         private readonly INamedTypeSymbol _importAttribute;
         private readonly INamedTypeSymbol _moduleAttribute;
+        private readonly INamedTypeSymbol _scopedAttribute;
 
         public ServiceProviderBuilder(GeneratorContext context)
         {
@@ -40,6 +42,7 @@ namespace Jab
             _compositionRootAttributeType = GetTypeByMetadataNameOrThrow(context, CompositionRootAttributeMetadataName);
             _transientAttributeType = GetTypeByMetadataNameOrThrow(context, TransientAttributeMetadataName);
             _singletonAttribute = GetTypeByMetadataNameOrThrow(context, SingletonAttributeMetadataName);
+            _scopedAttribute = GetTypeByMetadataNameOrThrow(context, ScopedAttributeMetadataName);
             _importAttribute = GetTypeByMetadataNameOrThrow(context, ImportAttributeMetadataName);
             _moduleAttribute = GetTypeByMetadataNameOrThrow(context, ServiceProviderModuleAttributeMetadataName);
         }
@@ -210,6 +213,21 @@ namespace Jab
 
         private ServiceCallSite? TryCreateEnumerable(ServiceProviderDescription description, Dictionary<CallSiteCacheKey, ServiceCallSite> callSiteCache, ITypeSymbol serviceType)
         {
+            static ServiceLifetime GetCommonLifetime(IEnumerable<ServiceCallSite> callSites)
+            {
+                var commonLifetime = ServiceLifetime.Singleton;
+
+                foreach (var serviceCallSite in callSites)
+                {
+                    if (serviceCallSite.Lifetime < commonLifetime)
+                    {
+                        commonLifetime = serviceCallSite.Lifetime;
+                    }
+                }
+
+                return commonLifetime;
+            }
+
             if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
                 SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _iEnumerableType))
             {
@@ -235,7 +253,9 @@ namespace Jab
                     genericType,
                     genericType,
                     enumerableService,
-                    serviceCallSites, items.All(i => i.Singleton));
+                    serviceCallSites,
+                    // Pick a most common lifetime
+                    GetCommonLifetime(items));
 
                 callSiteCache[new CallSiteCacheKey(reverseIndex, serviceType)] = callSite;
 
@@ -286,10 +306,10 @@ namespace Jab
             switch (registration)
             {
                 case {InstanceMember: { } instanceMember}:
-                    callSite = new MemberCallSite(registration.ServiceType, instanceMember, false, reverseIndex);
+                    callSite = new MemberCallSite(registration.ServiceType, instanceMember, registration.Lifetime, reverseIndex);
                     break;
                 case {FactoryMember: { } factoryMember}:
-                    callSite = new MemberCallSite(registration.ServiceType, factoryMember, registration.Lifetime == ServiceLifetime.Singleton, reverseIndex);
+                    callSite = new MemberCallSite(registration.ServiceType, factoryMember, registration.Lifetime, reverseIndex);
                     break;
                 default:
                     var implementationType = registration.ImplementationType ??
@@ -337,7 +357,7 @@ namespace Jab
                 serviceType,
                 implementationType,
                 parameters.ToArray(),
-                registration.Lifetime == ServiceLifetime.Singleton,
+                registration.Lifetime,
                 reverseIndex);
 
             callSiteCache[cacheKey] = callSite;
@@ -445,6 +465,12 @@ namespace Jab
 
             if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _singletonAttribute) &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Singleton, out registration))
+            {
+                return true;
+            }
+
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _scopedAttribute) &&
+                TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Scoped, out registration))
             {
                 return true;
             }

@@ -18,7 +18,7 @@ namespace Jab
 
         private void GenerateCallSiteWithCache(CodeWriter codeWriter, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
         {
-            if (serviceCallSite.Singleton)
+            if (serviceCallSite.Lifetime != ServiceLifetime.Transient)
             {
                 var cacheLocation = GetCacheLocation(serviceCallSite);
                 codeWriter.Line($"if ({cacheLocation} == default)");
@@ -42,20 +42,21 @@ namespace Jab
             }
         }
 
+        private void WriteResolutionCall(CodeWriter codeWriter, ServiceCallSite other, string reference)
+        {
+            if (other.IsMainImplementation)
+            {
+                codeWriter.Append($"{reference}.GetService<{other.ServiceType}>()");
+            }
+            else
+            {
+                codeWriter.Append($"{reference}.{GetResolutionServiceName(other)}()");
+            }
+        }
+
+
         private void GenerateCallSite(CodeWriter codeWriter, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
         {
-            void AppendResolutionCall(ServiceCallSite other)
-            {
-                if (other.IsMainImplementation)
-                {
-                    codeWriter.Append($"this.GetService<{other.ServiceType}>()");
-                }
-                else
-                {
-                    codeWriter.Append($"{GetResolutionServiceName(other)}()");
-                }
-            }
-
             switch (serviceCallSite)
             {
                 case ConstructorCallSite transientCallSite:
@@ -64,7 +65,7 @@ namespace Jab
                         w.Append($"new {transientCallSite.ImplementationType}(");
                         foreach (var parameter in transientCallSite.Parameters)
                         {
-                            AppendResolutionCall(parameter);
+                            WriteResolutionCall(codeWriter, parameter, "this");
                             w.AppendRaw(", ");
                         }
                         w.RemoveTrailingComma();
@@ -88,7 +89,7 @@ namespace Jab
                         {
                             foreach (var item in arrayServiceCallSite.Items)
                             {
-                                AppendResolutionCall(item);
+                                WriteResolutionCall(codeWriter, item, "this");
                                 w.LineRaw(", ");
                             }
                         }
@@ -118,53 +119,70 @@ namespace Jab
                         using CodeWriter.CodeWriterScope? parentTypeScope = root.Type.ContainingType is {} containingType ?
                             codeWriter.Scope($"{SyntaxFacts.GetText(containingType.DeclaredAccessibility)} partial class {containingType.Name}") :
                             null;
-                        codeWriter.Append($"{SyntaxFacts.GetText(root.Type.DeclaredAccessibility)} partial class {root.Type.Name} : ");
-                        foreach (var serviceCallSite in root.RootCallSites)
-                        {
-                            if (serviceCallSite.IsMainImplementation)
-                            {
-                                codeWriter.Line();
-                                codeWriter.Append($"    IServiceProvider<{serviceCallSite.ServiceType}>,");
-                            }
-                        }
-
-                        codeWriter.RemoveTrailingComma();
-                        codeWriter.Line();
+                        codeWriter.Append($"{SyntaxFacts.GetText(root.Type.DeclaredAccessibility)} partial class {root.Type.Name}");
+                        WriteInterfaces(codeWriter, root);
                         using (codeWriter.Scope())
                         {
-                            foreach (var rootService in root.RootCallSites)
-                            {
-                                if (rootService.Singleton)
-                                {
-                                    codeWriter.Line($"private {rootService.ServiceType} {GetCacheLocation(rootService)};");
-                                }
-                            }
+                            WriteCacheLocations(root, codeWriter, onlyScoped: false);
 
                             foreach (var rootService in root.RootCallSites)
                             {
                                 var rootServiceType = rootService.ServiceType;
-                                if (rootService.IsMainImplementation)
+                                using (rootService.IsMainImplementation ?
+                                    codeWriter.Scope($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()") :
+                                    codeWriter.Scope($"private {rootServiceType} {GetResolutionServiceName(rootService)}()"))
                                 {
-                                    using (codeWriter.Scope($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()"))
-                                    {
-                                        GenerateCallSiteWithCache(codeWriter,
-                                            rootService,
-                                            (w, v) => w.Line($"return {v};"));
-                                    }
-                                }
-                                else
-                                {
-                                    using (codeWriter.Scope($"private {rootServiceType} {GetResolutionServiceName(rootService)}()"))
-                                    {
-                                        GenerateCallSiteWithCache(codeWriter,
-                                            rootService,
-                                            (w, v) => w.Line($"return {v};"));
-                                    }
-
+                                    GenerateCallSiteWithCache(codeWriter,
+                                        rootService,
+                                        (w, v) => w.Line($"return {v};"));
                                 }
                                 codeWriter.Line();
                             }
 
+                            using (codeWriter.Scope($"public Scope CreateScope()"))
+                            {
+                                codeWriter.Line($"return new Scope(this);");
+                            }
+                            codeWriter.Line();
+
+                            codeWriter.Append($"public partial class Scope");
+                            WriteInterfaces(codeWriter, root);
+                            using (codeWriter.Scope())
+                            {
+                                WriteCacheLocations(root, codeWriter, onlyScoped: true);
+                                codeWriter.Line($"private {root.Type} _root;");
+                                codeWriter.Line();
+
+                                using (codeWriter.Scope($"public Scope({root.Type} root)"))
+                                {
+                                    codeWriter.Line($"_root = root;");
+                                }
+                                codeWriter.Line();
+
+                                foreach (var rootService in root.RootCallSites)
+                                {
+                                    var rootServiceType = rootService.ServiceType;
+
+                                    using (rootService.IsMainImplementation ?
+                                        codeWriter.Scope($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()") :
+                                        codeWriter.Scope($"private {rootServiceType} {GetResolutionServiceName(rootService)}()"))
+                                    {
+                                        if (rootService.Lifetime == ServiceLifetime.Scoped)
+                                        {
+                                            GenerateCallSiteWithCache(codeWriter,
+                                                rootService,
+                                                (w, v) => w.Line($"return {v};"));
+                                        }
+                                        else
+                                        {
+                                            codeWriter.Append($"return ");
+                                            WriteResolutionCall(codeWriter, rootService, "_root");
+                                            codeWriter.Line($";");
+                                        }
+                                    }
+                                    codeWriter.Line();
+                                }
+                            }
                         }
                     }
                     context.AddSource($"{root.Type.Name}.Generated.cs", codeWriter.ToString());
@@ -174,6 +192,43 @@ namespace Jab
             {
                 context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.UnexpectedErrorDescriptor, Location.None, e.ToString()));
             }
+        }
+
+        private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root)
+        {
+            bool first = true;
+            foreach (var serviceCallSite in root.RootCallSites)
+            {
+                if (serviceCallSite.IsMainImplementation)
+                {
+                    if (first)
+                    {
+                        codeWriter.Append($" : ");
+                        first = false;
+                    }
+                    codeWriter.Line();
+                    codeWriter.Append($"    IServiceProvider<{serviceCallSite.ServiceType}>,");
+                }
+            }
+
+            codeWriter.RemoveTrailingComma();
+            codeWriter.Line();
+        }
+
+        private void WriteCacheLocations(ServiceProvider root, CodeWriter codeWriter, bool onlyScoped)
+        {
+            foreach (var rootService in root.RootCallSites)
+            {
+                switch (rootService.Lifetime)
+                {
+                    case ServiceLifetime.Singleton when onlyScoped:
+                    case ServiceLifetime.Transient:
+                        continue;
+                }
+
+                codeWriter.Line($"private {rootService.ServiceType} {GetCacheLocation(rootService)};");
+            }
+            codeWriter.Line();
         }
 
         private string GetResolutionServiceName(ServiceCallSite serviceCallSite)

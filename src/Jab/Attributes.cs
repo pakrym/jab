@@ -70,6 +70,28 @@ namespace Jab
         }
     }
 
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
+    internal class ScopedAttribute : Attribute
+    {
+        public Type ServiceType { get; }
+
+        public Type? ImplementationType { get; }
+
+        public string? Factory { get; set; }
+
+        public ScopedAttribute(Type serviceType)
+        {
+            ServiceType = serviceType;
+        }
+
+        public ScopedAttribute(Type serviceType, Type implementationType)
+        {
+            ServiceType = serviceType;
+            ImplementationType = implementationType;
+        }
+    }
+
+
     internal static class ServiceProviderOfTExtensions
     {
         public static T GetService<T>(this IServiceProvider<T> serviceProvider)
