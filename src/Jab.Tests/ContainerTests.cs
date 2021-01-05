@@ -120,6 +120,48 @@ namespace Jab.Tests
         }
 
         [Fact]
+        public void CanUseScopedFactory()
+        {
+            CanUseScopedFactoryContainer c = new();
+            var scope1 = c.CreateScope();
+
+            var implementationWithParameter1_1 = Assert.IsType<ServiceImplementationWithParameter>(scope1.GetService<IService>());
+            var implementationWithParameter1_2 = Assert.IsType<ServiceImplementationWithParameter>(scope1.GetService<IService>());
+            var anotherImplementation1 = scope1.GetService<IAnotherService>();
+
+
+            var scope2 = c.CreateScope();
+            var implementationWithParameter2_1 = Assert.IsType<ServiceImplementationWithParameter>(scope2.GetService<IService>());
+            var implementationWithParameter2_2 = Assert.IsType<ServiceImplementationWithParameter>(scope2.GetService<IService>());
+            var anotherImplementation2 = scope2.GetService<IAnotherService>();
+
+            Assert.Same(implementationWithParameter1_1, implementationWithParameter1_2);
+            Assert.Same(anotherImplementation1, implementationWithParameter1_1.AnotherService);
+            Assert.Same(anotherImplementation1, implementationWithParameter1_2.AnotherService);
+
+            Assert.Same(implementationWithParameter2_1, implementationWithParameter2_2);
+            Assert.NotSame(implementationWithParameter1_1, implementationWithParameter2_1);
+
+            Assert.Same(anotherImplementation2, implementationWithParameter2_1.AnotherService);
+            Assert.Same(anotherImplementation2, implementationWithParameter2_2.AnotherService);
+
+            Assert.Equal(2, c.FactoryInvocationCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), typeof(ServiceImplementationWithParameter))]
+        [Scoped(typeof(IAnotherService), Factory = nameof(CreateMyIServiceInstance))]
+        internal partial class CanUseScopedFactoryContainer
+        {
+            public int FactoryInvocationCount;
+            public IAnotherService CreateMyIServiceInstance()
+            {
+                FactoryInvocationCount++;
+                return new AnotherServiceImplementation();
+            }
+        }
+
+        [Fact]
         public void CanResolveIEnumerableOfTransients()
         {
             CanResolveIEnumerableOfTransientsContainer c = new();

@@ -16,7 +16,7 @@ namespace Jab
             context.RegisterForSyntaxNotifications(() => new GetServiceSyntaxCollector());
         }
 
-        private void GenerateCallSiteWithCache(CodeWriter codeWriter, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
+        private void GenerateCallSiteWithCache(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
         {
             if (serviceCallSite.Lifetime != ServiceLifetime.Transient)
             {
@@ -27,6 +27,7 @@ namespace Jab
                 {
                     GenerateCallSite(
                         codeWriter,
+                        rootReference,
                         serviceCallSite,
                         (w, v) =>
                         {
@@ -38,7 +39,7 @@ namespace Jab
             }
             else
             {
-                GenerateCallSite(codeWriter, serviceCallSite, valueCallback);
+                GenerateCallSite(codeWriter, rootReference, serviceCallSite, valueCallback);
             }
         }
 
@@ -55,7 +56,7 @@ namespace Jab
         }
 
 
-        private void GenerateCallSite(CodeWriter codeWriter, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
+        private void GenerateCallSite(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
         {
             switch (serviceCallSite)
             {
@@ -75,7 +76,7 @@ namespace Jab
                 case MemberCallSite memberCallSite:
                     valueCallback(codeWriter, w =>
                     {
-                        w.AppendRaw(memberCallSite.Member.Name);
+                        w.Append($"{rootReference}.{memberCallSite.Member.Name}");
                         if (memberCallSite.Member is IMethodSymbol)
                         {
                             w.AppendRaw("()");
@@ -133,6 +134,7 @@ namespace Jab
                                     codeWriter.Scope($"private {rootServiceType} {GetResolutionServiceName(rootService)}()"))
                                 {
                                     GenerateCallSiteWithCache(codeWriter,
+                                        "this",
                                         rootService,
                                         (w, v) => w.Line($"return {v};"));
                                 }
@@ -170,6 +172,7 @@ namespace Jab
                                         if (rootService.Lifetime == ServiceLifetime.Scoped)
                                         {
                                             GenerateCallSiteWithCache(codeWriter,
+                                                "_root",
                                                 rootService,
                                                 (w, v) => w.Line($"return {v};"));
                                         }
