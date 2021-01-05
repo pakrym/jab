@@ -6,7 +6,7 @@ namespace Jab
     {
         public ISymbol Member { get; }
 
-        public MemberCallSite(INamedTypeSymbol serviceType, ISymbol member, bool singleton, int reverseIndex) : base(serviceType, serviceType, singleton, reverseIndex)
+        public MemberCallSite(INamedTypeSymbol serviceType, ISymbol member, ServiceLifetime lifetime, int reverseIndex) : base(serviceType, serviceType, lifetime, reverseIndex)
         {
             Member = member;
         }

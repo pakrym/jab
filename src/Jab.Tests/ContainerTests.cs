@@ -120,6 +120,48 @@ namespace Jab.Tests
         }
 
         [Fact]
+        public void CanUseScopedFactory()
+        {
+            CanUseScopedFactoryContainer c = new();
+            var scope1 = c.CreateScope();
+
+            var implementationWithParameter1_1 = Assert.IsType<ServiceImplementationWithParameter>(scope1.GetService<IService>());
+            var implementationWithParameter1_2 = Assert.IsType<ServiceImplementationWithParameter>(scope1.GetService<IService>());
+            var anotherImplementation1 = scope1.GetService<IAnotherService>();
+
+
+            var scope2 = c.CreateScope();
+            var implementationWithParameter2_1 = Assert.IsType<ServiceImplementationWithParameter>(scope2.GetService<IService>());
+            var implementationWithParameter2_2 = Assert.IsType<ServiceImplementationWithParameter>(scope2.GetService<IService>());
+            var anotherImplementation2 = scope2.GetService<IAnotherService>();
+
+            Assert.Same(implementationWithParameter1_1, implementationWithParameter1_2);
+            Assert.Same(anotherImplementation1, implementationWithParameter1_1.AnotherService);
+            Assert.Same(anotherImplementation1, implementationWithParameter1_2.AnotherService);
+
+            Assert.Same(implementationWithParameter2_1, implementationWithParameter2_2);
+            Assert.NotSame(implementationWithParameter1_1, implementationWithParameter2_1);
+
+            Assert.Same(anotherImplementation2, implementationWithParameter2_1.AnotherService);
+            Assert.Same(anotherImplementation2, implementationWithParameter2_2.AnotherService);
+
+            Assert.Equal(2, c.FactoryInvocationCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), typeof(ServiceImplementationWithParameter))]
+        [Scoped(typeof(IAnotherService), Factory = nameof(CreateMyIServiceInstance))]
+        internal partial class CanUseScopedFactoryContainer
+        {
+            public int FactoryInvocationCount;
+            public IAnotherService CreateMyIServiceInstance()
+            {
+                FactoryInvocationCount++;
+                return new AnotherServiceImplementation();
+            }
+        }
+
+        [Fact]
         public void CanResolveIEnumerableOfTransients()
         {
             CanResolveIEnumerableOfTransientsContainer c = new();
@@ -300,7 +342,6 @@ namespace Jab.Tests
         [Transient(typeof(IService), typeof(ServiceImplementation))]
         internal partial class CanOverrideModulesContainer { }
 
-
         [Fact]
         public void CanChainModules()
         {
@@ -321,5 +362,77 @@ namespace Jab.Tests
         [ServiceProvider]
         [Import(typeof(ICanChainModulesModule2))]
         internal partial class CanChainModulesModule { }
+
+        [Fact]
+        public void CanResolveScoped()
+        {
+            CanResolveScopedContainer c = new();
+            var scope1 = c.CreateScope();
+            var service1_1 = scope1.GetService<IService>();
+            var service1_2 = scope1.GetService<IService>();
+
+            var scope2 = c.CreateScope();
+            var service2_1 = scope2.GetService<IService>();
+            var service2_2 = scope2.GetService<IService>();
+
+            Assert.NotSame(scope1, scope2);
+            Assert.NotSame(service1_1, service2_1);
+            Assert.Same(service1_1, service1_2);
+            Assert.Same(service2_1, service2_2);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), typeof(ServiceImplementation))]
+        internal partial class CanResolveScopedContainer { }
+
+
+        [Fact]
+        public void CanResolveSingletonViaScope()
+        {
+            CanResolveSingletonViaScopeContainer c = new();
+            var scope1 = c.CreateScope();
+            var service = c.GetService<IService>();
+            var service1_1 = scope1.GetService<IService>();
+            var service1_2 = scope1.GetService<IService>();
+
+            Assert.Same(service1_1, service1_2);
+            Assert.Same(service, service1_1);
+        }
+
+        [ServiceProvider]
+        [Singleton(typeof(IService), typeof(ServiceImplementation))]
+        internal partial class CanResolveSingletonViaScopeContainer { }
+
+        [Fact]
+        public void CanResolveMixedEnumerable()
+        {
+            CanResolveMixedEnumerableContainer c = new();
+            var service = c.GetService<IService>();
+            var scope1 = c.CreateScope();
+            var services1_1 = scope1.GetService<IEnumerable<IService>>();
+            var services1_2 = scope1.GetService<IEnumerable<IService>>();
+            var array1_1 = Assert.IsType<IService[]>(services1_1);
+            var array1_2 = Assert.IsType<IService[]>(services1_2);
+
+            var scope2 = c.CreateScope();
+            var services2 = scope2.GetService<IEnumerable<IService>>();
+            var array2 = Assert.IsType<IService[]>(services2);
+
+            Assert.NotSame(array1_1[0], array1_2[0]);
+            Assert.NotSame(array1_2[0], array2[0]);
+
+            Assert.Same(array1_1[1], array1_2[1]);
+            Assert.NotSame(array1_2[1], array2[1]);
+
+            Assert.Same(service, array1_1[2]);
+            Assert.Same(array1_1[2], array1_2[2]);
+            Assert.Same(array1_2[2], array2[2]);
+        }
+
+        [ServiceProvider(RootServices = new [] { typeof(IEnumerable<IService>) })]
+        [Transient(typeof(IService), typeof(ServiceImplementation))]
+        [Scoped(typeof(IService), typeof(ServiceImplementation))]
+        [Singleton(typeof(IService), typeof(ServiceImplementation))]
+        internal partial class CanResolveMixedEnumerableContainer { }
     }
 }

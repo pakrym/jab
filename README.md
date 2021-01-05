@@ -53,7 +53,7 @@ IService service = c.GetService<IService>();
 ## Features
 
 - No runtime dependency, safe to use in libraries
-- Transient, Singleton service registration
+- Transient, Singleton, Scoped service registration
 - Factory registration
 - Instance registration
 - IEnumerable resolution
@@ -111,7 +111,22 @@ IService service = c.GetService<IService>();
 When using with `TransientAttribute` the factory method would be invoked for every service resolution.
 When used with `SingletonAttribute` it would only be invoked the first time the service is requested.
 
-## Modules
+### Scoped Services
+
+Scoped services are created once per service provider scope. To create a scope use the `CreateScope()` method of the service provider.
+Service are resolved from the scope using the `GetService<IService>()` call.
+
+```C#
+[ServiceProvider]
+[Scoped(typeof(IService), typeof(ServiceImplementation))]
+internal partial class MyServiceProvider { }
+
+MyServiceProvider c = new();
+MyServiceProvider.Scope scope = c.CreateScope();
+IService service = scope.GetService<IService>();
+```
+
+### Modules
 
 Often, a set of service registrations would represent a distinct set of functionality that can be included into arbitrary 
 service provider. Modules are used to implement registration sharing. To define a module create an interface and mark it with `ServiceProviderModuleAttribute`. Service registrations can be listed in module the same way they are in the service provider.
