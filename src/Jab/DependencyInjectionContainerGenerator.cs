@@ -169,18 +169,18 @@ namespace Jab
                                         codeWriter.Scope($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()") :
                                         codeWriter.Scope($"private {rootServiceType} {GetResolutionServiceName(rootService)}()"))
                                     {
-                                        if (rootService.Lifetime == ServiceLifetime.Scoped)
+                                        if (rootService.Lifetime == ServiceLifetime.Singleton)
+                                        {
+                                            codeWriter.Append($"return ");
+                                            WriteResolutionCall(codeWriter, rootService, "_root");
+                                            codeWriter.Line($";");
+                                        }
+                                        else
                                         {
                                             GenerateCallSiteWithCache(codeWriter,
                                                 "_root",
                                                 rootService,
                                                 (w, v) => w.Line($"return {v};"));
-                                        }
-                                        else
-                                        {
-                                            codeWriter.Append($"return ");
-                                            WriteResolutionCall(codeWriter, rootService, "_root");
-                                            codeWriter.Line($";");
                                         }
                                     }
                                     codeWriter.Line();
@@ -265,6 +265,5 @@ namespace Jab
         }
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = new[] {DiagnosticDescriptors.UnexpectedErrorDescriptor}.ToImmutableArray();
-
     }
 }
