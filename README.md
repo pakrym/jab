@@ -13,7 +13,7 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 Add Jab package reference:
 ```xml
 <ItemGroup>
-    <PackageReference Include="Jab" Version="0.0.2-beta.38" PrivateAssets="all" />
+    <PackageReference Include="Jab" Version="0.0.2-beta.67" PrivateAssets="all" />
 </ItemGroup>
 ```
 
