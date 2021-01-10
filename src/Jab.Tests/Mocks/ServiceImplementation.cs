@@ -1,6 +1,6 @@
 ﻿namespace Jab.Tests
 {
-    internal class ServiceImplementation : IService
+    internal class ServiceImplementation : IService, IService1, IService2, IService3
     {
     }
 

@@ -337,7 +337,7 @@ namespace Jab
                 return callSite;
             }
 
-            var ctor = SelectConstructor(implementationType);
+            var ctor = SelectConstructor(implementationType, description);
             if (ctor == null)
             {
                 var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ImplementationTypeRequiresPublicConstructor,
@@ -351,29 +351,47 @@ namespace Jab
             }
 
             var parameters = new List<ServiceCallSite>();
+            var namedParameters = new List<KeyValuePair<IParameterSymbol, ServiceCallSite>>();
+            var diagnostics = new List<Diagnostic>();
             foreach (var parameterSymbol in ctor.Parameters)
             {
                 var parameterCallSite = GetCallSite(description, callSiteCache, parameterSymbol.Type);
-                if (parameterCallSite == null)
+                if (parameterSymbol.IsOptional)
                 {
-                    var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
-                        registration.Location,
-                        parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                        implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
-
-                    _context.ReportDiagnostic(
-                        diagnostic);
-
-                    return new ErrorCallSite(serviceType, diagnostic);
+                    if (parameterCallSite != null)
+                    {
+                        namedParameters.Add(new KeyValuePair<IParameterSymbol, ServiceCallSite>(parameterSymbol, parameterCallSite));
+                    }
                 }
+                else
+                {
+                    if (parameterCallSite == null)
+                    {
+                        var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
+                            registration.Location,
+                            parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                            implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
-                parameters.Add(parameterCallSite);
+                        diagnostics.Add(diagnostic);
+                        _context.ReportDiagnostic(diagnostic);
+                    }
+                    else
+                    {
+                        parameters.Add(parameterCallSite);
+                    }
+                }
+            }
+
+            if (diagnostics.Count > 0)
+            {
+                return new ErrorCallSite(serviceType, diagnostics.ToArray());
             }
 
             callSite = new ConstructorCallSite(
                 serviceType,
                 implementationType,
                 parameters.ToArray(),
+                namedParameters.ToArray(),
                 registration.Lifetime,
                 reverseIndex,
                 // TODO: this can be optimized to avoid check for all the types
@@ -385,20 +403,80 @@ namespace Jab
             return callSite;
         }
 
-
-        private IMethodSymbol? SelectConstructor(INamedTypeSymbol implementationType)
+        private bool CanSatisfy(ITypeSymbol serviceType, ServiceProviderDescription description)
         {
-            IMethodSymbol? selectedCtor = null;
-            foreach (var constructor in implementationType.Constructors)
+            INamedTypeSymbol? genericType = null;
+
+            if (serviceType is INamedTypeSymbol {IsGenericType: true} genericServiceType)
             {
-                if (constructor.DeclaredAccessibility == Accessibility.Public &&
-                    constructor.Parameters.Length > (selectedCtor?.Parameters.Length ?? -1))
+                genericType = genericServiceType;
+            }
+
+            if (genericType != null &&
+                SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _iEnumerableType))
+            {
+                // We can always satisfy IEnumerables
+                return true;
+            }
+
+            foreach (var registration in description.ServiceRegistrations)
+            {
+                if (SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, serviceType))
                 {
-                    selectedCtor = constructor;
+                    return true;
+                }
+
+                if (genericType != null &&
+                    registration.ServiceType.IsUnboundGenericType &&
+                    SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, genericType.ConstructedFrom))
+                {
+                    return true;
                 }
             }
 
-            return selectedCtor;
+            return false;
+        }
+
+        private IMethodSymbol? SelectConstructor(INamedTypeSymbol implementationType, ServiceProviderDescription description)
+        {
+            IMethodSymbol? selectedCtor = null;
+            IMethodSymbol? candidate = null;
+            foreach (var constructor in implementationType.Constructors)
+            {
+                if (constructor.DeclaredAccessibility == Accessibility.Public)
+                {
+                    // Pick a shortest candidate just in case we don't find
+                    // any applicable ctor and need to produce diagnostics
+                    if (candidate == null ||
+                        candidate.Parameters.Length > constructor.Parameters.Length)
+                    {
+                        candidate = constructor;
+                    }
+
+                    if (constructor.Parameters.Length > (selectedCtor?.Parameters.Length ?? -1))
+                    {
+                        bool allSatisfied = true;
+                        foreach (var constructorParameter in constructor.Parameters)
+                        {
+                            if (!CanSatisfy(constructorParameter.Type, description) &&
+                                !constructorParameter.IsOptional)
+                            {
+                                allSatisfied = false;
+                                break;
+                            }
+                        }
+
+                        if (allSatisfied)
+                        {
+                            selectedCtor = constructor;
+                        }
+                    }
+                }
+
+            }
+
+            // Return a candidate so we can produce diagnostics for required services in a simple case
+            return selectedCtor ?? candidate;
         }
 
         private ServiceProviderDescription? GetDescription(ITypeSymbol serviceProviderType)
