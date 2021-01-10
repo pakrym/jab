@@ -9,14 +9,16 @@ namespace Jab
         public ISymbol? InstanceMember { get; }
         public ISymbol? FactoryMember { get; }
         public ServiceLifetime Lifetime { get; }
+        public Location? Location { get; }
 
-        public ServiceRegistration(ServiceLifetime lifetime, INamedTypeSymbol serviceType, INamedTypeSymbol? implementationType, ISymbol? instanceMember, ISymbol? factoryMember)
+        public ServiceRegistration(ServiceLifetime lifetime, INamedTypeSymbol serviceType, INamedTypeSymbol? implementationType, ISymbol? instanceMember, ISymbol? factoryMember, Location? location)
         {
             Lifetime = lifetime;
             ServiceType = serviceType;
             ImplementationType = implementationType;
             InstanceMember = instanceMember;
             FactoryMember = factoryMember;
+            Location = location;
         }
     }
 }

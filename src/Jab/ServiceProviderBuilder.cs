@@ -148,9 +148,9 @@ namespace Jab
                     !typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
                 {
                     _context.ReportDiagnostic(Diagnostic.Create(
-                        DiagnosticDescriptors.UnexpectedErrorDescriptor,
+                        DiagnosticDescriptors.ServiceProviderTypeHasToBePartial,
                         typeDeclarationSyntax.Identifier.GetLocation(),
-                        "The type marked with the ServiceProvider attribute has to be marked partial."
+                        typeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
                     ));
                 }
             }
@@ -337,16 +337,35 @@ namespace Jab
                 return callSite;
             }
 
-            var ctor = SelectConstructor(implementationType)
-                       ?? throw new InvalidOperationException(
-                           $"Public constructor not found for type '{implementationType.Name}'");
+            var ctor = SelectConstructor(implementationType);
+            if (ctor == null)
+            {
+                var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ImplementationTypeRequiresPublicConstructor,
+                    registration.Location,
+                    implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+
+                _context.ReportDiagnostic(
+                    diagnostic);
+
+                return new ErrorCallSite(serviceType, diagnostic);
+            }
 
             var parameters = new List<ServiceCallSite>();
             foreach (var parameterSymbol in ctor.Parameters)
             {
-                var parameterCallSite = GetCallSite(description, callSiteCache, parameterSymbol.Type)
-                                        ?? throw new InvalidOperationException(
-                                            $"Failed to resolve parameter of type '{parameterSymbol.Type}'");
+                var parameterCallSite = GetCallSite(description, callSiteCache, parameterSymbol.Type);
+                if (parameterCallSite == null)
+                {
+                    var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
+                        registration.Location,
+                        parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                        implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+
+                    _context.ReportDiagnostic(
+                        diagnostic);
+
+                    return new ErrorCallSite(serviceType, diagnostic);
+                }
 
                 parameters.Add(parameterCallSite);
             }
@@ -447,9 +466,10 @@ namespace Jab
             if (!isModule)
             {
                 _context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.UnexpectedErrorDescriptor,
+                    DiagnosticDescriptors.ImportedTypeNotMarkedWithModuleAttribute,
                     importAttributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
-                    $"The imported type '{moduleType}' is not marked with the '{_moduleAttribute}'."
+                    moduleType.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat),
+                    _moduleAttribute.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)
                 ));
             }
         }
@@ -519,7 +539,8 @@ namespace Jab
                 serviceType,
                 implementationType,
                 instanceMember,
-                factoryMember);
+                factoryMember,
+                attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation());
 
             return true;
         }
@@ -532,9 +553,10 @@ namespace Jab
             if (members.Length == 0)
             {
                 _context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.UnexpectedErrorDescriptor,
+                    DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeNotFound,
                     attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
-                    $"Unable to find a member '{memberName}' referenced in the '{parameterName}' attribute parameter."
+                    memberName,
+                    parameterName
                 ));
                 return false;
             }
@@ -542,10 +564,12 @@ namespace Jab
             if (members.Length > 1)
             {
                 _context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.UnexpectedErrorDescriptor,
+                    DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeAmbiguous,
                     attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
-                    $"Found multiple members with the '{memberName}' name, referenced in the '{parameterName}' attribute parameter."
+                    memberName,
+                    parameterName
                 ));
+                return false;
             }
 
             instanceMember = members[0];

@@ -20,6 +20,14 @@ namespace Jab
 
         private void GenerateCallSiteWithCache(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
         {
+            if (serviceCallSite is ErrorCallSite errorCallSite)
+            {
+                codeWriter.Line($"// There was an error while building the container, please refer to the compiler diagnostics");
+                codeWriter.Line($"// {errorCallSite.Diagnostic}");
+                codeWriter.Line($"return default;");
+                return;
+            }
+
             if (serviceCallSite.Lifetime != ServiceLifetime.Transient)
             {
                 var cacheLocation = GetCacheLocation(serviceCallSite);
@@ -343,6 +351,15 @@ namespace Jab
             });
         }
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = new[] {DiagnosticDescriptors.UnexpectedErrorDescriptor}.ToImmutableArray();
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = new[]
+        {
+            DiagnosticDescriptors.UnexpectedErrorDescriptor,
+            DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
+            DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeNotFound,
+            DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeAmbiguous,
+            DiagnosticDescriptors.ServiceProviderTypeHasToBePartial,
+            DiagnosticDescriptors.ImportedTypeNotMarkedWithModuleAttribute,
+            DiagnosticDescriptors.ImplementationTypeRequiresPublicConstructor,
+        }.ToImmutableArray();
     }
 }

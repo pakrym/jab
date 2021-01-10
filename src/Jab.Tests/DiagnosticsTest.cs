@@ -21,9 +21,9 @@ public partial class Container {}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
-                    .CompilerError("JAB0001")
+                    .CompilerError("JAB0006")
                     .WithLocation(1)
-                    .WithArguments("The imported type 'IModule' is not marked with the 'Jab.ServiceProviderModuleAttribute'."));
+                    .WithArguments("IModule", "ServiceProviderModuleAttribute"));
         }
 
         [Fact]
@@ -36,9 +36,9 @@ public class {|#1:Container|} {}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
-                    .CompilerError("JAB0001")
+                    .CompilerError("JAB0005")
                     .WithLocation(1)
-                    .WithArguments("The type marked with the ServiceProvider attribute has to be marked partial."));
+                    .WithArguments("Container"));
         }
 
         [Fact]
@@ -51,9 +51,9 @@ public partial class Container {}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
-                    .CompilerError("JAB0001")
+                    .CompilerError("JAB0003")
                     .WithLocation(1)
-                    .WithArguments("Unable to find a member 'CreateCloneable' referenced in the 'Instance' attribute parameter."));
+                    .WithArguments("CreateCloneable", "Instance"));
         }
 
         [Theory]
@@ -68,9 +68,9 @@ public partial class Container {{}}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
-                    .CompilerError("JAB0001")
+                    .CompilerError("JAB0003")
                     .WithLocation(1)
-                    .WithArguments("Unable to find a member 'CreateCloneable' referenced in the 'Factory' attribute parameter."));
+                    .WithArguments("CreateCloneable", "Factory"));
         }
 
         [Theory]
@@ -88,9 +88,42 @@ ICloneable CreateCloneable(int why) => null;
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
-                    .CompilerError("JAB0001")
+                    .CompilerError("JAB0004")
                     .WithLocation(1)
-                    .WithArguments("Found multiple members with the 'CreateCloneable' name, referenced in the 'Factory' attribute parameter."));
+                    .WithArguments("CreateCloneable", "Factory"));
+        }
+
+        [Fact]
+        public async Task ProducesJAB0002WhenRequiredDependencyNotFound()
+        {
+            string testCode = $@"
+interface IDependency {{ }}
+class Service {{ public Service(IDependency dep) {{}} }}
+[ServiceProvider]
+[{{|#1:Transient(typeof(Service))|}}]
+public partial class Container {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0002")
+                    .WithLocation(1)
+                    .WithArguments("IDependency", "Service"));
+        }
+
+        [Fact]
+        public async Task ProducesJAB0007WhenRequiredImplementationHasNoPublicConstructors()
+        {
+            string testCode = $@"
+class Service {{ private Service() {{}} }}
+[ServiceProvider]
+[{{|#1:Transient(typeof(Service))|}}]
+public partial class Container {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0007")
+                    .WithLocation(1)
+                    .WithArguments("Service"));
         }
     }
 }
