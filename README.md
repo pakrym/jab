@@ -1,7 +1,5 @@
 # Jab Compile Time Dependency Injection
 
-**NOTE:** this is an extremely early prototype not intended for any production use.
-
 Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/introducing-c-source-generators/) based dependency injection container implementation.
 
 - Fast startup (200x faster than Microsoft.Extensions.DependencyInjection). [Details](#Startup-Time).
@@ -56,7 +54,8 @@ IService service = c.GetService<IService>();
 - Transient, Singleton, Scoped service registration
 - Factory registration
 - Instance registration
-- IEnumerable resolution
+- `IEnumerable` resolution
+- `IDisposable` and `IAsyncDisposable` support
 
 The plan is to support the minimum feature set Microsoft.Extensions.DependencyInjection.Abstraction requires but *NOT* the `IServiceCollection`-based registration syntax as it is runtime based.
 

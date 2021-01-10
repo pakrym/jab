@@ -88,6 +88,13 @@ namespace Jab
                             WriteResolutionCall(codeWriter, parameter, "this");
                             w.AppendRaw(", ");
                         }
+
+                        foreach (var pair in transientCallSite.OptionalParameter)
+                        {
+                            w.Append($"{pair.Key.Name}: ");
+                            WriteResolutionCall(codeWriter, pair.Value, "this");
+                            w.AppendRaw(", ");
+                        }
                         w.RemoveTrailingComma();
                         w.Append($")");
                     });
