@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -37,6 +38,15 @@ namespace Jab
                 }
 
                 valueCallback(codeWriter, w => w.Append($"{cacheLocation}"));
+            }
+            else if (serviceCallSite.IsDisposable != false)
+            {
+                GenerateCallSite(codeWriter, rootReference, serviceCallSite, (w, v) =>
+                {
+                    w.Line($"{serviceCallSite.ImplementationType} service = {v};");
+                });
+                codeWriter.Line($"TryAddDisposable(service);");
+                valueCallback(codeWriter, w => w.Append($"service"));
             }
             else
             {
@@ -204,22 +214,37 @@ namespace Jab
 
         private void WriteDispose(CodeWriter codeWriter, ServiceProvider root, bool onlyScoped)
         {
+            codeWriter.Line($"private {typeof(List<object>)} _disposables;");
+            codeWriter.Line();
+
+            using (codeWriter.Scope($"private void TryAddDisposable(object value)"))
+            {
+                codeWriter.Line($"if (value is {typeof(IDisposable)} || value is System.IAsyncDisposable)");
+                using (codeWriter.Scope($"lock (this)"))
+                {
+                    codeWriter.Line($"(_disposables ??= new {typeof(List<object>)}()).Add(value);");
+                }
+            }
+            codeWriter.Line();
+
             using (codeWriter.Scope($"public void Dispose()"))
             {
-                bool first = true;
+                codeWriter.LineRaw("void TryDispose(object value) => (value as IDisposable)?.Dispose();");
+                codeWriter.Line();
+
                 foreach (var rootService in root.RootCallSites)
                 {
-                    if ((rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped) ||
+                    if (rootService.IsDisposable == false ||
+                        rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped ||
                         rootService.Lifetime == ServiceLifetime.Transient) continue;
 
-                    if (first)
-                    {
-                        codeWriter.LineRaw("void TryDispose(object value) => (value as IDisposable)?.Dispose();");
-                        codeWriter.Line();
-                        first = false;
-                    }
-
                     codeWriter.Line($"TryDispose({GetCacheLocation(rootService)});");
+                }
+
+                using (codeWriter.Scope($"if (_disposables != null)"))
+                using (codeWriter.Scope($"foreach (var service in _disposables)"))
+                {
+                    codeWriter.Line($"TryDispose(service);");
                 }
             }
 
@@ -227,36 +252,33 @@ namespace Jab
 
             using (codeWriter.Scope($"public async {typeof(ValueTask)} DisposeAsync()"))
             {
-                bool first = true;
+                using (codeWriter.Scope($"{typeof(ValueTask)} TryDispose(object value)"))
+                {
+                    using (codeWriter.Scope($"if (value is System.IAsyncDisposable asyncDisposable)"))
+                    {
+                        codeWriter.Line($"return asyncDisposable.DisposeAsync();");
+                    }
+                    using (codeWriter.Scope($"else if (value is {typeof(IDisposable)} disposable)"))
+                    {
+                        codeWriter.Line($"disposable.Dispose();");
+                    }
+                    codeWriter.Line($"return default;");
+                }
+                codeWriter.Line();
+
                 foreach (var rootService in root.RootCallSites)
                 {
-                    if ((rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped) ||
+                    if (rootService.IsDisposable == false ||
+                        rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped ||
                         rootService.Lifetime == ServiceLifetime.Transient) continue;
-
-                    if (first)
-                    {
-                        using (codeWriter.Scope($"{typeof(ValueTask)} TryDispose(object value)"))
-                        {
-                            using (codeWriter.Scope($"if (value is System.IAsyncDisposable asyncDisposable)"))
-                            {
-                                codeWriter.Line($"return asyncDisposable.DisposeAsync();");
-                            }
-                            using (codeWriter.Scope($"else if (value is {typeof(IDisposable)} disposable)"))
-                            {
-                                codeWriter.Line($"disposable.Dispose();");
-                            }
-                            codeWriter.Line($"return default;");
-                        }
-                        codeWriter.Line();
-                        first = false;
-                    }
 
                     codeWriter.Line($"await TryDispose({GetCacheLocation(rootService)});");
                 }
-                // avoid the warning
-                if (first)
+
+                using (codeWriter.Scope($"if (_disposables != null)"))
+                using (codeWriter.Scope($"foreach (var service in _disposables)"))
                 {
-                    codeWriter.Line($"await default(ValueTask);");
+                    codeWriter.Line($"await TryDispose(service);");
                 }
             }
 

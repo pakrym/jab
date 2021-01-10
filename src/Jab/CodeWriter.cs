@@ -215,7 +215,15 @@ namespace Jab
                 AppendRaw("global::");
                 AppendRaw(type.Namespace);
                 AppendRaw(".");
-                AppendRaw(type.Name);
+                var i = type.Name.IndexOf("`");
+                if (i > 0)
+                {
+                    AppendRaw(type.Name.AsSpan(0, i));
+                }
+                else
+                {
+                    AppendRaw(type.Name);
+                }
             }
             else
             {
@@ -359,6 +367,11 @@ namespace Jab
 
         public CodeWriter AppendRaw(string str)
         {
+            return AppendRaw(str.AsSpan());
+        }
+
+        public CodeWriter AppendRaw(ReadOnlySpan<char> str)
+        {
             if (_indent)
             {
                 EnsureSpace(_indentLevel);
@@ -368,7 +381,7 @@ namespace Jab
             }
 
             EnsureSpace(str.Length);
-            str.AsSpan().CopyTo(_builder.AsSpan().Slice(_position));
+            str.CopyTo(_builder.AsSpan().Slice(_position));
             _position += str.Length;
             return this;
         }

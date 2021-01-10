@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -306,10 +305,10 @@ namespace Jab
             switch (registration)
             {
                 case {InstanceMember: { } instanceMember}:
-                    callSite = new MemberCallSite(registration.ServiceType, instanceMember, registration.Lifetime, reverseIndex);
+                    callSite = new MemberCallSite(registration.ServiceType, instanceMember, registration.Lifetime, reverseIndex, false);
                     break;
                 case {FactoryMember: { } factoryMember}:
-                    callSite = new MemberCallSite(registration.ServiceType, factoryMember, registration.Lifetime, reverseIndex);
+                    callSite = new MemberCallSite(registration.ServiceType, factoryMember, registration.Lifetime, reverseIndex, null);
                     break;
                 default:
                     var implementationType = registration.ImplementationType ??
@@ -331,7 +330,6 @@ namespace Jab
             INamedTypeSymbol implementationType,
             int reverseIndex)
         {
-
             var cacheKey = new CallSiteCacheKey(reverseIndex, registration.ServiceType);
 
             if (callSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
@@ -358,7 +356,10 @@ namespace Jab
                 implementationType,
                 parameters.ToArray(),
                 registration.Lifetime,
-                reverseIndex);
+                reverseIndex,
+                // TODO: this can be optimized to avoid check for all the types
+                isDisposable: null
+                );
 
             callSiteCache[cacheKey] = callSite;
 
