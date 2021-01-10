@@ -65,5 +65,22 @@ namespace Jab.Tests
         [Transient(typeof(IService3), typeof(ServiceImplementation))]
         [Transient(typeof(IService), typeof(ServiceImplementationWithParameter<IService1, IService2, IService3>))]
         internal partial class PassesOptionalParametersWhenAvailableContainer { }
+
+        [Fact]
+        public void IgnoresNonReferenceTypedParameters()
+        {
+            IgnoresNonReferenceTypedParametersContainer c = new();
+            var service = Assert.IsType<ServiceImplementationWithParameter<IService1, int, IService3>>(c.GetService<IService>());
+            Assert.Equal(3, service.SelectedCtor);
+            Assert.NotNull(service.Parameter1);
+            Assert.Equal(0, service.Parameter2);
+            Assert.NotNull(service.Parameter3);
+        }
+
+        [ServiceProvider]
+        [Transient(typeof(IService1), typeof(ServiceImplementation))]
+        [Transient(typeof(IService3), typeof(ServiceImplementation))]
+        [Transient(typeof(IService), typeof(ServiceImplementationWithParameter<IService1, int, IService3>))]
+        internal partial class IgnoresNonReferenceTypedParametersContainer { }
     }
 }

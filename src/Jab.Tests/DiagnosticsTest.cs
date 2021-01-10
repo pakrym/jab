@@ -111,6 +111,28 @@ public partial class Container {{}}
         }
 
         [Fact]
+        public async Task ProducesJAB0002WhenRequiredDependenciesNotFound()
+        {
+            string testCode = $@"
+interface IDependency {{ }}
+interface IDependency2 {{ }}
+class Service {{ public Service(IDependency dep, IDependency2 dep2) {{}} }}
+[ServiceProvider]
+[{{|#1:Transient(typeof(Service))|}}]
+public partial class Container {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0002")
+                    .WithLocation(1)
+                    .WithArguments("IDependency", "Service"),
+                DiagnosticResult
+                    .CompilerError("JAB0002")
+                    .WithLocation(1)
+                    .WithArguments("IDependency2", "Service"));
+        }
+
+        [Fact]
         public async Task ProducesJAB0007WhenRequiredImplementationHasNoPublicConstructors()
         {
             string testCode = $@"

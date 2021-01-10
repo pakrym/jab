@@ -352,6 +352,7 @@ namespace Jab
 
             var parameters = new List<ServiceCallSite>();
             var namedParameters = new List<KeyValuePair<IParameterSymbol, ServiceCallSite>>();
+            var diagnostics = new List<Diagnostic>();
             foreach (var parameterSymbol in ctor.Parameters)
             {
                 var parameterCallSite = GetCallSite(description, callSiteCache, parameterSymbol.Type);
@@ -371,14 +372,19 @@ namespace Jab
                             parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
                             implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
-                        _context.ReportDiagnostic(
-                            diagnostic);
-
-                        return new ErrorCallSite(serviceType, diagnostic);
+                        diagnostics.Add(diagnostic);
+                        _context.ReportDiagnostic(diagnostic);
                     }
-
-                    parameters.Add(parameterCallSite);
+                    else
+                    {
+                        parameters.Add(parameterCallSite);
+                    }
                 }
+            }
+
+            if (diagnostics.Count > 0)
+            {
+                return new ErrorCallSite(serviceType, diagnostics.ToArray());
             }
 
             callSite = new ConstructorCallSite(
@@ -434,30 +440,43 @@ namespace Jab
         private IMethodSymbol? SelectConstructor(INamedTypeSymbol implementationType, ServiceProviderDescription description)
         {
             IMethodSymbol? selectedCtor = null;
+            IMethodSymbol? candidate = null;
             foreach (var constructor in implementationType.Constructors)
             {
-                if (constructor.DeclaredAccessibility == Accessibility.Public &&
-                    constructor.Parameters.Length > (selectedCtor?.Parameters.Length ?? -1))
+                if (constructor.DeclaredAccessibility == Accessibility.Public)
                 {
-                    bool allSatisfied = true;
-                    foreach (var constructorParameter in constructor.Parameters)
+                    // Pick a shortest candidate just in case we don't find
+                    // any applicable ctor and need to produce diagnostics
+                    if (candidate == null ||
+                        candidate.Parameters.Length > constructor.Parameters.Length)
                     {
-                        if (!CanSatisfy(constructorParameter.Type, description) &&
-                            !constructorParameter.IsOptional)
+                        candidate = constructor;
+                    }
+
+                    if (constructor.Parameters.Length > (selectedCtor?.Parameters.Length ?? -1))
+                    {
+                        bool allSatisfied = true;
+                        foreach (var constructorParameter in constructor.Parameters)
                         {
-                            allSatisfied = false;
-                            break;
+                            if (!CanSatisfy(constructorParameter.Type, description) &&
+                                !constructorParameter.IsOptional)
+                            {
+                                allSatisfied = false;
+                                break;
+                            }
+                        }
+
+                        if (allSatisfied)
+                        {
+                            selectedCtor = constructor;
                         }
                     }
-
-                    if (allSatisfied)
-                    {
-                        selectedCtor = constructor;
-                    }
                 }
+
             }
 
-            return selectedCtor;
+            // Return a candidate so we can produce diagnostics for required services in a simple case
+            return selectedCtor ?? candidate;
         }
 
         private ServiceProviderDescription? GetDescription(ITypeSymbol serviceProviderType)
