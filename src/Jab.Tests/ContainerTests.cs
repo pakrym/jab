@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Jab.Tests
@@ -434,5 +435,113 @@ namespace Jab.Tests
         [Scoped(typeof(IService), typeof(ServiceImplementation))]
         [Singleton(typeof(IService), typeof(ServiceImplementation))]
         internal partial class CanResolveMixedEnumerableContainer { }
+
+        [Fact]
+        public void DisposingScopeDisposesServices()
+        {
+            DisposingScopeDisposesServicesContainer c = new();
+            var scope = c.CreateScope();
+            var service = Assert.IsType<DisposableServiceImplementation>(scope.GetService<IService>());
+
+            scope.Dispose();
+
+            Assert.Equal(1, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
+        internal partial class DisposingScopeDisposesServicesContainer { }
+
+        [Fact]
+        public async Task DisposingScopeDisposesAsyncServices()
+        {
+            DisposingScopeDisposesAsyncServicesContainer c = new();
+            var scope = c.CreateScope();
+            var service = Assert.IsType<AsyncDisposableServiceImplementation>(scope.GetService<IService>());
+
+            await scope.DisposeAsync();
+
+            Assert.Equal(1, service.AsyncDisposalCount);
+            Assert.Equal(0, service.DisposalCount);
+
+            scope = c.CreateScope();
+            service = Assert.IsType<AsyncDisposableServiceImplementation>(scope.GetService<IService>());
+
+            scope.Dispose();
+
+            Assert.Equal(0, service.AsyncDisposalCount);
+            Assert.Equal(1, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), typeof(AsyncDisposableServiceImplementation))]
+        internal partial class DisposingScopeDisposesAsyncServicesContainer { }
+
+        [Fact]
+        public void DisposingProviderDisposesRootScopedServices()
+        {
+            DisposingProviderDisposesRootScopedServicesContainer c = new();
+            var service = Assert.IsType<DisposableServiceImplementation>(c.GetService<IService>());
+
+            c.Dispose();
+
+            Assert.Equal(1, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
+        internal partial class DisposingProviderDisposesRootScopedServicesContainer { }
+
+        [Fact]
+        public void DisposingProviderDisposesRootSingletonServices()
+        {
+            DisposingProviderDisposesRootSingletonServicesContainer c = new();
+            var service = Assert.IsType<DisposableServiceImplementation>(c.GetService<IService>());
+
+            c.Dispose();
+
+            Assert.Equal(1, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Singleton(typeof(IService), typeof(DisposableServiceImplementation))]
+        internal partial class DisposingProviderDisposesRootSingletonServicesContainer { }
+
+        [Fact]
+        public async Task DisposingProviderDisposesRootSingAsyncServices()
+        {
+            DisposingProviderDisposesRootSingAsyncServicesContainer c = new();
+            var service = Assert.IsType<AsyncDisposableServiceImplementation>(c.GetService<IService>());
+
+            await c.DisposeAsync();
+
+            Assert.Equal(1, service.AsyncDisposalCount);
+            Assert.Equal(0, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), typeof(AsyncDisposableServiceImplementation))]
+        internal partial class DisposingProviderDisposesRootSingAsyncServicesContainer { }
+
+        [Fact]
+        public async Task DisposingProviderDisposesAllSingletonEnumerableServices()
+        {
+            DisposingProviderDisposesAllSingletonEnumerableServicesContainer c = new();
+            var services = Assert.IsType<IService[]>(c.GetService<IEnumerable<IService>>());
+
+            await c.DisposeAsync();
+
+            foreach (var service in services)
+            {
+                var disposableService = Assert.IsType<DisposableServiceImplementation>(service);
+                Assert.Equal(1, disposableService.DisposalCount);
+            }
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
+        [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
+        [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
+        internal partial class DisposingProviderDisposesAllSingletonEnumerableServicesContainer { }
     }
 }
