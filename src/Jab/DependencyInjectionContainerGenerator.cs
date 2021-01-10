@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -141,6 +142,8 @@ namespace Jab
                                 codeWriter.Line();
                             }
 
+                            WriteDispose(codeWriter, root, onlyScoped: false);
+
                             using (codeWriter.Scope($"public Scope CreateScope()"))
                             {
                                 codeWriter.Line($"return new Scope(this);");
@@ -185,6 +188,8 @@ namespace Jab
                                     }
                                     codeWriter.Line();
                                 }
+
+                                WriteDispose(codeWriter, root, onlyScoped: true);
                             }
                         }
                     }
@@ -197,18 +202,74 @@ namespace Jab
             }
         }
 
+        private void WriteDispose(CodeWriter codeWriter, ServiceProvider root, bool onlyScoped)
+        {
+            using (codeWriter.Scope($"public void Dispose()"))
+            {
+                bool first = true;
+                foreach (var rootService in root.RootCallSites)
+                {
+                    if ((rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped) ||
+                        rootService.Lifetime == ServiceLifetime.Transient) continue;
+
+                    if (first)
+                    {
+                        codeWriter.LineRaw("void TryDispose(object value) => (value as IDisposable)?.Dispose();");
+                        codeWriter.Line();
+                        first = false;
+                    }
+
+                    codeWriter.Line($"TryDispose({GetCacheLocation(rootService)});");
+                }
+            }
+
+            codeWriter.Line();
+
+            using (codeWriter.Scope($"public async {typeof(ValueTask)} DisposeAsync()"))
+            {
+                bool first = true;
+                foreach (var rootService in root.RootCallSites)
+                {
+                    if ((rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped) ||
+                        rootService.Lifetime == ServiceLifetime.Transient) continue;
+
+                    if (first)
+                    {
+                        using (codeWriter.Scope($"{typeof(ValueTask)} TryDispose(object value)"))
+                        {
+                            using (codeWriter.Scope($"if (value is System.IAsyncDisposable asyncDisposable)"))
+                            {
+                                codeWriter.Line($"return asyncDisposable.DisposeAsync();");
+                            }
+                            using (codeWriter.Scope($"else if (value is {typeof(IDisposable)} disposable)"))
+                            {
+                                codeWriter.Line($"disposable.Dispose();");
+                            }
+                            codeWriter.Line($"return default;");
+                        }
+                        codeWriter.Line();
+                        first = false;
+                    }
+
+                    codeWriter.Line($"await TryDispose({GetCacheLocation(rootService)});");
+                }
+                // avoid the warning
+                if (first)
+                {
+                    codeWriter.Line($"await default(ValueTask);");
+                }
+            }
+
+            codeWriter.Line();
+        }
+
         private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root)
         {
-            bool first = true;
+            codeWriter.Append($" : {typeof(IDisposable)},");
             foreach (var serviceCallSite in root.RootCallSites)
             {
                 if (serviceCallSite.IsMainImplementation)
                 {
-                    if (first)
-                    {
-                        codeWriter.Append($" : ");
-                        first = false;
-                    }
                     codeWriter.Line();
                     codeWriter.Append($"    IServiceProvider<{serviceCallSite.ServiceType}>,");
                 }
@@ -222,14 +283,10 @@ namespace Jab
         {
             foreach (var rootService in root.RootCallSites)
             {
-                switch (rootService.Lifetime)
-                {
-                    case ServiceLifetime.Singleton when onlyScoped:
-                    case ServiceLifetime.Transient:
-                        continue;
-                }
+                if ((rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped) ||
+                     rootService.Lifetime == ServiceLifetime.Transient) continue;
 
-                codeWriter.Line($"private {rootService.ServiceType} {GetCacheLocation(rootService)};");
+                codeWriter.Line($"private {rootService.ImplementationType} {GetCacheLocation(rootService)};");
             }
             codeWriter.Line();
         }
