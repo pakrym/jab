@@ -124,9 +124,11 @@ Service are resolved from the scope using the `GetService<IService>()` call.
 internal partial class MyServiceProvider { }
 
 MyServiceProvider c = new MyServiceProvider();
-MyServiceProvider.Scope scope = c.CreateScope();
+using MyServiceProvider.Scope scope = c.CreateScope();
 IService service = scope.GetService<IService>();
 ```
+
+When the scope is disposed all `IDisposable` and `IAsyncDisposable` services that were resolved from it are disposed as well.
 
 ### Modules
 
