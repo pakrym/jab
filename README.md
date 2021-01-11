@@ -6,10 +6,12 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 - Fast resolution (7x faster than Microsoft.Extensions.DependencyInjection). [Details](#GetService).
 - No runtime dependencies.
 - AOT and linker friendly, all code is generated during project compilation.
-- Easy debugging of the service resolution process (clean stack trace, readable generated code).
+- Clean stack traces
     ![stacktrace](doc/stacktrace.png)
+- Readable generated code
     ![generated code](doc/generatedcode.png)
-    
+- Registration validation. Container configuration issues become compiler errors:
+    ![generated code](doc/errors.png)
 
 ## Example
 
