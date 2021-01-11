@@ -6,7 +6,10 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 - Fast resolution (7x faster than Microsoft.Extensions.DependencyInjection). [Details](#GetService).
 - No runtime dependencies.
 - AOT and linker friendly, all code is generated during project compilation.
-- Easy debugging of the service resolution process.
+- Easy debugging of the service resolution process (clean stack trace, readable generated code).
+    ![stacktrace](doc/stacktrace.png)
+    ![generated code](doc/generatedcode.png)
+    
 
 ## Example
 
@@ -41,10 +44,10 @@ Define a composition root and register services:
 internal partial class MyServiceProvider { }
 ```
 
-Use the container:
+Use the service provider:
 
 ``` C#
-MyServiceProvider c = new();
+MyServiceProvider c = new MyServiceProvider();
 IService service = c.GetService<IService>();
 ```
 
@@ -85,7 +88,7 @@ internal partial class MyServiceProvider {
 Then initialize the property during the container creation:
 
 ```C#
-MyServiceProvider c = new();
+MyServiceProvider c = new MyServiceProvider();
 c.MyServiceInstance = new ServiceImplementation();
 
 IService service = c.GetService<IService>();
@@ -103,7 +106,7 @@ internal partial class MyServiceProvider {
     public IService MyServiceFactory() => new ServiceImplementation();
 }
 
-MyServiceProvider c = new();
+MyServiceProvider c = new MyServiceProvider();
 IService service = c.GetService<IService>();
 ```
 
@@ -120,7 +123,7 @@ Service are resolved from the scope using the `GetService<IService>()` call.
 [Scoped(typeof(IService), typeof(ServiceImplementation))]
 internal partial class MyServiceProvider { }
 
-MyServiceProvider c = new();
+MyServiceProvider c = new MyServiceProvider();
 MyServiceProvider.Scope scope = c.CreateScope();
 IService service = scope.GetService<IService>();
 ```
@@ -147,7 +150,7 @@ internal partial class MyServiceProvider
 {
 }
 
-MyServiceProvider c = new();
+MyServiceProvider c = new MyServiceProvider();
 IService service = c.GetService<IEnumerable<IService>>();
 ```
 
@@ -168,7 +171,7 @@ internal partial class MyServiceProvider
 {
 }
 
-MyServiceProvider c = new();
+MyServiceProvider c = new MyServiceProvider();
 IService service = c.GetService<IEnumerable<IService>>();
 ```
 
