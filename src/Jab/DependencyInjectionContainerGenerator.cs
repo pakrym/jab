@@ -167,6 +167,8 @@ namespace Jab
                                 codeWriter.Line();
                             }
 
+                            WriteServiceProvider(codeWriter, root);
+
                             WriteDispose(codeWriter, root, onlyScoped: false);
 
                             using (codeWriter.Scope($"public Scope CreateScope()"))
@@ -225,6 +227,11 @@ namespace Jab
             {
                 context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.UnexpectedErrorDescriptor, Location.None, e.ToString()));
             }
+        }
+
+        private void WriteServiceProvider(CodeWriter codeWriter, ServiceProvider root)
+        {
+            throw new NotImplementedException();
         }
 
         private void WriteDispose(CodeWriter codeWriter, ServiceProvider root, bool onlyScoped)
@@ -302,7 +309,7 @@ namespace Jab
 
         private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root)
         {
-            codeWriter.Append($" : {typeof(IDisposable)},");
+            codeWriter.Append($" : {typeof(IDisposable)}, {typeof(IServiceProvider)},");
             foreach (var serviceCallSite in root.RootCallSites)
             {
                 if (serviceCallSite.IsMainImplementation)
