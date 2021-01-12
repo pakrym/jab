@@ -61,6 +61,7 @@ IService service = c.GetService<IService>();
 - Instance registration
 - `IEnumerable` resolution
 - `IDisposable` and `IAsyncDisposable` support
+- `IServiceProvider` support
 
 The plan is to support the minimum feature set Microsoft.Extensions.DependencyInjection.Abstraction requires but *NOT* the `IServiceCollection`-based registration syntax as it is runtime based.
 
