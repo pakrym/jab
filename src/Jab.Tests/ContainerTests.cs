@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
@@ -630,5 +631,20 @@ namespace Jab.Tests
         {
             internal DisposableServiceImplementation DisposableServiceImplementation { get; } = new DisposableServiceImplementation();
         }
+
+        [Fact]
+        public void CanResolveServicesUsingIServiceProvider()
+        {
+            CanResolveServicesUsingIServiceProviderContainer c = new();
+            IServiceProvider serviceProvider = c;
+            Assert.IsType<ServiceImplementation>(serviceProvider.GetService(typeof(IService)));
+            var services = Assert.IsType<IService[]>(serviceProvider.GetService(typeof(IEnumerable<IService>)));
+            var service = Assert.Single(services);
+            Assert.NotNull(service);
+        }
+
+        [ServiceProvider(RootServices = new [] { typeof(IEnumerable<IService>) })]
+        [Transient(typeof(IService), typeof(ServiceImplementation))]
+        internal partial class CanResolveServicesUsingIServiceProviderContainer { }
     }
 }

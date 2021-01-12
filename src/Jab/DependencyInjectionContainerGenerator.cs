@@ -167,6 +167,7 @@ namespace Jab
                                 codeWriter.Line();
                             }
 
+                            WriteServiceProvider(codeWriter, root);
                             WriteDispose(codeWriter, root, onlyScoped: false);
 
                             using (codeWriter.Scope($"public Scope CreateScope()"))
@@ -214,6 +215,7 @@ namespace Jab
                                     codeWriter.Line();
                                 }
 
+                                WriteServiceProvider(codeWriter, root);
                                 WriteDispose(codeWriter, root, onlyScoped: true);
                             }
                         }
@@ -225,6 +227,26 @@ namespace Jab
             {
                 context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.UnexpectedErrorDescriptor, Location.None, e.ToString()));
             }
+        }
+
+        private void WriteServiceProvider(CodeWriter codeWriter, ServiceProvider root)
+        {
+            using (codeWriter.Scope($"{typeof(object)} {typeof(IServiceProvider)}.GetService({typeof(Type)} type)"))
+            {
+                foreach (var rootRootCallSite in root.RootCallSites)
+                {
+                    if (rootRootCallSite.IsMainImplementation)
+                    {
+                        codeWriter.Append($"if (type == typeof({rootRootCallSite.ServiceType})) return ");
+                        WriteResolutionCall(codeWriter, rootRootCallSite, "this");
+                        codeWriter.Line($";");
+                    }
+                }
+
+                codeWriter.Line($"return null;");
+            }
+
+            codeWriter.Line();
         }
 
         private void WriteDispose(CodeWriter codeWriter, ServiceProvider root, bool onlyScoped)
@@ -303,6 +325,7 @@ namespace Jab
         private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root)
         {
             codeWriter.Append($" : {typeof(IDisposable)},");
+            codeWriter.Append($"   {typeof(IServiceProvider)},");
             foreach (var serviceCallSite in root.RootCallSites)
             {
                 if (serviceCallSite.IsMainImplementation)
