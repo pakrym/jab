@@ -512,12 +512,12 @@ namespace Jab
         private ServiceProviderDescription? GetDescription(ITypeSymbol serviceProviderType)
         {
             bool isCompositionRoot = false;
+            bool isModule = false;
             Location? location = null;
             List<ServiceRegistration> registrations = new();
             List<ITypeSymbol> rootServices = new();
             foreach (var attributeData in serviceProviderType.GetAttributes())
-            {
-                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _compositionRootAttributeType))
+            {if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _compositionRootAttributeType))
                 {
                     location = attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation();
                     isCompositionRoot = true;
@@ -540,17 +540,26 @@ namespace Jab
                 {
                     registrations.Add(registration);
                 }
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _moduleAttribute))
+                {
+                    isModule = true;
+                }
             }
 
             if (isCompositionRoot)
             {
                 return new ServiceProviderDescription(registrations, rootServices.ToArray(), location);
             }
-            else
+
+            if (registrations.Count > 0 && !isModule)
             {
-                // TODO: Diagnostic
-                return null;
+                _context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingServiceProviderAttribute,
+                    ExtractSymbolNameLocation(serviceProviderType),
+                    serviceProviderType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
+                ));
             }
+
+            return null;
         }
 
         private void ProcessModule(ITypeSymbol serviceProviderType, List<ServiceRegistration> registrations, INamedTypeSymbol moduleType, AttributeData importAttributeData)
@@ -699,6 +708,22 @@ namespace Jab
             }
 
             return (INamedTypeSymbol) typedConstant.Value;
+        }
+
+        private Location? ExtractSymbolNameLocation(ITypeSymbol symbol)
+        {
+            foreach (var declaringSyntaxReference in symbol.DeclaringSyntaxReferences)
+            {
+                var syntax = declaringSyntaxReference.GetSyntax();
+                if (syntax is TypeDeclarationSyntax declarationSyntax)
+                {
+                    return declarationSyntax.Identifier.GetLocation();
+                }
+
+                return syntax.GetLocation();
+            }
+
+            return null;
         }
 
         private readonly struct CallSiteCacheKey : IEquatable<CallSiteCacheKey>
