@@ -12,7 +12,6 @@ namespace Jab.Tests
         {
             string testCode = @"
 
-[Singleton(typeof(Object))]
 public interface IModule {}
 
 [ServiceProvider]
@@ -147,6 +146,7 @@ public partial class Container {{}}
                     .WithLocation(1)
                     .WithArguments("Service"));
         }
+
         [Fact]
         public async Task ProducesJAB0008WhenCircularChainDetected()
         {
@@ -166,6 +166,36 @@ public partial class Container {{}}
                     .CompilerError("JAB0008")
                     .WithLocation(1)
                     .WithArguments("FirstService", "IService", "FirstService -> IService -> Service -> AnotherService -> IService"));
+        }
+
+        [Fact]
+        public async Task ProducesJAB0009ForRegistrationsWithoutServiceProvider()
+        {
+            string testCode = $@"
+interface IService {{}}
+[Transient(typeof(IService))]
+public partial class {{|#1:Container|}} {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0009")
+                    .WithLocation(1)
+                    .WithArguments("Container"));
+        }
+
+        [Fact]
+        public async Task ProducesJAB0009ForInterafaceWithRegistrationsWithoutServiceProvider()
+        {
+            string testCode = $@"
+interface IService {{}}
+[Transient(typeof(IService))]
+interface {{|#1:Container|}} {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0009")
+                    .WithLocation(1)
+                    .WithArguments("Container"));
         }
     }
 }

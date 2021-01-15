@@ -391,6 +391,7 @@ namespace Jab
             DiagnosticDescriptors.ImportedTypeNotMarkedWithModuleAttribute,
             DiagnosticDescriptors.ImplementationTypeRequiresPublicConstructor,
             DiagnosticDescriptors.CyclicDependencyDetected,
+            DiagnosticDescriptors.MissingServiceProviderAttribute,
         }.ToImmutableArray();
     }
 }
