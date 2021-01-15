@@ -33,6 +33,10 @@ namespace Jab
             "The implementation type is required to have at least one public constructor",
             "The implementation type '{0}' is required to have at least one public constructor", "Usage", DiagnosticSeverity.Error, true);
 
+        public static readonly DiagnosticDescriptor CyclicDependencyDetected = new DiagnosticDescriptor("JAB0008",
+            "A cyclic dependency detected when resolving a service",
+            "A cyclic dependency detected when resolving a service '{0}', cycle starts at service '{1}', dependency chain: '{2}'", "Usage", DiagnosticSeverity.Error, true);
+
 
     }
 }

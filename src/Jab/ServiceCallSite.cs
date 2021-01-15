@@ -4,7 +4,7 @@ namespace Jab
 {
     internal abstract record ServiceCallSite
     {
-        protected ServiceCallSite(INamedTypeSymbol serviceType, INamedTypeSymbol implementationType, ServiceLifetime lifetime, int reverseIndex, bool? isDisposable)
+        protected ServiceCallSite(ITypeSymbol serviceType, ITypeSymbol implementationType, ServiceLifetime lifetime, int reverseIndex, bool? isDisposable)
         {
             ServiceType = serviceType;
             ImplementationType = implementationType;
@@ -13,8 +13,8 @@ namespace Jab
             IsDisposable = isDisposable;
         }
 
-        public INamedTypeSymbol ServiceType { get; }
-        public INamedTypeSymbol ImplementationType { get; }
+        public ITypeSymbol ServiceType { get; }
+        public ITypeSymbol ImplementationType { get; }
         public ServiceLifetime Lifetime { get; }
         public int ReverseIndex { get; }
         public bool? IsDisposable { get; }

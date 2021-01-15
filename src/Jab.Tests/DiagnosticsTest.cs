@@ -147,5 +147,25 @@ public partial class Container {{}}
                     .WithLocation(1)
                     .WithArguments("Service"));
         }
+        [Fact]
+        public async Task ProducesJAB0008WhenCircularChainDetected()
+        {
+            string testCode = $@"
+interface IService {{}}
+class FirstService {{ public FirstService(IService s) {{}} }}
+class Service : IService {{ public Service(AnotherService s) {{}} }}
+class AnotherService {{ public AnotherService(IService s) {{}} }}
+[ServiceProvider]
+[{{|#1:Transient(typeof(FirstService))|}}]
+[Transient(typeof(IService), typeof(Service))]
+[Transient(typeof(AnotherService))]
+public partial class Container {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0008")
+                    .WithLocation(1)
+                    .WithArguments("FirstService", "IService", "FirstService -> IService -> Service -> AnotherService -> IService"));
+        }
     }
 }
