@@ -646,9 +646,5 @@ namespace Jab.Tests
         [ServiceProvider(RootServices = new [] { typeof(IEnumerable<IService>) })]
         [Transient(typeof(IService), typeof(ServiceImplementation))]
         internal partial class CanResolveServicesUsingIServiceProviderContainer { }
-
-        [ServiceProvider(RootServices = new [] { typeof(IEnumerable<IService>) })]
-        [Transient(typeof(IService), typeof(ServiceImplementationWithParameter<IService>))]
-        internal partial class CanResolveServicesUsingIServiceProviderContainer2 { }
     }
 }

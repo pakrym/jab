@@ -390,6 +390,7 @@ namespace Jab
             DiagnosticDescriptors.ServiceProviderTypeHasToBePartial,
             DiagnosticDescriptors.ImportedTypeNotMarkedWithModuleAttribute,
             DiagnosticDescriptors.ImplementationTypeRequiresPublicConstructor,
+            DiagnosticDescriptors.CyclicDependencyDetected,
         }.ToImmutableArray();
     }
 }
