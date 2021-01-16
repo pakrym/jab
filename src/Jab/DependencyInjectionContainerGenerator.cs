@@ -373,16 +373,20 @@ namespace Jab
 
         public override void Initialize(AnalysisContext context)
         {
-            var syntaxCollector = new SyntaxCollector();
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
             context.EnableConcurrentExecution();
-            context.RegisterSyntaxNodeAction(analysisContext =>
+            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
+            context.RegisterCompilationStartAction(compilationStartAnalysisContext =>
             {
-                syntaxCollector.OnVisitSyntaxNode(analysisContext.Node);
-            }, SyntaxKind.Attribute, SyntaxKind.InvocationExpression);
-            context.RegisterCompilationAction(compilationContext =>
-            {
-                Execute(new GeneratorContext(compilationContext, syntaxCollector));
+                var syntaxCollector = new SyntaxCollector();
+                compilationStartAnalysisContext.RegisterSyntaxNodeAction(analysisContext =>
+                {
+                    syntaxCollector.OnVisitSyntaxNode(analysisContext.Node);
+                }, SyntaxKind.Attribute, SyntaxKind.InvocationExpression);
+
+                compilationStartAnalysisContext.RegisterCompilationEndAction(compilationContext =>
+                {
+                    Execute(new GeneratorContext(compilationContext, syntaxCollector));
+                });
             });
         }
 

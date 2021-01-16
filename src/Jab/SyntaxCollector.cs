@@ -41,7 +41,7 @@ namespace Jab
                         break;
                 }
             }
-            else if (syntaxNode is InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax { Name: { Identifier: { Text: "GetService" } } } } invocationExpressionSyntax)
+            else if (syntaxNode is InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax { Name: GenericNameSyntax { Identifier: { Text: "GetService" } } } } invocationExpressionSyntax)
             {
                 InvocationExpressions.Add(invocationExpressionSyntax);
             }
