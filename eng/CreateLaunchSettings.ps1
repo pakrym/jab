@@ -8,6 +8,8 @@ $launchSettings = Join-Path $target "Properties" "launchSettings.json"
 $args = Get-Content $source
 $args[1] = '"' + $args[1] + '"'
 $joinedArgs = $args | Join-String -Separator ' ';
+Write-Host "Unprocessed args:"
+Write-Host $args
 $environmentVariablesToReplace = 'USERPROFILE', 'ProgramW6432'
 
 foreach ($ev in $environmentVariablesToReplace)
