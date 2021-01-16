@@ -11,21 +11,25 @@ namespace Jab
     {
         private readonly GeneratorExecutionContext? _generatorExecutionContext;
         private readonly CompilationAnalysisContext? _compilationAnalysisContext;
+        private readonly SyntaxCollector _syntaxCollector;
 
-        public GeneratorContext(CompilationAnalysisContext compilationAnalysisContext)
+        public GeneratorContext(CompilationAnalysisContext compilationAnalysisContext, SyntaxCollector syntaxCollector)
         {
             _compilationAnalysisContext = compilationAnalysisContext;
+            _syntaxCollector = syntaxCollector;
             _generatorExecutionContext = null;
         }
 
         public GeneratorContext(GeneratorExecutionContext generatorExecutionContext)
         {
+            _syntaxCollector = (SyntaxCollector) generatorExecutionContext.SyntaxReceiver!;
             _compilationAnalysisContext = null;
             _generatorExecutionContext = generatorExecutionContext;
         }
 
         public Compilation Compilation => _generatorExecutionContext?.Compilation ?? _compilationAnalysisContext?.Compilation ?? throw new InvalidOperationException();
-        public IEnumerable<InvocationExpressionSyntax> CandidateGetServiceCalls => ((GetServiceSyntaxCollector?) _generatorExecutionContext?.SyntaxReceiver)?.InvocationExpressions ?? Enumerable.Empty<InvocationExpressionSyntax>();
+        public IEnumerable<InvocationExpressionSyntax> CandidateGetServiceCalls => _syntaxCollector.InvocationExpressions;
+        public IEnumerable<TypeDeclarationSyntax> CandidateTypes => _syntaxCollector.CandidateTypes;
 
         public void ReportDiagnostic(Diagnostic diagnostic)
         {

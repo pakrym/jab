@@ -11,16 +11,7 @@ namespace Jab
 {
     internal class ServiceProviderBuilder
     {
-        private const string TransientAttributeMetadataName = "Jab.TransientAttribute";
-        private const string SingletonAttributeMetadataName = "Jab.SingletonAttribute";
-        private const string ScopedAttributeMetadataName = "Jab.ScopedAttribute";
-        private const string CompositionRootAttributeMetadataName = "Jab.ServiceProviderAttribute";
-        private const string ServiceProviderModuleAttributeMetadataName = "Jab.ServiceProviderModuleAttribute";
-        private const string ImportAttributeMetadataName = "Jab.ImportAttribute";
         private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
-        private const string InstanceAttributePropertyName = "Instance";
-        private const string FactoryAttributePropertyName = "Factory";
-        private const string RootServicesAttributePropertyName = "RootServices";
 
         private readonly GeneratorContext _context;
         private readonly INamedTypeSymbol _iEnumerableType;
@@ -39,53 +30,64 @@ namespace Jab
 
             _context = context;
             _iEnumerableType = GetTypeByMetadataNameOrThrow(context, IEnumerableMetadataName);
-            _compositionRootAttributeType = GetTypeByMetadataNameOrThrow(context, CompositionRootAttributeMetadataName);
-            _transientAttributeType = GetTypeByMetadataNameOrThrow(context, TransientAttributeMetadataName);
-            _singletonAttribute = GetTypeByMetadataNameOrThrow(context, SingletonAttributeMetadataName);
-            _scopedAttribute = GetTypeByMetadataNameOrThrow(context, ScopedAttributeMetadataName);
-            _importAttribute = GetTypeByMetadataNameOrThrow(context, ImportAttributeMetadataName);
-            _moduleAttribute = GetTypeByMetadataNameOrThrow(context, ServiceProviderModuleAttributeMetadataName);
+            _compositionRootAttributeType = GetTypeByMetadataNameOrThrow(context, AttributeNames.CompositionRootAttributeMetadataName);
+            _transientAttributeType = GetTypeByMetadataNameOrThrow(context, AttributeNames.TransientAttributeMetadataName);
+            _singletonAttribute = GetTypeByMetadataNameOrThrow(context, AttributeNames.SingletonAttributeMetadataName);
+            _scopedAttribute = GetTypeByMetadataNameOrThrow(context, AttributeNames.ScopedAttributeMetadataName);
+            _importAttribute = GetTypeByMetadataNameOrThrow(context, AttributeNames.ImportAttributeMetadataName);
+            _moduleAttribute = GetTypeByMetadataNameOrThrow(context, AttributeNames.ServiceProviderModuleAttributeMetadataName);
         }
 
         public ServiceProvider[] BuildRoots()
         {
-            List<ServiceProvider> compositionRoots = new();
+            List<GetServiceCallCandidate> getServiceCallCandidates = new();
 
-            void ProcessType(INamedTypeSymbol typeSymbol)
+            foreach (var candidateGetServiceCallGroup in _context.CandidateGetServiceCalls.GroupBy(c => c.SyntaxTree))
             {
-                if (TryCreateCompositionRoot(typeSymbol, out var compositionRoot))
+                var semanticModel = _context.Compilation.GetSemanticModel(candidateGetServiceCallGroup.Key);
+                foreach (var candidateGetServiceCall in candidateGetServiceCallGroup)
+                {
+                    if (candidateGetServiceCall.Expression is MemberAccessExpressionSyntax
+                        {
+                            Name: GenericNameSyntax
+                            {
+                                IsUnboundGenericName: false,
+                                TypeArgumentList: { Arguments: { Count: 1 } arguments }
+                            }
+                        } memberAccessExpression)
+                    {
+                        var containerTypeInfo = semanticModel.GetTypeInfo(memberAccessExpression.Expression);
+                        var serviceInfo = semanticModel.GetSymbolInfo(arguments[0]);
+                        if (containerTypeInfo.Type != null &&
+                            serviceInfo.Symbol is ITypeSymbol serviceType)
+                        {
+                            getServiceCallCandidates.Add(new GetServiceCallCandidate(containerTypeInfo.Type, serviceType, candidateGetServiceCall.GetLocation()));
+                        }
+                    }
+                }
+            }
+
+            List<ServiceProvider> compositionRoots = new();
+#pragma warning disable RS1024 // Compare symbols correctly
+            HashSet<ITypeSymbol> processedTypes = new(SymbolEqualityComparer.Default);
+#pragma warning restore RS1024 // Compare symbols correctly
+            foreach (var candidateTypeDeclaration in _context.CandidateTypes)
+            {
+                var semanticModel = _context.Compilation.GetSemanticModel(candidateTypeDeclaration.SyntaxTree);
+                var symbol = semanticModel.GetDeclaredSymbol(candidateTypeDeclaration);
+
+                if (symbol is ITypeSymbol typeSymbol &&
+                    processedTypes.Add(typeSymbol) &&
+                    TryCreateCompositionRoot(typeSymbol, getServiceCallCandidates, out var compositionRoot))
                 {
                     compositionRoots.Add(compositionRoot);
                 }
-
-                foreach (var typeMember in typeSymbol.GetTypeMembers())
-                {
-                    ProcessType(typeMember);
-                }
-            }
-
-            void ProcessNamespace(INamespaceSymbol ns)
-            {
-                foreach (var namespaceSymbol in ns.GetNamespaceMembers())
-                {
-                    ProcessNamespace(namespaceSymbol);
-                }
-
-                foreach (var typeSymbol in ns.GetTypeMembers())
-                {
-                    ProcessType(typeSymbol);
-                }
-            }
-
-            foreach (var assemblyModule in _context.Compilation.Assembly.Modules)
-            {
-                ProcessNamespace(assemblyModule.GlobalNamespace);
             }
 
             return compositionRoots.ToArray();
         }
 
-        private bool TryCreateCompositionRoot(INamedTypeSymbol typeSymbol, [NotNullWhen(true)] out ServiceProvider? compositionRoot)
+        private bool TryCreateCompositionRoot(ITypeSymbol typeSymbol, List<GetServiceCallCandidate> getServiceCallCandidates, [NotNullWhen(true)] out ServiceProvider? compositionRoot)
         {
             compositionRoot = null;
 
@@ -113,27 +115,11 @@ namespace Jab
                 GetCallSite(rootService, new ServiceResolutionContext(description, callSites, rootService, description.Location));
             }
 
-            foreach (var candidateGetServiceCall in _context.CandidateGetServiceCalls)
+            foreach (var getServiceCallCandidate in getServiceCallCandidates)
             {
-                var semanticModel = _context.Compilation.GetSemanticModel(candidateGetServiceCall.SyntaxTree);
-                if (candidateGetServiceCall.Expression is MemberAccessExpressionSyntax
+                if (SymbolEqualityComparer.Default.Equals(getServiceCallCandidate.ProviderType, typeSymbol))
                 {
-                    Name: GenericNameSyntax
-                    {
-                        IsUnboundGenericName: false,
-                        TypeArgumentList: { Arguments: { Count: 1 } arguments }
-                    }
-                } memberAccessExpression)
-                {
-                    var containerTypeInfo = semanticModel.GetTypeInfo(memberAccessExpression.Expression);
-                    var serviceInfo = semanticModel.GetSymbolInfo(arguments[0]);
-
-                    if (SymbolEqualityComparer.Default.Equals(containerTypeInfo.Type, typeSymbol) &&
-                        serviceInfo.Symbol is INamedTypeSymbol serviceSymbol)
-                    {
-                        GetCallSite(serviceSymbol, new ServiceResolutionContext(description, callSites, serviceSymbol, candidateGetServiceCall.GetLocation()));
-                    }
-
+                    GetCallSite(getServiceCallCandidate.ServiceType, new ServiceResolutionContext(description, callSites, getServiceCallCandidate.ServiceType, getServiceCallCandidate.Location));
                 }
             }
 
@@ -141,7 +127,7 @@ namespace Jab
             return true;
         }
 
-        private void EmitTypeDiagnostics(INamedTypeSymbol typeSymbol)
+        private void EmitTypeDiagnostics(ITypeSymbol typeSymbol)
         {
             foreach (var declaringSyntaxReference in typeSymbol.DeclaringSyntaxReferences)
             {
@@ -523,7 +509,7 @@ namespace Jab
                     isCompositionRoot = true;
                     foreach (var namedArgument in attributeData.NamedArguments)
                     {
-                        if (namedArgument.Key == RootServicesAttributePropertyName)
+                        if (namedArgument.Key == AttributeNames.RootServicesAttributePropertyName)
                         {
                             foreach (var typedConstant in namedArgument.Value.Values)
                             {
@@ -617,11 +603,11 @@ namespace Jab
             string? factoryMemberName = null;
             foreach (var namedArgument in attributeData.NamedArguments)
             {
-                if (namedArgument.Key == InstanceAttributePropertyName)
+                if (namedArgument.Key == AttributeNames.InstanceAttributePropertyName)
                 {
                     instanceMemberName = (string?)namedArgument.Value.Value;
                 }
-                else if (namedArgument.Key == FactoryAttributePropertyName)
+                else if (namedArgument.Key == AttributeNames.FactoryAttributePropertyName)
                 {
                     factoryMemberName = (string?)namedArgument.Value.Value;
                 }
@@ -629,14 +615,14 @@ namespace Jab
 
             ISymbol? instanceMember = null;
             if (instanceMemberName != null &&
-                !TryFindMember(serviceProviderType, attributeData, instanceMemberName, InstanceAttributePropertyName, out instanceMember))
+                !TryFindMember(serviceProviderType, attributeData, instanceMemberName, AttributeNames.InstanceAttributePropertyName, out instanceMember))
             {
                 return false;
             }
 
             ISymbol? factoryMember = null;
             if (factoryMemberName != null&&
-                !TryFindMember(serviceProviderType, attributeData, factoryMemberName, FactoryAttributePropertyName, out factoryMember))
+                !TryFindMember(serviceProviderType, attributeData, factoryMemberName, AttributeNames.FactoryAttributePropertyName, out factoryMember))
             {
                 return false;
             }

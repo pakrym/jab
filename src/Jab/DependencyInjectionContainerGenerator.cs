@@ -15,7 +15,7 @@ namespace Jab
     {
         public void Initialize(GeneratorInitializationContext context)
         {
-            context.RegisterForSyntaxNotifications(() => new GetServiceSyntaxCollector());
+            context.RegisterForSyntaxNotifications(() => new SyntaxCollector());
         }
 
         private void GenerateCallSiteWithCache(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
@@ -373,11 +373,16 @@ namespace Jab
 
         public override void Initialize(AnalysisContext context)
         {
+            var syntaxCollector = new SyntaxCollector();
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
             context.EnableConcurrentExecution();
+            context.RegisterSyntaxNodeAction(analysisContext =>
+            {
+                syntaxCollector.OnVisitSyntaxNode(analysisContext.Node);
+            }, SyntaxKind.Attribute, SyntaxKind.InvocationExpression);
             context.RegisterCompilationAction(compilationContext =>
             {
-                Execute(new GeneratorContext(compilationContext));
+                Execute(new GeneratorContext(compilationContext, syntaxCollector));
             });
         }
 
