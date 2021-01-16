@@ -122,6 +122,9 @@ namespace Jab
                         }
                     });
                     break;
+                case ThisCallSite:
+                    valueCallback(codeWriter, w => w.AppendRaw("this"));
+                    break;
             }
         }
 
@@ -324,8 +327,8 @@ namespace Jab
 
         private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root)
         {
-            codeWriter.Append($" : {typeof(IDisposable)},");
-            codeWriter.Append($"   {typeof(IServiceProvider)},");
+            codeWriter.Line($" : {typeof(IDisposable)},");
+            codeWriter.Line($"   {typeof(IServiceProvider)},");
             foreach (var serviceCallSite in root.RootCallSites)
             {
                 if (serviceCallSite.IsMainImplementation)

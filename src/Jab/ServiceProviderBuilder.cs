@@ -12,9 +12,11 @@ namespace Jab
     internal class ServiceProviderBuilder
     {
         private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
+        private const string IServiceProviderMetadataName = "System.IServiceProvider";
 
         private readonly GeneratorContext _context;
         private readonly INamedTypeSymbol _iEnumerableType;
+        private readonly INamedTypeSymbol _iServiceProviderType;
         private readonly INamedTypeSymbol _compositionRootAttributeType;
         private readonly INamedTypeSymbol _transientAttributeType;
         private readonly INamedTypeSymbol _singletonAttribute;
@@ -30,6 +32,7 @@ namespace Jab
 
             _context = context;
             _iEnumerableType = GetTypeByMetadataNameOrThrow(context, IEnumerableMetadataName);
+            _iServiceProviderType = GetTypeByMetadataNameOrThrow(context, IServiceProviderMetadataName);
             _compositionRootAttributeType = GetTypeByMetadataNameOrThrow(context, AttributeNames.CompositionRootAttributeMetadataName);
             _transientAttributeType = GetTypeByMetadataNameOrThrow(context, AttributeNames.TransientAttributeMetadataName);
             _singletonAttribute = GetTypeByMetadataNameOrThrow(context, AttributeNames.SingletonAttributeMetadataName);
@@ -100,7 +103,6 @@ namespace Jab
             EmitTypeDiagnostics(typeSymbol);
 
             Dictionary<CallSiteCacheKey, ServiceCallSite> callSites = new();
-
             foreach (var registration in description.ServiceRegistrations)
             {
                 if (registration.ServiceType.IsUnboundGenericType)
@@ -168,7 +170,8 @@ namespace Jab
 
             try
             {
-                return TryCreateExact(serviceType, context) ??
+                return TryCreateSpecial(serviceType, context) ??
+                       TryCreateExact(serviceType, context) ??
                        TryCreateEnumerable(serviceType, context) ??
                        TryCreateGeneric(serviceType, context);
             }
@@ -177,6 +180,17 @@ namespace Jab
                 context.Remove(serviceType);
                 throw;
             }
+        }
+
+        private ServiceCallSite? TryCreateSpecial(ITypeSymbol serviceType, ServiceResolutionContext context)
+        {
+            if (SymbolEqualityComparer.Default.Equals(serviceType, _iServiceProviderType))
+            {
+                var callSite = new ThisCallSite(_iServiceProviderType);
+                context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
+            }
+
+            return null;
         }
 
         private ServiceCallSite? TryCreateGeneric(
@@ -199,7 +213,6 @@ namespace Jab
 
             return null;
         }
-
 
         private ServiceCallSite? TryCreateGeneric(
             ITypeSymbol serviceType,

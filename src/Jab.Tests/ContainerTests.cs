@@ -11,7 +11,7 @@ namespace Jab.Tests
         public void CanCreateTransientService()
         {
             CanCreateTransientServiceContainer c = new();
-            Assert.IsType<ServiceImplementation>(c.GetService());
+            Assert.IsType<ServiceImplementation>(c.GetService<IService>());
         }
 
         [ServiceProvider]
@@ -646,5 +646,21 @@ namespace Jab.Tests
         [ServiceProvider(RootServices = new [] { typeof(IEnumerable<IService>) })]
         [Transient(typeof(IService), typeof(ServiceImplementation))]
         internal partial class CanResolveServicesUsingIServiceProviderContainer { }
+
+        [Fact]
+        public void CanResolveIServiceProvider()
+        {
+            CanResolveIServiceProviderContainer c = new();
+            var provider = c.GetService<IServiceProvider>();
+
+            var scope = c.CreateScope();
+            var scopeProvider = scope.GetService<IServiceProvider>();
+
+            Assert.Same(provider, c);
+            Assert.Same(scopeProvider, scope);
+        }
+
+        [ServiceProvider]
+        internal partial class CanResolveIServiceProviderContainer { }
     }
 }
