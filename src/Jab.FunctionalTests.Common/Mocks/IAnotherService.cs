@@ -2,8 +2,5 @@
 {
     internal interface IAnotherService
     {
-        public void N()
-        {
-        }
     }
 }
