@@ -122,8 +122,11 @@ namespace Jab
                         }
                     });
                     break;
-                case ThisCallSite:
+                case ServiceProviderCallSite:
                     valueCallback(codeWriter, w => w.AppendRaw("this"));
+                    break;
+                case ScopeFactoryCallSite:
+                    valueCallback(codeWriter, w => w.AppendRaw(rootReference));
                     break;
             }
         }
@@ -150,7 +153,7 @@ namespace Jab
                             codeWriter.Scope($"{SyntaxFacts.GetText(containingType.DeclaredAccessibility)} partial class {containingType.Name}") :
                             null;
                         codeWriter.Append($"{SyntaxFacts.GetText(root.Type.DeclaredAccessibility)} partial class {root.Type.Name}");
-                        WriteInterfaces(codeWriter, root);
+                        WriteInterfaces(codeWriter, root, false);
                         using (codeWriter.Scope())
                         {
                             WriteCacheLocations(root, codeWriter, onlyScoped: false);
@@ -179,8 +182,14 @@ namespace Jab
                             }
                             codeWriter.Line();
 
+                            if (root.KnownTypes.IServiceScopeFactoryType != null)
+                            {
+                                codeWriter.Line($"{root.KnownTypes.IServiceScopeType} {root.KnownTypes.IServiceScopeFactoryType}.CreateScope() => this.CreateScope();");
+                                codeWriter.Line();
+                            }
+
                             codeWriter.Append($"public partial class Scope");
-                            WriteInterfaces(codeWriter, root);
+                            WriteInterfaces(codeWriter, root, true);
                             using (codeWriter.Scope())
                             {
                                 WriteCacheLocations(root, codeWriter, onlyScoped: true);
@@ -219,6 +228,12 @@ namespace Jab
                                 }
 
                                 WriteServiceProvider(codeWriter, root);
+
+                                if (root.KnownTypes.IServiceScopeType != null)
+                                {
+                                    codeWriter.Line($"{root.KnownTypes.IServiceProviderType} {root.KnownTypes.IServiceScopeType}.ServiceProvider => this;");
+                                    codeWriter.Line();
+                                }
                                 WriteDispose(codeWriter, root, onlyScoped: true);
                             }
                         }
@@ -325,16 +340,26 @@ namespace Jab
             codeWriter.Line();
         }
 
-        private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root)
+        private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root, bool isScope)
         {
             codeWriter.Line($" : {typeof(IDisposable)},");
             codeWriter.Line($"   {typeof(IServiceProvider)},");
+
+            if (!isScope && root.KnownTypes.IServiceScopeFactoryType != null)
+            {
+                codeWriter.Line($"   {root.KnownTypes.IServiceScopeFactoryType},");
+            }
+
+            if (isScope && root.KnownTypes.IServiceScopeType != null)
+            {
+                codeWriter.Line($"   {root.KnownTypes.IServiceScopeType},");
+            }
+
             foreach (var serviceCallSite in root.RootCallSites)
             {
                 if (serviceCallSite.IsMainImplementation)
                 {
-                    codeWriter.Line();
-                    codeWriter.Append($"    IServiceProvider<{serviceCallSite.ServiceType}>,");
+                    codeWriter.Append($"   IServiceProvider<{serviceCallSite.ServiceType}>,");
                 }
             }
 

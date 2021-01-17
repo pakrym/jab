@@ -9,36 +9,76 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Jab
 {
-    internal class ServiceProviderBuilder
+    internal class KnownTypes
     {
+        public const string TransientAttributeShortName = "Transient";
+        public const string SingletonAttributeShortName = "Singleton";
+        public const string ScopedAttributeShortName = "Scoped";
+        public const string CompositionRootAttributeShortName = "ServiceProvider";
+        public const string ServiceProviderModuleAttributeShortName = "ServiceProviderModule";
+        public const string ImportAttributeShortName = "Import";
+
+        public const string TransientAttributeTypeName = TransientAttributeShortName + "Attribute";
+        public const string SingletonAttributeTypeName = SingletonAttributeShortName + "Attribute";
+        public const string ScopedAttributeTypeName = ScopedAttributeShortName + "Attribute";
+        public const string CompositionRootAttributeTypeName = CompositionRootAttributeShortName + "Attribute";
+        public const string ServiceProviderModuleAttributeTypeName = ServiceProviderModuleAttributeShortName + "Attribute";
+        public const string ImportAttributeTypeName = ImportAttributeShortName + "Attribute";
+
+        public const string TransientAttributeMetadataName = "Jab." + TransientAttributeTypeName;
+        public const string SingletonAttributeMetadataName = "Jab." + SingletonAttributeTypeName;
+        public const string ScopedAttributeMetadataName = "Jab." + ScopedAttributeTypeName;
+        public const string CompositionRootAttributeMetadataName = "Jab." + CompositionRootAttributeTypeName;
+        public const string ServiceProviderModuleAttributeMetadataName = "Jab." + ServiceProviderModuleAttributeTypeName;
+        public const string ImportAttributeMetadataName = "Jab." + ImportAttributeTypeName;
+
+        public const string InstanceAttributePropertyName = "Instance";
+        public const string FactoryAttributePropertyName = "Factory";
+        public const string RootServicesAttributePropertyName = "RootServices";
+
         private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
         private const string IServiceProviderMetadataName = "System.IServiceProvider";
+        private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";
+        private const string IServiceScopeFactoryMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
 
+        public INamedTypeSymbol IEnumerableType { get; }
+        public INamedTypeSymbol IServiceProviderType { get; }
+        public INamedTypeSymbol CompositionRootAttributeType { get; }
+        public INamedTypeSymbol TransientAttributeType { get; }
+        public INamedTypeSymbol SingletonAttribute { get; }
+        public INamedTypeSymbol ImportAttribute { get; }
+        public INamedTypeSymbol ModuleAttribute { get; }
+        public INamedTypeSymbol ScopedAttribute { get; }
+        public INamedTypeSymbol? IServiceScopeType { get; }
+        public INamedTypeSymbol? IServiceScopeFactoryType { get; }
+
+        public KnownTypes(Compilation compilation)
+        {
+            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(Compilation compilation, string fullyQualifiedMetadataName) =>
+                compilation.GetTypeByMetadataName(fullyQualifiedMetadataName)
+                ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
+
+            IEnumerableType = GetTypeByMetadataNameOrThrow(compilation, IEnumerableMetadataName);
+            IServiceProviderType = GetTypeByMetadataNameOrThrow(compilation, IServiceProviderMetadataName);
+            IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
+            IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
+            CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(compilation, CompositionRootAttributeMetadataName);
+            TransientAttributeType = GetTypeByMetadataNameOrThrow(compilation, TransientAttributeMetadataName);
+            SingletonAttribute = GetTypeByMetadataNameOrThrow(compilation, SingletonAttributeMetadataName);
+            ScopedAttribute = GetTypeByMetadataNameOrThrow(compilation, ScopedAttributeMetadataName);
+            ImportAttribute = GetTypeByMetadataNameOrThrow(compilation, ImportAttributeMetadataName);
+            ModuleAttribute = GetTypeByMetadataNameOrThrow(compilation, ServiceProviderModuleAttributeMetadataName);
+        }
+    }
+    internal class ServiceProviderBuilder
+    {
         private readonly GeneratorContext _context;
-        private readonly INamedTypeSymbol _iEnumerableType;
-        private readonly INamedTypeSymbol _iServiceProviderType;
-        private readonly INamedTypeSymbol _compositionRootAttributeType;
-        private readonly INamedTypeSymbol _transientAttributeType;
-        private readonly INamedTypeSymbol _singletonAttribute;
-        private readonly INamedTypeSymbol _importAttribute;
-        private readonly INamedTypeSymbol _moduleAttribute;
-        private readonly INamedTypeSymbol _scopedAttribute;
+        private readonly KnownTypes _knownTypes;
 
         public ServiceProviderBuilder(GeneratorContext context)
         {
-            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(GeneratorContext context, string fullyQualifiedMetadataName) =>
-                context.Compilation.GetTypeByMetadataName(fullyQualifiedMetadataName)
-                    ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
-
             _context = context;
-            _iEnumerableType = GetTypeByMetadataNameOrThrow(context, IEnumerableMetadataName);
-            _iServiceProviderType = GetTypeByMetadataNameOrThrow(context, IServiceProviderMetadataName);
-            _compositionRootAttributeType = GetTypeByMetadataNameOrThrow(context, AttributeNames.CompositionRootAttributeMetadataName);
-            _transientAttributeType = GetTypeByMetadataNameOrThrow(context, AttributeNames.TransientAttributeMetadataName);
-            _singletonAttribute = GetTypeByMetadataNameOrThrow(context, AttributeNames.SingletonAttributeMetadataName);
-            _scopedAttribute = GetTypeByMetadataNameOrThrow(context, AttributeNames.ScopedAttributeMetadataName);
-            _importAttribute = GetTypeByMetadataNameOrThrow(context, AttributeNames.ImportAttributeMetadataName);
-            _moduleAttribute = GetTypeByMetadataNameOrThrow(context, AttributeNames.ServiceProviderModuleAttributeMetadataName);
+            _knownTypes = new KnownTypes(context.Compilation);
         }
 
         public ServiceProvider[] BuildRoots()
@@ -125,7 +165,7 @@ namespace Jab
                 }
             }
 
-            compositionRoot = new ServiceProvider(typeSymbol, callSites.Values.ToArray());
+            compositionRoot = new ServiceProvider(typeSymbol, callSites.Values.ToArray(), _knownTypes);
             return true;
         }
 
@@ -184,9 +224,15 @@ namespace Jab
 
         private ServiceCallSite? TryCreateSpecial(ITypeSymbol serviceType, ServiceResolutionContext context)
         {
-            if (SymbolEqualityComparer.Default.Equals(serviceType, _iServiceProviderType))
+            if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceProviderType))
             {
-                var callSite = new ThisCallSite(_iServiceProviderType);
+                var callSite = new ServiceProviderCallSite(serviceType);
+                context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
+            }
+
+            if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceScopeFactoryType))
+            {
+                var callSite = new ScopeFactoryCallSite(serviceType);
                 context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
             }
 
@@ -249,7 +295,7 @@ namespace Jab
             }
 
             if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
-                SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _iEnumerableType))
+                SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _knownTypes.IEnumerableType))
             {
                 var enumerableService = genericType.TypeArguments[0];
                 var items = new List<ServiceCallSite>();
@@ -442,7 +488,7 @@ namespace Jab
             }
 
             if (genericType != null &&
-                SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _iEnumerableType))
+                SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _knownTypes.IEnumerableType))
             {
                 // We can always satisfy IEnumerables
                 return true;
@@ -516,13 +562,13 @@ namespace Jab
             List<ServiceRegistration> registrations = new();
             List<ITypeSymbol> rootServices = new();
             foreach (var attributeData in serviceProviderType.GetAttributes())
-            {if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _compositionRootAttributeType))
+            {if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.CompositionRootAttributeType))
                 {
                     location = attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation();
                     isCompositionRoot = true;
                     foreach (var namedArgument in attributeData.NamedArguments)
                     {
-                        if (namedArgument.Key == AttributeNames.RootServicesAttributePropertyName)
+                        if (namedArgument.Key == KnownTypes.RootServicesAttributePropertyName)
                         {
                             foreach (var typedConstant in namedArgument.Value.Values)
                             {
@@ -531,7 +577,7 @@ namespace Jab
                         }
                     }
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _importAttribute))
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ImportAttribute))
                 {
                     ProcessModule(serviceProviderType, registrations, ExtractType(attributeData.ConstructorArguments[0]), attributeData);
                 }
@@ -539,7 +585,7 @@ namespace Jab
                 {
                     registrations.Add(registration);
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _moduleAttribute))
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ModuleAttribute))
                 {
                     isModule = true;
                 }
@@ -567,11 +613,11 @@ namespace Jab
             bool isModule = false;
             foreach (var attributeData in moduleType.GetAttributes())
             {
-                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _moduleAttribute))
+                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ModuleAttribute))
                 {
                     isModule = true;
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _importAttribute))
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ImportAttribute))
                 {
                     ProcessModule(serviceProviderType, registrations, ExtractType(attributeData.ConstructorArguments[0]), importAttributeData);
                 }
@@ -587,7 +633,7 @@ namespace Jab
                     DiagnosticDescriptors.ImportedTypeNotMarkedWithModuleAttribute,
                     importAttributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
                     moduleType.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat),
-                    _moduleAttribute.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)
+                    _knownTypes.ModuleAttribute.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)
                 ));
             }
         }
@@ -596,19 +642,19 @@ namespace Jab
         {
             registration = null;
 
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _transientAttributeType) &&
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.TransientAttributeType) &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Transient, out registration))
             {
                 return true;
             }
 
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _singletonAttribute) &&
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.SingletonAttribute) &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Singleton, out registration))
             {
                 return true;
             }
 
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _scopedAttribute) &&
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ScopedAttribute) &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Scoped, out registration))
             {
                 return true;
@@ -625,11 +671,11 @@ namespace Jab
             string? factoryMemberName = null;
             foreach (var namedArgument in attributeData.NamedArguments)
             {
-                if (namedArgument.Key == AttributeNames.InstanceAttributePropertyName)
+                if (namedArgument.Key == KnownTypes.InstanceAttributePropertyName)
                 {
                     instanceMemberName = (string?)namedArgument.Value.Value;
                 }
-                else if (namedArgument.Key == AttributeNames.FactoryAttributePropertyName)
+                else if (namedArgument.Key == KnownTypes.FactoryAttributePropertyName)
                 {
                     factoryMemberName = (string?)namedArgument.Value.Value;
                 }
@@ -637,14 +683,14 @@ namespace Jab
 
             ISymbol? instanceMember = null;
             if (instanceMemberName != null &&
-                !TryFindMember(serviceProviderType, attributeData, instanceMemberName, AttributeNames.InstanceAttributePropertyName, out instanceMember))
+                !TryFindMember(serviceProviderType, attributeData, instanceMemberName, KnownTypes.InstanceAttributePropertyName, out instanceMember))
             {
                 return false;
             }
 
             ISymbol? factoryMember = null;
             if (factoryMemberName != null&&
-                !TryFindMember(serviceProviderType, attributeData, factoryMemberName, AttributeNames.FactoryAttributePropertyName, out factoryMember))
+                !TryFindMember(serviceProviderType, attributeData, factoryMemberName, KnownTypes.FactoryAttributePropertyName, out factoryMember))
             {
                 return false;
             }
