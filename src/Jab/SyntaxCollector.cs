@@ -25,18 +25,18 @@ namespace Jab
             {
                 switch (identifier.Text)
                 {
-                    case AttributeNames.TransientAttributeShortName:
-                    case AttributeNames.SingletonAttributeShortName:
-                    case AttributeNames.ScopedAttributeShortName:
-                    case AttributeNames.CompositionRootAttributeShortName:
-                    case AttributeNames.ServiceProviderModuleAttributeShortName:
-                    case AttributeNames.ImportAttributeShortName:
-                    case AttributeNames.TransientAttributeTypeName:
-                    case AttributeNames.SingletonAttributeTypeName:
-                    case AttributeNames.ScopedAttributeTypeName:
-                    case AttributeNames.CompositionRootAttributeTypeName:
-                    case AttributeNames.ServiceProviderModuleAttributeTypeName:
-                    case AttributeNames.ImportAttributeTypeName:
+                    case KnownTypes.TransientAttributeShortName:
+                    case KnownTypes.SingletonAttributeShortName:
+                    case KnownTypes.ScopedAttributeShortName:
+                    case KnownTypes.CompositionRootAttributeShortName:
+                    case KnownTypes.ServiceProviderModuleAttributeShortName:
+                    case KnownTypes.ImportAttributeShortName:
+                    case KnownTypes.TransientAttributeTypeName:
+                    case KnownTypes.SingletonAttributeTypeName:
+                    case KnownTypes.ScopedAttributeTypeName:
+                    case KnownTypes.CompositionRootAttributeTypeName:
+                    case KnownTypes.ServiceProviderModuleAttributeTypeName:
+                    case KnownTypes.ImportAttributeTypeName:
                         CandidateTypes.Add(candidateType);
                         break;
                 }
