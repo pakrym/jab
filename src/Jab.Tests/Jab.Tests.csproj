@@ -7,6 +7,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Jab\Jab.csproj" />
 
+    <Content Include="..\Jab\Attributes.cs" CopyToOutputDirectory="PreserveNewest" />
+    
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">

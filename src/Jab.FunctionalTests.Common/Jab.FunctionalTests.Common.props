@@ -23,7 +23,6 @@
     <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" />
     <Compile Include="$(MSBuildThisFileDirectory)\**\*.cs" />
     <Compile Include="..\Jab\Attributes.cs" />
-    <Content Include="..\Jab\Attributes.cs" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="_SetProperties">
     <PropertyGroup>
