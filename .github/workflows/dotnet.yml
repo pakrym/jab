@@ -31,5 +31,5 @@ jobs:
       run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "github" --skip-duplicate --no-symbols true
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     - name: Publish NuGet packages to NuGet
-      run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source "NuGet" --skip-duplicate --no-symbols true
+      run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source "nuget.org" --skip-duplicate --no-symbols true
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
