@@ -27,6 +27,9 @@ jobs:
       run: dotnet pack src --no-build --output nuget
     - name: Add GitHub package source
       run: dotnet nuget add source https://nuget.pkg.github.com/pakrym/index.json --name "github" --username NotUsed --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
-    - name: Publish NuGet packages
+    - name: Publish NuGet packages to GitHub feed
       run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "github" --skip-duplicate --no-symbols true
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    - name: Publish NuGet packages to NuGet
+      run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source "NuGet" --skip-duplicate --no-symbols true
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
