@@ -10,6 +10,7 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <RepositoryUrl>https://github.com/pakrym/jab</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
