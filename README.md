@@ -1,5 +1,7 @@
 # Jab Compile Time Dependency Injection
 
+![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Jab)
+
 Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/introducing-c-source-generators/) based dependency injection container implementation.
 
 - Fast startup (200x faster than Microsoft.Extensions.DependencyInjection). [Details](#Startup-Time).
