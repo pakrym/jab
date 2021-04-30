@@ -3,23 +3,33 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.ServiceLookup;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Jab.Extensions.DependencyInjection
 {
     /// <summary>
     /// The default IServiceProvider.
     /// </summary>
-    internal sealed class ServiceProvider : IServiceProvider, IDisposable, IServiceProviderEngineCallback, IAsyncDisposable
+    public class JabServiceProvider : IServiceProvider, IDisposable, IServiceProviderEngineCallback, IAsyncDisposable
     {
         private readonly IServiceProviderEngine _engine;
 
         private readonly CallSiteValidator _callSiteValidator;
 
-        internal ServiceProvider(IEnumerable<ServiceDescriptor> serviceDescriptors, IServiceProviderEngine engine, ServiceProviderOptions options)
+        public JabServiceProvider(): this(Array.Empty<ServiceDescriptor>())
         {
-            _engine = engine;
+        }
+
+        public JabServiceProvider(IEnumerable<ServiceDescriptor> serviceDescriptors): this(serviceDescriptors, null, ServiceProviderOptions.Default)
+        {
+        }
+
+        internal JabServiceProvider(IEnumerable<ServiceDescriptor> serviceDescriptors, ServiceProviderEngine? engine, ServiceProviderOptions options)
+        {
+            _engine = engine ?? GetEngine(serviceDescriptors);
 
             if (options.ValidateScopes)
             {
@@ -58,7 +68,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public object GetService(Type serviceType) => _engine.GetService(serviceType);
 
         /// <inheritdoc />
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             _engine.Dispose();
         }
@@ -74,9 +84,31 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         /// <inheritdoc/>
-        public ValueTask DisposeAsync()
+        ValueTask IAsyncDisposable.DisposeAsync()
         {
             return _engine.DisposeAsync();
+        }
+
+        private static IServiceProviderEngine GetEngine(IEnumerable<ServiceDescriptor> services)
+        {
+
+            IServiceProviderEngine engine;
+
+#if !NETSTANDARD2_1
+            engine = new DynamicServiceProviderEngine(services);
+#else
+            if (RuntimeFeature.IsDynamicCodeCompiled)
+            {
+                engine = new DynamicServiceProviderEngine(services);
+            }
+            else
+            {
+                // Don't try to compile Expressions/IL if they are going to get interpreted
+                engine = new RuntimeServiceProviderEngine(services);
+            }
+#endif
+
+            return engine;
         }
     }
 }

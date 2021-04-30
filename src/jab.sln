@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab.Extensions.DependencyIn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab.Extensions.DependencyInjection", "Jab.Extensions.DependencyInjection\Jab.Extensions.DependencyInjection.csproj", "{52005C20-84C9-4761-88DE-4AA53B0347C7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab.FunctionalTests.JEDI", "Jab.FunctionalTests.JEDI\Jab.FunctionalTests.JEDI.csproj", "{C0382000-BECF-4B85-84D4-90A1AF458F60}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -128,5 +130,17 @@ Global
 		{52005C20-84C9-4761-88DE-4AA53B0347C7}.Release|x64.Build.0 = Release|Any CPU
 		{52005C20-84C9-4761-88DE-4AA53B0347C7}.Release|x86.ActiveCfg = Release|Any CPU
 		{52005C20-84C9-4761-88DE-4AA53B0347C7}.Release|x86.Build.0 = Release|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Debug|x64.Build.0 = Debug|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Debug|x86.Build.0 = Debug|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Release|x64.ActiveCfg = Release|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Release|x64.Build.0 = Release|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Release|x86.ActiveCfg = Release|Any CPU
+		{C0382000-BECF-4B85-84D4-90A1AF458F60}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

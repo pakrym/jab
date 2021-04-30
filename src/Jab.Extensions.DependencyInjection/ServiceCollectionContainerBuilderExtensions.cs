@@ -9,15 +9,15 @@ using Microsoft.Extensions.DependencyInjection.ServiceLookup;
 namespace Jab.Extensions.DependencyInjection
 {
     /// <summary>
-    /// Extension methods for building a <see cref="ServiceProvider"/> from an <see cref="IServiceCollection"/>.
+    /// Extension methods for building a <see cref="JabServiceProvider"/> from an <see cref="IServiceCollection"/>.
     /// </summary>
-    public static class ServiceCollectionContainerBuilderExtensions
+    internal static class ServiceCollectionContainerBuilderExtensions
     {
         /// <summary>
-        /// Creates a <see cref="ServiceProvider"/> containing services from the provided <see cref="IServiceCollection"/>.
+        /// Creates a <see cref="JabServiceProvider"/> containing services from the provided <see cref="IServiceCollection"/>.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> containing service descriptors.</param>
-        /// <returns>The <see cref="ServiceProvider"/>.</returns>
+        /// <returns>The <see cref="JabServiceProvider"/>.</returns>
 
         public static IServiceProvider BuildServiceProvider(this IServiceCollection services)
         {
@@ -25,29 +25,29 @@ namespace Jab.Extensions.DependencyInjection
         }
 
         /// <summary>
-        /// Creates a <see cref="ServiceProvider"/> containing services from the provided <see cref="IServiceCollection"/>
+        /// Creates a <see cref="JabServiceProvider"/> containing services from the provided <see cref="IServiceCollection"/>
         /// optionally enabling scope validation.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> containing service descriptors.</param>
         /// <param name="validateScopes">
         /// <c>true</c> to perform check verifying that scoped services never gets resolved from root provider; otherwise <c>false</c>.
         /// </param>
-        /// <returns>The <see cref="ServiceProvider"/>.</returns>
-        internal static ServiceProvider BuildServiceProvider(this IServiceCollection services, bool validateScopes)
+        /// <returns>The <see cref="JabServiceProvider"/>.</returns>
+        internal static IServiceProvider BuildServiceProvider(this IServiceCollection services, bool validateScopes)
         {
             return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = validateScopes });
         }
 
         /// <summary>
-        /// Creates a <see cref="ServiceProvider"/> containing services from the provided <see cref="IServiceCollection"/>
+        /// Creates a <see cref="JabServiceProvider"/> containing services from the provided <see cref="IServiceCollection"/>
         /// optionally enabling scope validation.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> containing service descriptors.</param>
         /// <param name="options">
         /// Configures various service provider behaviors.
         /// </param>
-        /// <returns>The <see cref="ServiceProvider"/>.</returns>
-        internal static ServiceProvider BuildServiceProvider(this IServiceCollection services, ServiceProviderOptions options)
+        /// <returns>The <see cref="JabServiceProvider"/>.</returns>
+        internal static IServiceProvider BuildServiceProvider(this IServiceCollection services, ServiceProviderOptions options)
         {
             if (services == null)
             {
@@ -59,23 +59,7 @@ namespace Jab.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(options));
             }
 
-            IServiceProviderEngine engine;
-
-#if !NETSTANDARD2_1
-            engine = new DynamicServiceProviderEngine(services);
-#else
-            if (RuntimeFeature.IsDynamicCodeCompiled)
-            {
-                engine = new DynamicServiceProviderEngine(services);
-            }
-            else
-            {
-                // Don't try to compile Expressions/IL if they are going to get interpreted
-                engine = new RuntimeServiceProviderEngine(services);
-            }
-#endif
-
-            return new ServiceProvider(services, engine, options);
+            return new JabServiceProvider(services, null, options);
         }
     }
 }

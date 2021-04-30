@@ -25,7 +25,7 @@ namespace Microsoft.Extensions.DependencyInjection.Tests
                 _ => throw new NotSupportedException()
             };
 
-            return new ServiceProvider(services, engine, ServiceProviderOptions.Default);
+            return new JabServiceProvider(services, engine, ServiceProviderOptions.Default);
         }
     }
 }

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using Jab.Extensions.DependencyInjection;
 
 namespace Microsoft.Extensions.DependencyInjection.ServiceLookup
 {
@@ -12,7 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection.ServiceLookup
         }
 
         public override Type ServiceType { get; } = typeof(IServiceProvider);
-        public override Type ImplementationType { get; } = typeof(ServiceProvider);
+        public override Type ImplementationType { get; } = typeof(JabServiceProvider);
         public override CallSiteKind Kind { get; } = CallSiteKind.ServiceProvider;
     }
 }

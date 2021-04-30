@@ -40,6 +40,8 @@ namespace Jab
         private const string IServiceProviderMetadataName = "System.IServiceProvider";
         private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";
         private const string IServiceScopeFactoryMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
+        private const string IServiceCollectionMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceCollection";
+        private const string JabServiceProviderTypeMetadataName = "Jab.Extensions.DependencyInjection.JabServiceProvider";
 
         public INamedTypeSymbol IEnumerableType { get; }
         public INamedTypeSymbol IServiceProviderType { get; }
@@ -51,6 +53,8 @@ namespace Jab
         public INamedTypeSymbol ScopedAttribute { get; }
         public INamedTypeSymbol? IServiceScopeType { get; }
         public INamedTypeSymbol? IServiceScopeFactoryType { get; }
+        public INamedTypeSymbol? IServiceCollectionType { get; }
+        public INamedTypeSymbol? JabServiceProviderType { get; }
 
         public KnownTypes(Compilation compilation)
         {
@@ -62,12 +66,14 @@ namespace Jab
             IServiceProviderType = GetTypeByMetadataNameOrThrow(compilation, IServiceProviderMetadataName);
             IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
             IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
+            IServiceCollectionType = compilation.GetTypeByMetadataName(IServiceCollectionMetadataName);
             CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(compilation, CompositionRootAttributeMetadataName);
             TransientAttributeType = GetTypeByMetadataNameOrThrow(compilation, TransientAttributeMetadataName);
             SingletonAttribute = GetTypeByMetadataNameOrThrow(compilation, SingletonAttributeMetadataName);
             ScopedAttribute = GetTypeByMetadataNameOrThrow(compilation, ScopedAttributeMetadataName);
             ImportAttribute = GetTypeByMetadataNameOrThrow(compilation, ImportAttributeMetadataName);
             ModuleAttribute = GetTypeByMetadataNameOrThrow(compilation, ServiceProviderModuleAttributeMetadataName);
+            JabServiceProviderType = compilation.GetTypeByMetadataName(JabServiceProviderTypeMetadataName);
         }
     }
     internal class ServiceProviderBuilder

@@ -153,10 +153,13 @@ namespace Jab
                             codeWriter.Scope($"{SyntaxFacts.GetText(containingType.DeclaredAccessibility)} partial class {containingType.Name}") :
                             null;
                         codeWriter.Append($"{SyntaxFacts.GetText(root.Type.DeclaredAccessibility)} partial class {root.Type.Name}");
+
                         WriteInterfaces(codeWriter, root, false);
                         using (codeWriter.Scope())
                         {
                             WriteCacheLocations(root, codeWriter, onlyScoped: false);
+
+                            WriteConstructor(root, codeWriter);
 
                             foreach (var rootService in root.RootCallSites)
                             {
@@ -247,6 +250,21 @@ namespace Jab
             }
         }
 
+        private void WriteConstructor(ServiceProvider root, CodeWriter codeWriter)
+        {
+            if (root.KnownTypes.JabServiceProviderType != null)
+            {
+                using (codeWriter.Scope($"public {root.Type.Name}() : base()"))
+                {
+                }
+                codeWriter.Line();
+                using (codeWriter.Scope($"public {root.Type.Name}({root.KnownTypes.IServiceCollectionType} services) : base(services)"))
+                {
+                }
+                codeWriter.Line();
+            }
+        }
+
         private void WriteServiceProvider(CodeWriter codeWriter, ServiceProvider root)
         {
             using (codeWriter.Scope($"{typeof(object)} {typeof(IServiceProvider)}.GetService({typeof(Type)} type)"))
@@ -261,7 +279,14 @@ namespace Jab
                     }
                 }
 
-                codeWriter.Line($"return null;");
+                if (root.KnownTypes.JabServiceProviderType != null)
+                {
+                    codeWriter.Line($"return base.GetService(type);");
+                }
+                else
+                {
+                    codeWriter.Line($"return null;");
+                }
             }
 
             codeWriter.Line();
@@ -342,7 +367,12 @@ namespace Jab
 
         private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root, bool isScope)
         {
-            codeWriter.Line($" : {typeof(IDisposable)},");
+            codeWriter.Line($" :");
+            if (root.KnownTypes.JabServiceProviderType is {} jabProvider)
+            {
+                codeWriter.Line($"   {jabProvider},");
+            }
+            codeWriter.Line($"   {typeof(IDisposable)},");
             codeWriter.Line($"   {typeof(IServiceProvider)},");
 
             if (!isScope && root.KnownTypes.IServiceScopeFactoryType != null)
