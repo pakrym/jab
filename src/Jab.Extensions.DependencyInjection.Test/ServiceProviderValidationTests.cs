@@ -3,6 +3,7 @@
 
 using System;
 using Microsoft.Extensions.DependencyInjection.Specification.Fakes;
+using Jab.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Microsoft.Extensions.DependencyInjection.Tests

@@ -11,7 +11,7 @@ namespace Microsoft.Extensions.DependencyInjection
     /// <summary>
     /// The default IServiceProvider.
     /// </summary>
-    public sealed class ServiceProvider : IServiceProvider, IDisposable, IServiceProviderEngineCallback, IAsyncDisposable
+    internal sealed class ServiceProvider : IServiceProvider, IDisposable, IServiceProviderEngineCallback, IAsyncDisposable
     {
         private readonly IServiceProviderEngine _engine;
 

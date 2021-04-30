@@ -8,6 +8,7 @@ using System.Diagnostics.Tracing;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection.Specification.Fakes;
 using Newtonsoft.Json.Linq;
+using Jab.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Microsoft.Extensions.DependencyInjection.Tests

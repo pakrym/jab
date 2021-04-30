@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection.Specification;
 using Microsoft.Extensions.DependencyInjection.Specification.Fakes;
 using Microsoft.Extensions.DependencyInjection.Tests.Fakes;
 using Microsoft.Extensions.Internal;
+using Jab.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Microsoft.Extensions.DependencyInjection.Tests
@@ -384,7 +385,7 @@ namespace Microsoft.Extensions.DependencyInjection.Tests
                 //forces Dispose ValueTask to be asynchronous and not be immediately completed
                 services.AddSingleton<DelayedAsyncDisposableService>();
             }
-            ServiceProvider sp = services.BuildServiceProvider();
+            IServiceProvider sp = services.BuildServiceProvider();
             var disposable = sp.GetRequiredService<Disposable>();
             var asyncDisposable = sp.GetRequiredService<AsyncDisposable>();
             DelayedAsyncDisposableService delayedAsyncDisposableService = null;
@@ -393,7 +394,7 @@ namespace Microsoft.Extensions.DependencyInjection.Tests
                 delayedAsyncDisposableService = sp.GetRequiredService<DelayedAsyncDisposableService>();
             }
 
-            await sp.DisposeAsync();
+            await ((IAsyncDisposable)sp).DisposeAsync();
 
             Assert.True(disposable.Disposed);
             Assert.True(asyncDisposable.DisposeAsyncCalled);

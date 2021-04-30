@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection.Tests.Fakes;
+using Jab.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Microsoft.Extensions.DependencyInjection.Tests

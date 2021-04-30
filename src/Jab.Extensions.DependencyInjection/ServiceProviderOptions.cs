@@ -8,7 +8,7 @@ namespace Microsoft.Extensions.DependencyInjection
     /// <summary>
     /// Options for configuring various behaviors of the default <see cref="IServiceProvider"/> implementation.
     /// </summary>
-    public class ServiceProviderOptions
+    internal class ServiceProviderOptions
     {
         // Avoid allocating objects in the default case
         internal static readonly ServiceProviderOptions Default = new ServiceProviderOptions();

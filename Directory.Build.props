@@ -2,5 +2,8 @@
   <PropertyGroup>
       <SignAssembly>true</SignAssembly>
       <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)eng\sign.snk</AssemblyOriginatorKeyFile>
+      <LangVersion>latest</LangVersion>
+      <GITHUB_RUN_NUMBER Condition="'$(GITHUB_RUN_NUMBER)' == ''">1</GITHUB_RUN_NUMBER>
+      <Version>0.0.2-beta.$(GITHUB_RUN_NUMBER)</Version>
   </PropertyGroup>
 </Project>

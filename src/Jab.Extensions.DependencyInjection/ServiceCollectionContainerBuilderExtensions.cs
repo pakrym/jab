@@ -3,9 +3,10 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.ServiceLookup;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Jab.Extensions.DependencyInjection
 {
     /// <summary>
     /// Extension methods for building a <see cref="ServiceProvider"/> from an <see cref="IServiceCollection"/>.
@@ -18,7 +19,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The <see cref="IServiceCollection"/> containing service descriptors.</param>
         /// <returns>The <see cref="ServiceProvider"/>.</returns>
 
-        public static ServiceProvider BuildServiceProvider(this IServiceCollection services)
+        public static IServiceProvider BuildServiceProvider(this IServiceCollection services)
         {
             return BuildServiceProvider(services, ServiceProviderOptions.Default);
         }
@@ -32,7 +33,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <c>true</c> to perform check verifying that scoped services never gets resolved from root provider; otherwise <c>false</c>.
         /// </param>
         /// <returns>The <see cref="ServiceProvider"/>.</returns>
-        public static ServiceProvider BuildServiceProvider(this IServiceCollection services, bool validateScopes)
+        internal static ServiceProvider BuildServiceProvider(this IServiceCollection services, bool validateScopes)
         {
             return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = validateScopes });
         }
@@ -46,7 +47,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// Configures various service provider behaviors.
         /// </param>
         /// <returns>The <see cref="ServiceProvider"/>.</returns>
-        public static ServiceProvider BuildServiceProvider(this IServiceCollection services, ServiceProviderOptions options)
+        internal static ServiceProvider BuildServiceProvider(this IServiceCollection services, ServiceProviderOptions options)
         {
             if (services == null)
             {

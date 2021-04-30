@@ -3,12 +3,13 @@
 
 using System;
 using Microsoft.Extensions.DependencyInjection.ServiceLookup;
+using Jab.Extensions.DependencyInjection;
 
 namespace Microsoft.Extensions.DependencyInjection.Tests
 {
     internal static class ServiceCollectionContainerBuilderTestExtensions
     {
-        public static ServiceProvider BuildServiceProvider(this IServiceCollection services, ServiceProviderMode mode)
+        public static IServiceProvider BuildServiceProvider(this IServiceCollection services, ServiceProviderMode mode)
         {
             if (mode == ServiceProviderMode.Default)
             {

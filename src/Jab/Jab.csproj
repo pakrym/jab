@@ -2,10 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <GITHUB_RUN_NUMBER Condition="'$(GITHUB_RUN_NUMBER)' == ''">1</GITHUB_RUN_NUMBER>
-        <Version>0.0.2-beta.$(GITHUB_RUN_NUMBER)</Version>
         <IncludeBuildOutput>false</IncludeBuildOutput> <!-- Do not include the generator as a lib dependency -->
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
