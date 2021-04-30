@@ -13,7 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection.ServiceLookup
         }
 
         public override Type ServiceType { get; } = typeof(IServiceProvider);
-        public override Type ImplementationType { get; } = typeof(JabServiceProvider);
+        public override Type ImplementationType { get; } = typeof(ServiceProvider);
         public override CallSiteKind Kind { get; } = CallSiteKind.ServiceProvider;
     }
 }

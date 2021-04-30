@@ -41,7 +41,7 @@ namespace Jab
         private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";
         private const string IServiceScopeFactoryMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
         private const string IServiceCollectionMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceCollection";
-        private const string JabServiceProviderTypeMetadataName = "Jab.Extensions.DependencyInjection.JabServiceProvider";
+        private const string JabServiceProviderTypeMetadataName = "Jab.Extensions.DependencyInjection.ServiceProvider";
 
         public INamedTypeSymbol IEnumerableType { get; }
         public INamedTypeSymbol IServiceProviderType { get; }
