@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+      <SignAssembly>true</SignAssembly>
+      <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)eng\sign.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+</Project>

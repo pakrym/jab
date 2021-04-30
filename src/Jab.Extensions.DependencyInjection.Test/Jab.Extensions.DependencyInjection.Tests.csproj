@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net5.0;net461</TargetFrameworks>
+    <EnableDefaultItems>true</EnableDefaultItems>
+    <LangVersion>Latest</LangVersion>
+    <NoWarn>xUnit2013;xUnit1026;xUnit2015;CS8632</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <ProjectReference Include="..\Jab.Extensions.DependencyInjection\Jab.Extensions.DependencyInjection.csproj"  />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+
+</Project>
