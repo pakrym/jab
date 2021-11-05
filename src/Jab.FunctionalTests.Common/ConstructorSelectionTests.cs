@@ -1,6 +1,7 @@
 using Xunit;
+using Jab;
 
-namespace Jab.Tests
+namespace JabTests
 {
     public partial class ConstructorSelectionTests
     {

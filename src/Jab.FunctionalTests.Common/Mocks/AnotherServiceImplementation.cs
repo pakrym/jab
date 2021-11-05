@@ -1,4 +1,6 @@
-﻿namespace Jab.Tests
+﻿using Jab;
+
+namespace JabTests
 {
     internal class AnotherServiceImplementation: IAnotherService
     {

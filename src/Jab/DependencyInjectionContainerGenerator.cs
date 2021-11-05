@@ -146,6 +146,7 @@ namespace Jab
                 {
                     var codeWriter = new CodeWriter();
                     codeWriter.UseNamespace("Jab");
+                    codeWriter.UseNamespace("System.Diagnostics");
                     using (codeWriter.Namespace($"{root.Type.ContainingNamespace.ToDisplayString()}"))
                     {
                         // TODO: implement infinite nesting
@@ -176,10 +177,11 @@ namespace Jab
                             WriteServiceProvider(codeWriter, root);
                             WriteDispose(codeWriter, root, onlyScoped: false);
 
-                            using (codeWriter.Scope($"public Scope CreateScope()"))
-                            {
-                                codeWriter.Line($"return new Scope(this);");
-                            }
+                            codeWriter.Line($"[DebuggerHidden]");
+                            codeWriter.Line($"public T GetService<T>() => ((IServiceProvider<T>)this).GetService();");
+                            codeWriter.Line();
+
+                            codeWriter.Line($"public Scope CreateScope() => new Scope(this);");
                             codeWriter.Line();
 
                             if (root.KnownTypes.IServiceScopeFactoryType != null)
@@ -200,6 +202,10 @@ namespace Jab
                                 {
                                     codeWriter.Line($"_root = root;");
                                 }
+                                codeWriter.Line();
+
+                                codeWriter.Line($"[DebuggerHidden]");
+                                codeWriter.Line($"public T GetService<T>() => ((IServiceProvider<T>)this).GetService();");
                                 codeWriter.Line();
 
                                 foreach (var rootService in root.RootCallSites)
