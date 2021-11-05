@@ -4,7 +4,9 @@ using Microsoft.CodeAnalysis.CSharp.Testing.XUnit;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 
-namespace Jab.Tests
+using Jab;
+
+namespace JabTests
 {
     public static class GeneratorAnalyzerVerifier<TAnalyzer> where TAnalyzer : DiagnosticAnalyzer, new()
     {

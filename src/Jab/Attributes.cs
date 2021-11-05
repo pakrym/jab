@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 #nullable enable
 
@@ -89,16 +88,6 @@ namespace Jab
         {
             ServiceType = serviceType;
             ImplementationType = implementationType;
-        }
-    }
-
-
-    internal static class ServiceProviderOfTExtensions
-    {
-        [DebuggerHidden]
-        public static T GetService<T>(this IServiceProvider<T> serviceProvider)
-        {
-            return serviceProvider.GetService();
         }
     }
 

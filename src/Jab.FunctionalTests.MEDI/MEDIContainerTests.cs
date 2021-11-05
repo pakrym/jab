@@ -1,7 +1,8 @@
+using Jab;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace Jab.FunctionalTests.MEDI
+namespace JabTests
 {
     public partial class MEDIContainerTests
     {

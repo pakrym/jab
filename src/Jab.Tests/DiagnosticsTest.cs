@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
-using Verify = Jab.Tests.GeneratorAnalyzerVerifier<Jab.DependencyInjectionContainerGenerator>;
+using Verify = JabTests.GeneratorAnalyzerVerifier<Jab.DependencyInjectionContainerGenerator>;
 
-namespace Jab.Tests
+namespace JabTests
 {
     public class DiagnosticsTest
     {

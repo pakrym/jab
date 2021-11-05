@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 using JabTests;
 using Xunit;
 
-namespace Jab.Tests
+using Jab;
+
+namespace JabTests
 {
     public partial class ContainerTests
     {

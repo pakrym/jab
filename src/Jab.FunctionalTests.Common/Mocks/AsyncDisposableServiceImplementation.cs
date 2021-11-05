@@ -1,7 +1,9 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Jab.Tests
+using Jab;
+
+namespace JabTests
 {
     internal class AsyncDisposableServiceImplementation : IService, IDisposable, IAsyncDisposable
     {
