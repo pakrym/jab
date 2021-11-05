@@ -9,11 +9,11 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 - No runtime dependencies.
 - AOT and linker friendly, all code is generated during project compilation.
 - Clean stack traces: <p>
-    ![stacktrace](doc/stacktrace.png)
+    ![stacktrace](https://github.com/pakrym/jab/blob/main/doc/stacktrace.png?raw=true)
 - Readable generated code: <p>
-    ![generated code](doc/generatedcode.png)
+    ![generated code](https://github.com/pakrym/jab/blob/main/doc/generatedcode.png?raw=true)
 - Registration validation. Container configuration issues become compiler errors: <p>
-    ![generated code](doc/errors.png)
+    ![generated code](https://github.com/pakrym/jab/blob/main/doc/errors.png?raw=true)
 
 ## Example
 
