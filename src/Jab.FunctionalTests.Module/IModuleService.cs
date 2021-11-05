@@ -1,6 +1,6 @@
-namespace JabTests;
-
-public interface IModuleService
+namespace JabTests
 {
-
+    public interface IModuleService
+    {
+    }
 }
