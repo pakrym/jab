@@ -1,5 +1,7 @@
 # Jab Compile Time Dependency Injection
 
+[![Nuget (with prereleases)](https://img.shields.io/nuget/v/Jab)](https://www.nuget.org/packages/Jab)
+
 [![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Jab)](https://www.nuget.org/packages/Jab)
 
 Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/introducing-c-source-generators/) based dependency injection container implementation.
