@@ -5,16 +5,20 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <GITHUB_RUN_NUMBER Condition="'$(GITHUB_RUN_NUMBER)' == ''">1</GITHUB_RUN_NUMBER>
-        <Version>0.0.2-beta.$(GITHUB_RUN_NUMBER)</Version>
+        <Version>0.5.0-beta.$(GITHUB_RUN_NUMBER)</Version>
+        <Version Condition="'$(IsRelease)' == 'true'">0.5.0</Version>
         <IncludeBuildOutput>false</IncludeBuildOutput> <!-- Do not include the generator as a lib dependency -->
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
         <!-- Package the generator in the analyzer directory of the nuget package -->
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false"  />
+
     </ItemGroup>
 
     <ItemGroup>
