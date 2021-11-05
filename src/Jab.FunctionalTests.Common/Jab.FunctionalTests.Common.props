@@ -1,11 +1,6 @@
 ﻿<Project>
 
-  <PropertyGroup>
-    <IsPackable>false</IsPackable>
-    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)/Jab.FunctionalTest.props" />
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
@@ -20,21 +15,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.0.1-beta1.20623.3" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" />
-    <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" />
+
+    <ProjectReference Include="..\Jab.FunctionalTests.Module\Jab.FunctionalTests.Module.csproj" />
     <Compile Include="$(MSBuildThisFileDirectory)\**\*.cs" />
-    <Compile Include="..\Jab\Attributes.cs" />
   </ItemGroup>
-  <Target Name="_SetProperties">
-    <PropertyGroup>
-      <!-- Force CoreCompile execution -->
-      <NonExistentFile>__NonExistentSubDir__\__NonExistentFile__</NonExistentFile>
-      <ProvideCommandLineArgs>true</ProvideCommandLineArgs>
-      <SkipCompilerExecution>true</SkipCompilerExecution>
-    </PropertyGroup>
-  </Target>
-  <!-- dotnet build /t:CreateLaunchSettings -->
-  <Target Name="CreateLaunchSettings" DependsOnTargets="_SetProperties;ResolveAssemblyReferences;CoreCompile">
-    <WriteLinesToFile File="$(IntermediateOutputPath)csc.rsp" Lines="@(CscCommandLineArgs)" Overwrite="true" />
-    <Exec Command="pwsh -noprofile -nologo $(MSBuildProjectDirectory)\..\..\eng\CreateLaunchSettings.ps1 $(IntermediateOutputPath)\csc.rsp $(MSBuildProjectDirectory)\..\Jab\" WorkingDirectory="$(MSBuildProjectDirectory)" />
-  </Target>
+
 </Project>

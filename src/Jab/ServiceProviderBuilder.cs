@@ -52,22 +52,27 @@ namespace Jab
         public INamedTypeSymbol? IServiceScopeType { get; }
         public INamedTypeSymbol? IServiceScopeFactoryType { get; }
 
-        public KnownTypes(Compilation compilation)
+        public KnownTypes(Compilation compilation, IAssemblySymbol assemblySymbol)
         {
-            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(Compilation compilation, string fullyQualifiedMetadataName) =>
+            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(IAssemblySymbol assemblySymbol, string fullyQualifiedMetadataName) =>
+                assemblySymbol.GetTypeByMetadataName(fullyQualifiedMetadataName)
+                ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
+
+            static INamedTypeSymbol GetTypeFromCompilationByMetadataNameOrThrow(Compilation compilation, string fullyQualifiedMetadataName) =>
                 compilation.GetTypeByMetadataName(fullyQualifiedMetadataName)
                 ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
 
-            IEnumerableType = GetTypeByMetadataNameOrThrow(compilation, IEnumerableMetadataName);
-            IServiceProviderType = GetTypeByMetadataNameOrThrow(compilation, IServiceProviderMetadataName);
+            IEnumerableType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IEnumerableMetadataName);
+            IServiceProviderType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IServiceProviderMetadataName);
             IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
             IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
-            CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(compilation, CompositionRootAttributeMetadataName);
-            TransientAttributeType = GetTypeByMetadataNameOrThrow(compilation, TransientAttributeMetadataName);
-            SingletonAttribute = GetTypeByMetadataNameOrThrow(compilation, SingletonAttributeMetadataName);
-            ScopedAttribute = GetTypeByMetadataNameOrThrow(compilation, ScopedAttributeMetadataName);
-            ImportAttribute = GetTypeByMetadataNameOrThrow(compilation, ImportAttributeMetadataName);
-            ModuleAttribute = GetTypeByMetadataNameOrThrow(compilation, ServiceProviderModuleAttributeMetadataName);
+
+            CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, CompositionRootAttributeMetadataName);
+            TransientAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, TransientAttributeMetadataName);
+            SingletonAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, SingletonAttributeMetadataName);
+            ScopedAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ScopedAttributeMetadataName);
+            ImportAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ImportAttributeMetadataName);
+            ModuleAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceProviderModuleAttributeMetadataName);
         }
     }
     internal class ServiceProviderBuilder
@@ -78,7 +83,7 @@ namespace Jab
         public ServiceProviderBuilder(GeneratorContext context)
         {
             _context = context;
-            _knownTypes = new KnownTypes(context.Compilation);
+            _knownTypes = new KnownTypes(context.Compilation, context.Compilation.Assembly);
         }
 
         public ServiceProvider[] BuildRoots()
@@ -581,7 +586,7 @@ namespace Jab
                 {
                     ProcessModule(serviceProviderType, registrations, ExtractType(attributeData.ConstructorArguments[0]), attributeData);
                 }
-                else if (TryCreateRegistration(serviceProviderType, attributeData, out var registration))
+                else if (TryCreateRegistration(serviceProviderType, attributeData, _knownTypes, out var registration))
                 {
                     registrations.Add(registration);
                 }
@@ -611,17 +616,23 @@ namespace Jab
         {
             // TODO: idempotency
             bool isModule = false;
+            // If module it in another assembly use KnownTypes native to that assembly
+            var knownTypes =
+                SymbolEqualityComparer.Default.Equals(moduleType.ContainingAssembly, _context.Compilation.Assembly) ?
+                    _knownTypes :
+                    new KnownTypes(_context.Compilation, moduleType.ContainingAssembly);
+
             foreach (var attributeData in moduleType.GetAttributes())
             {
-                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ModuleAttribute))
+                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ModuleAttribute))
                 {
                     isModule = true;
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ImportAttribute))
+                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ImportAttribute))
                 {
                     ProcessModule(serviceProviderType, registrations, ExtractType(attributeData.ConstructorArguments[0]), importAttributeData);
                 }
-                else if (TryCreateRegistration(serviceProviderType, attributeData, out var registration))
+                else if (TryCreateRegistration(serviceProviderType, attributeData, knownTypes, out var registration))
                 {
                     registrations.Add(registration);
                 }
@@ -633,28 +644,28 @@ namespace Jab
                     DiagnosticDescriptors.ImportedTypeNotMarkedWithModuleAttribute,
                     importAttributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
                     moduleType.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat),
-                    _knownTypes.ModuleAttribute.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)
+                    knownTypes.ModuleAttribute.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)
                 ));
             }
         }
 
-        private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, [NotNullWhen(true)] out ServiceRegistration? registration)
+        private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, KnownTypes knownTypes, [NotNullWhen(true)] out ServiceRegistration? registration)
         {
             registration = null;
 
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.TransientAttributeType) &&
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.TransientAttributeType) &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Transient, out registration))
             {
                 return true;
             }
 
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.SingletonAttribute) &&
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.SingletonAttribute) &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Singleton, out registration))
             {
                 return true;
             }
 
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ScopedAttribute) &&
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ScopedAttribute) &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Scoped, out registration))
             {
                 return true;

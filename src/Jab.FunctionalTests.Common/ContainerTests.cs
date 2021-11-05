@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using JabTests;
 using Xunit;
 
 using Jab;
@@ -311,6 +312,17 @@ namespace JabTests
         [ServiceProvider]
         [Import(typeof(ICanUseModulesModule))]
         internal partial class CanUseModulesContainer { }
+
+        [Fact]
+        public void CanUseModulesFromAnotherAssembly()
+        {
+            CanUseModulesFromAnotherAssemblyContainer c = new();
+            Assert.IsType<ModuleService>(c.GetService<IModuleService>());
+        }
+
+        [ServiceProvider]
+        [Import(typeof(IModule))]
+        internal partial class CanUseModulesFromAnotherAssemblyContainer { }
 
         [Fact]
         public void CanExtendModules()
