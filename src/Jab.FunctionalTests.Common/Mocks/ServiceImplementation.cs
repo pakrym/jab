@@ -1,4 +1,6 @@
-﻿namespace Jab.Tests
+﻿using Jab;
+
+namespace JabTests
 {
     internal class ServiceImplementation : IService, IService1, IService2, IService3
     {

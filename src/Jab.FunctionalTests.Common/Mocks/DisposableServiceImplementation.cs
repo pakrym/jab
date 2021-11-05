@@ -1,6 +1,8 @@
 using System;
 
-namespace Jab.Tests
+using Jab;
+
+namespace JabTests
 {
     internal class DisposableServiceImplementation : IService, IDisposable
     {
