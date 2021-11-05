@@ -52,22 +52,22 @@ namespace Jab
         public INamedTypeSymbol? IServiceScopeType { get; }
         public INamedTypeSymbol? IServiceScopeFactoryType { get; }
 
-        public KnownTypes(Compilation compilation)
+        public KnownTypes(IAssemblySymbol assemblySymbol)
         {
-            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(Compilation compilation, string fullyQualifiedMetadataName) =>
-                compilation.GetTypeByMetadataName(fullyQualifiedMetadataName)
+            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(IAssemblySymbol assemblySymbol, string fullyQualifiedMetadataName) =>
+                assemblySymbol.GetTypeByMetadataName(fullyQualifiedMetadataName)
                 ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
 
-            IEnumerableType = GetTypeByMetadataNameOrThrow(compilation, IEnumerableMetadataName);
-            IServiceProviderType = GetTypeByMetadataNameOrThrow(compilation, IServiceProviderMetadataName);
-            IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
-            IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
-            CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(compilation, CompositionRootAttributeMetadataName);
-            TransientAttributeType = GetTypeByMetadataNameOrThrow(compilation, TransientAttributeMetadataName);
-            SingletonAttribute = GetTypeByMetadataNameOrThrow(compilation, SingletonAttributeMetadataName);
-            ScopedAttribute = GetTypeByMetadataNameOrThrow(compilation, ScopedAttributeMetadataName);
-            ImportAttribute = GetTypeByMetadataNameOrThrow(compilation, ImportAttributeMetadataName);
-            ModuleAttribute = GetTypeByMetadataNameOrThrow(compilation, ServiceProviderModuleAttributeMetadataName);
+            IEnumerableType = GetTypeByMetadataNameOrThrow(assemblySymbol, IEnumerableMetadataName);
+            IServiceProviderType = GetTypeByMetadataNameOrThrow(assemblySymbol, IServiceProviderMetadataName);
+            IServiceScopeType = assemblySymbol.GetTypeByMetadataName(IServiceScopeMetadataName);
+            IServiceScopeFactoryType = assemblySymbol.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
+            CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, CompositionRootAttributeMetadataName);
+            TransientAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, TransientAttributeMetadataName);
+            SingletonAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, SingletonAttributeMetadataName);
+            ScopedAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ScopedAttributeMetadataName);
+            ImportAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ImportAttributeMetadataName);
+            ModuleAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceProviderModuleAttributeMetadataName);
         }
     }
     internal class ServiceProviderBuilder
@@ -78,7 +78,7 @@ namespace Jab
         public ServiceProviderBuilder(GeneratorContext context)
         {
             _context = context;
-            _knownTypes = new KnownTypes(context.Compilation);
+            _knownTypes = new KnownTypes(context.Compilation.Assembly);
         }
 
         public ServiceProvider[] BuildRoots()
