@@ -1,20 +1,18 @@
 <Project>
     <Target Name="_JabMultiTargetRoslyn3"
             Condition="'$(SupportsRoslynComponentVersioning)' != 'true'"
-            AfterTargets="ResolvePackageAssets"
-            BeforeTargets="ResolveLockFileAnalyzers">
+            BeforeTargets="CoreCompile">
         <ItemGroup>
-            <ResolvedAnalyzers Remove="@(ResolvedAnalyzers)"
-                           Condition="$([System.String]::Copy('%(ResolvedAnalyzers.Identity)').IndexOf('Jab.dll')) &gt;= 0"/>
+            <Analyzer Remove="@(Analyzer)"
+                           Condition="$([System.String]::Copy('%(Analyzer.Identity)').IndexOf('Jab.dll')) &gt;= 0"/>
         </ItemGroup>
     </Target>
     <Target Name="_JabMultiTargetRoslyn4"
             Condition="'$(SupportsRoslynComponentVersioning)' == 'true'"
-            AfterTargets="ResolvePackageAssets"
-            BeforeTargets="ResolveLockFileAnalyzers">
+            BeforeTargets="CoreCompile">
         <ItemGroup>
-            <ResolvedAnalyzers Remove="@(ResolvedAnalyzers)"
-                      Condition="$([System.String]::Copy('%(ResolvedAnalyzers.Identity)').IndexOf('Jab.Roslyn3.dll')) &gt;= 0"/>
+            <Analyzer Remove="@(Analyzer)"
+                      Condition="$([System.String]::Copy('%(Analyzer.Identity)').IndexOf('Jab.Roslyn3.dll')) &gt;= 0"/>
         </ItemGroup>
     </Target>
 </Project>

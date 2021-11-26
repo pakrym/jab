@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\Jab.Roslyn3\Jab.Roslyn3.csproj" OutputItemType="Analyzer" />
     <Compile Include="..\Jab\Attributes.cs" />
   </ItemGroup>
   <Target Name="_SetProperties">
@@ -25,4 +26,6 @@
     <WriteLinesToFile File="$(IntermediateOutputPath)csc.rsp" Lines="@(CscCommandLineArgs)" Overwrite="true" />
     <Exec Command="pwsh -noprofile -nologo $(MSBuildProjectDirectory)\..\..\eng\CreateLaunchSettings.ps1 $(IntermediateOutputPath)\csc.rsp $(MSBuildProjectDirectory)\..\Jab\" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
+
+  <Import Project="..\Jab\build\Jab.targets" />
 </Project>
