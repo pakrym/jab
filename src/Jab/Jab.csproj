@@ -32,7 +32,7 @@
         <TfmSpecificPackageFile Include="Attributes.cs" PackagePath="contentFiles\cs\netstandard2.0\" BuildAction="Compile" />
     </ItemGroup>
     
-    <Target Name="ReferenceCrossTargeting" BeforeTargets="Build">
+    <Target Name="ReferenceCrossTargeting" BeforeTargets="_GetPackageFiles">
         <MSBuild Projects="../Jab.Roslyn3/Jab.Roslyn3.csproj" Targets="GetTargetPath">
             <Output ItemName="Roslyn3Assembly" TaskParameter="TargetOutputs"/>
         </MSBuild>
