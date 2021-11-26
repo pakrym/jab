@@ -52,12 +52,13 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: nuget
+        path: nuget
     - name: Get package version
       shell: pwsh
       id: vars
       run: |
         gci -Recurse | %{ $_.FullName }
-        $name = (gci *.nupkg -Recurse)[0].Name
+        $name = (gci nuget/*.nupkg -Recurse)[0].Name
         $version = $name.Substring($name.IndexOf(".") + 1)
         $version = $version.Substring($version.LastIndexOf("."))
         Write-Host "::set-output name={FunctionalTestPackageVersion}::{$version}"
@@ -71,6 +72,7 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: nuget
+        path: nuget
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
