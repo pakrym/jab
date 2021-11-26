@@ -43,7 +43,7 @@ jobs:
     steps:
     - name: Download all workflow run artifacts
       uses: actions/download-artifact@v2
-    - run: Get package version
+    - name: Get package version
       shell: pwsh
       run: ls nuget
     - name: Test
