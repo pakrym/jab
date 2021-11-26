@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab.FunctionalTests.Module"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleSample", "samples\ModuleSample\ModuleSample.csproj", "{F28BC41F-6785-4063-8799-249DC5AD701E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab.Roslyn3", "Jab.Roslyn3\Jab.Roslyn3.csproj", "{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -128,5 +130,17 @@ Global
 		{F28BC41F-6785-4063-8799-249DC5AD701E}.Release|x64.Build.0 = Release|Any CPU
 		{F28BC41F-6785-4063-8799-249DC5AD701E}.Release|x86.ActiveCfg = Release|Any CPU
 		{F28BC41F-6785-4063-8799-249DC5AD701E}.Release|x86.Build.0 = Release|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Debug|x64.Build.0 = Debug|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Debug|x86.Build.0 = Debug|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Release|x64.ActiveCfg = Release|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Release|x64.Build.0 = Release|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Release|x86.ActiveCfg = Release|Any CPU
+		{A6A56D14-EA3A-4D5E-B37A-9B4864E77A28}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

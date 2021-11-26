@@ -1,0 +1,22 @@
+<Project>
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <GITHUB_RUN_NUMBER Condition="'$(GITHUB_RUN_NUMBER)' == ''">1</GITHUB_RUN_NUMBER>
+        <Version>0.5.1-beta.$(GITHUB_RUN_NUMBER)</Version>
+        <Version Condition="'$(IsRelease)' == 'true'">0.5.2</Version>
+        <EnableDefaultItems>false</EnableDefaultItems>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="All" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="$(MSBuildProjectDirectory)/*.cs" />
+        <Compile Remove="$(MSBuildProjectDirectory)/Attributes.cs" />
+    </ItemGroup>
+
+</Project>

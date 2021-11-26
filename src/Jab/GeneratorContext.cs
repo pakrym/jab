@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -9,37 +8,61 @@ namespace Jab
 {
     internal readonly struct GeneratorContext
     {
-        private readonly GeneratorExecutionContext? _generatorExecutionContext;
+#if ROSLYN4_0_OR_GREATER
+        private readonly SourceProductionContext? _sourceProductionContext;
+
+        public GeneratorContext(
+            SourceProductionContext sourceProductionContext,
+            ImmutableArray<TypeDeclarationSyntax> candidateTypes,
+            ImmutableArray<InvocationExpressionSyntax> candidateGetServiceCalls,
+            Compilation compilation)
+        {
+            _sourceProductionContext = sourceProductionContext;
+            CandidateTypes = candidateTypes;
+            CandidateGetServiceCalls = candidateGetServiceCalls;
+            Compilation = compilation;
+            _compilationAnalysisContext = null;
+        }
+#else
+        private readonly GeneratorExecutionContext? _sourceProductionContext;
+
+        public GeneratorContext(GeneratorExecutionContext sourceProductionContext)
+        {
+            _sourceProductionContext = sourceProductionContext;
+
+            var syntaxCollector = (SyntaxCollector)sourceProductionContext.SyntaxReceiver!;
+            CandidateGetServiceCalls = syntaxCollector.InvocationExpressions;
+            CandidateTypes = syntaxCollector.CandidateTypes;
+            Compilation = sourceProductionContext.Compilation;
+            _compilationAnalysisContext = null;
+        }
+#endif
+
         private readonly CompilationAnalysisContext? _compilationAnalysisContext;
-        private readonly SyntaxCollector _syntaxCollector;
 
         public GeneratorContext(CompilationAnalysisContext compilationAnalysisContext, SyntaxCollector syntaxCollector)
         {
             _compilationAnalysisContext = compilationAnalysisContext;
-            _syntaxCollector = syntaxCollector;
-            _generatorExecutionContext = null;
+
+            CandidateGetServiceCalls = syntaxCollector.InvocationExpressions;
+            CandidateTypes = syntaxCollector.CandidateTypes;
+            Compilation = compilationAnalysisContext.Compilation;
+            _sourceProductionContext = null;
         }
 
-        public GeneratorContext(GeneratorExecutionContext generatorExecutionContext)
-        {
-            _syntaxCollector = (SyntaxCollector) generatorExecutionContext.SyntaxReceiver!;
-            _compilationAnalysisContext = null;
-            _generatorExecutionContext = generatorExecutionContext;
-        }
-
-        public Compilation Compilation => _generatorExecutionContext?.Compilation ?? _compilationAnalysisContext?.Compilation ?? throw new InvalidOperationException();
-        public IEnumerable<InvocationExpressionSyntax> CandidateGetServiceCalls => _syntaxCollector.InvocationExpressions;
-        public IEnumerable<TypeDeclarationSyntax> CandidateTypes => _syntaxCollector.CandidateTypes;
+        public Compilation Compilation { get; }
+        public IEnumerable<InvocationExpressionSyntax> CandidateGetServiceCalls { get; }
+        public IEnumerable<TypeDeclarationSyntax> CandidateTypes { get; }
 
         public void ReportDiagnostic(Diagnostic diagnostic)
         {
-            _generatorExecutionContext?.ReportDiagnostic(diagnostic);
+            _sourceProductionContext?.ReportDiagnostic(diagnostic);
             _compilationAnalysisContext?.ReportDiagnostic(diagnostic);
         }
 
         public void AddSource(string nameHint, string code)
         {
-            _generatorExecutionContext?.AddSource(nameHint, code);
+            _sourceProductionContext?.AddSource(nameHint, code);
         }
     }
 }

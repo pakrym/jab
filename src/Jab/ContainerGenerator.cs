@@ -4,20 +4,16 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Jab
 {
     [Generator]
     #pragma warning disable RS1001 // We don't want this to be discovered as analyzer but it simplifies testing
-    public class DependencyInjectionContainerGenerator : DiagnosticAnalyzer, ISourceGenerator
+    public partial class ContainerGenerator : DiagnosticAnalyzer
     #pragma warning restore RS1001 // We don't want this to be discovered as analyzer but it simplifies testing
     {
-        public void Initialize(GeneratorInitializationContext context)
-        {
-            context.RegisterForSyntaxNotifications(() => new SyntaxCollector());
-        }
-
         private void GenerateCallSiteWithCache(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
         {
             if (serviceCallSite is ErrorCallSite errorCallSite)
@@ -129,11 +125,6 @@ namespace Jab
                     valueCallback(codeWriter, w => w.AppendRaw(rootReference));
                     break;
             }
-        }
-
-        public void Execute(GeneratorExecutionContext context)
-        {
-            Execute(new GeneratorContext(context));
         }
 
         private void Execute(GeneratorContext context)

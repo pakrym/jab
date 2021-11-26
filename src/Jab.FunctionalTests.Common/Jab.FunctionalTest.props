@@ -8,10 +8,6 @@
     <RootNamespace>JabTests</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" />
-    <Compile Include="..\Jab\Attributes.cs" />
-  </ItemGroup>
   <Target Name="_SetProperties">
     <PropertyGroup>
       <!-- Force CoreCompile execution -->
@@ -25,4 +21,16 @@
     <WriteLinesToFile File="$(IntermediateOutputPath)csc.rsp" Lines="@(CscCommandLineArgs)" Overwrite="true" />
     <Exec Command="pwsh -noprofile -nologo $(MSBuildProjectDirectory)\..\..\eng\CreateLaunchSettings.ps1 $(IntermediateOutputPath)\csc.rsp $(MSBuildProjectDirectory)\..\Jab\" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
+
+  <ItemGroup Condition="'$(FunctionalTestPackageVersion)' != ''" >
+    <PackageReference Include="Jab" Version="$(FunctionalTestPackageVersion)" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(FunctionalTestPackageVersion)' == ''" >
+    <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\Jab.Roslyn3\Jab.Roslyn3.csproj" OutputItemType="Analyzer" />
+    <Compile Include="..\Jab\Attributes.cs" />
+  </ItemGroup>
+
+  <Import Condition="'$(FunctionalTestPackageVersion)' == ''" Project="..\Jab\build\Jab.targets" />
 </Project>
