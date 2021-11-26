@@ -49,9 +49,7 @@ jobs:
     - name: Test
       run: dotnet msbuild /t:Test src/FunctionaTests.proj /p:RestoreAdditionalProjectSources=nuget 
   publish:
-    needs: |
-      build
-      test
+    needs: [build, test]
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
