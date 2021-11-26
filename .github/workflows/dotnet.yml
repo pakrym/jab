@@ -62,9 +62,9 @@ jobs:
         $name
         $version = $name.Substring($name.IndexOf(".") + 1)
         $version
-        $version = $version.Substring($version.LastIndexOf("."))
+        $version = $version.Substring(0, $version.LastIndexOf("."))
         $version
-        "::set-output name={FunctionalTestPackageVersion}::{$version}"
+        "::set-output name=FunctionalTestPackageVersion::$version"
     - name: Build
       run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ steps.vars.outputs.FunctionalTestPackageVersion }}
     - name: Test
