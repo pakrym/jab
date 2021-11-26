@@ -57,13 +57,9 @@ jobs:
       shell: pwsh
       id: vars
       run: |
-        gci -Recurse | %{ $_.FullName }
         $name = (gci nuget/*.nupkg -Recurse)[0].Name
-        $name
         $version = $name.Substring($name.IndexOf(".") + 1)
-        $version
         $version = $version.Substring(0, $version.LastIndexOf("."))
-        $version
         "::set-output name=FunctionalTestPackageVersion::$version"
     - name: Build
       run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ steps.vars.outputs.FunctionalTestPackageVersion }}
