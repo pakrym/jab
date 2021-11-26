@@ -19,9 +19,14 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          3.1.x
+          5.0.x
+          6.0.x
     - name: Build
       run: dotnet build src
+    - name: Test
+      run: dotnet test src --no-build --verbosity normal
     - name: Pack
       run: dotnet pack src --no-build --output nuget /p:IsRelease=${{ github.event.inputs.IsRelease }}
     - name: 'Upload Artifact'
@@ -29,16 +34,16 @@ jobs:
       with:
         name: nuget
         path: nuget
-    - name: Test
-      run: dotnet test src --no-build --verbosity normal
   test:
     needs: build
     strategy:
       matrix:
         config:
           - sdk: |
+              3.1.x
               5.0.x
           - sdk: |
+              3.1.x
               6.0.x
     runs-on: ubuntu-latest
     steps:
