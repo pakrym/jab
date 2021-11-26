@@ -14,10 +14,10 @@ on:
 jobs:
   build:
     strategy:
-    matrix:
-      config:
-        - sdk: 5.0.x
-        - sdk: 6.0.x
+      matrix:
+        config:
+          - sdk: 5.0.x
+          - sdk: 6.0.x
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
