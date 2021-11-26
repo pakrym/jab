@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.Build.Traversal">
   <ItemGroup>
-    <ProjectReference Include="**\Jab.FunctionalTests*.csproj" />
+    <ProjectReference Include="..\src\**\Jab.FunctionalTests*.csproj" />
   </ItemGroup>
 </Project>
