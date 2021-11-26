@@ -59,11 +59,16 @@ jobs:
       run: |
         gci -Recurse | %{ $_.FullName }
         $name = (gci nuget/*.nupkg -Recurse)[0].Name
+        $name
         $version = $name.Substring($name.IndexOf(".") + 1)
+        $version
         $version = $version.Substring($version.LastIndexOf("."))
-        Write-Host "::set-output name={FunctionalTestPackageVersion}::{$version}"
+        $version
+        "::set-output name={FunctionalTestPackageVersion}::{$version}"
+    - name: Build
+      run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ steps.vars.outputs.FunctionalTestPackageVersion }}
     - name: Test
-      run: dotnet build /t:Test eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ steps.vars.outputs.FunctionalTestPackageVersion }}
+      run: dotnet test --no-build eng/FunctionaTests.proj
   publish:
     needs: [build, test]
     runs-on: ubuntu-latest
