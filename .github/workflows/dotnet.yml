@@ -55,7 +55,7 @@ jobs:
       shell: pwsh
       id: vars
       run: |
-         $name = (ls nuget/*.nupkg)[0].Name
+         $name = (ls nuget/*.nupkg -Recurse)[0].Name
          $version = $name.Substring($name.IndexOf(".") + 1)
          $version = $version.Substring($version.LastIndexOf("."))
          Write-Host "::set-output name={FunctionalTestPackageVersion}::{$version}"
