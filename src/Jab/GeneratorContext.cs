@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -10,20 +8,8 @@ namespace Jab
 {
     internal readonly struct GeneratorContext
     {
+#if ROSLYN4_0_OR_GREATER
         private readonly SourceProductionContext? _sourceProductionContext;
-        private readonly CompilationAnalysisContext? _compilationAnalysisContext;
-
-        public GeneratorContext(CompilationAnalysisContext compilationAnalysisContext, SyntaxCollector syntaxCollector)
-        {
-            _compilationAnalysisContext = compilationAnalysisContext;
-
-            CandidateGetServiceCalls = syntaxCollector.InvocationExpressions;
-            CandidateTypes = syntaxCollector.CandidateTypes;
-            Compilation = compilationAnalysisContext.Compilation;
-            _sourceProductionContext = null;
-        }
-
-        public Compilation Compilation { get; }
 
         public GeneratorContext(
             SourceProductionContext sourceProductionContext,
@@ -37,7 +23,34 @@ namespace Jab
             Compilation = compilation;
             _compilationAnalysisContext = null;
         }
+#else
+        private readonly GeneratorExecutionContext? _sourceProductionContext;
 
+        public GeneratorContext(GeneratorExecutionContext sourceProductionContext)
+        {
+            _sourceProductionContext = sourceProductionContext;
+
+            var syntaxCollector = (SyntaxCollector)sourceProductionContext.SyntaxReceiver!;
+            CandidateGetServiceCalls = syntaxCollector.InvocationExpressions;
+            CandidateTypes = syntaxCollector.CandidateTypes;
+            Compilation = sourceProductionContext.Compilation;
+            _compilationAnalysisContext = null;
+        }
+#endif
+
+        private readonly CompilationAnalysisContext? _compilationAnalysisContext;
+
+        public GeneratorContext(CompilationAnalysisContext compilationAnalysisContext, SyntaxCollector syntaxCollector)
+        {
+            _compilationAnalysisContext = compilationAnalysisContext;
+
+            CandidateGetServiceCalls = syntaxCollector.InvocationExpressions;
+            CandidateTypes = syntaxCollector.CandidateTypes;
+            Compilation = compilationAnalysisContext.Compilation;
+            _sourceProductionContext = null;
+        }
+
+        public Compilation Compilation { get; }
         public IEnumerable<InvocationExpressionSyntax> CandidateGetServiceCalls { get; }
         public IEnumerable<TypeDeclarationSyntax> CandidateTypes { get; }
 

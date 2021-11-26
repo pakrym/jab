@@ -11,7 +11,7 @@ namespace Jab
 {
     [Generator]
     #pragma warning disable RS1001 // We don't want this to be discovered as analyzer but it simplifies testing
-    public class DependencyInjectionContainerGenerator : DiagnosticAnalyzer, IIncrementalGenerator
+    public partial class ContainerGenerator : DiagnosticAnalyzer
     #pragma warning restore RS1001 // We don't want this to be discovered as analyzer but it simplifies testing
     {
         private void GenerateCallSiteWithCache(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
@@ -413,23 +413,6 @@ namespace Jab
                     Execute(new GeneratorContext(compilationContext, syntaxCollector));
                 });
             });
-        }
-
-        public void Initialize(IncrementalGeneratorInitializationContext context)
-        {
-            IncrementalValuesProvider<TypeDeclarationSyntax> providerTypes = context.SyntaxProvider.CreateSyntaxProvider(
-                (node, _) => SyntaxCollector.IsKnownAttribute(node),
-                (syntaxContext, _) => SyntaxCollector.GetCandidateType(syntaxContext.Node));
-
-            IncrementalValuesProvider<InvocationExpressionSyntax> getServiceCalls = context.SyntaxProvider.CreateSyntaxProvider(
-                (node, _) => SyntaxCollector.IsGetServiceExpression(node),
-                (syntaxContext, _) => (InvocationExpressionSyntax)syntaxContext.Node);
-
-            IncrementalValueProvider<((ImmutableArray<TypeDeclarationSyntax>, ImmutableArray<InvocationExpressionSyntax>), Compilation)> allInputs =
-                providerTypes.Collect().Combine(getServiceCalls.Collect()).Combine(context.CompilationProvider);
-
-            context.RegisterImplementationSourceOutput(allInputs, (productionContext, inputs) =>
-                Execute(new GeneratorContext(productionContext, inputs.Item1.Item1, inputs.Item1.Item2, inputs.Item2)));
         }
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = new[]
