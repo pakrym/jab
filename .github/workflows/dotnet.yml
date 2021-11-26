@@ -13,13 +13,18 @@ on:
 
 jobs:
   build:
+    strategy:
+    matrix:
+      config:
+        - sdk: 5.0.x
+        - sdk: 6.0.x
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: ${{ matrix.config.os }}
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
@@ -28,10 +33,17 @@ jobs:
       run: dotnet build src
     - name: Test
       run: dotnet test src --no-build --verbosity normal
+
+  publish:
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
     - name: Pack
       run: dotnet pack src --no-build --output nuget /p:IsRelease=${{ github.event.inputs.IsRelease }}
     - name: Add GitHub package source
       run: dotnet nuget add source https://nuget.pkg.github.com/pakrym/index.json --name "github" --username NotUsed --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
     - name: Publish NuGet packages to NuGet
       run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source "nuget.org" --skip-duplicate --no-symbols true
-      if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
