@@ -32,6 +32,7 @@ jobs:
     - name: Test
       run: dotnet test src --no-build --verbosity normal
   test:
+    needs: build
     strategy:
       matrix:
         config:
