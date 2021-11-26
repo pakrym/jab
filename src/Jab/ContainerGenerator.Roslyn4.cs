@@ -20,7 +20,7 @@ namespace Jab
             IncrementalValueProvider<((ImmutableArray<TypeDeclarationSyntax>, ImmutableArray<InvocationExpressionSyntax>), Compilation)> allInputs =
                 providerTypes.Collect().Combine(getServiceCalls.Collect()).Combine(context.CompilationProvider);
 
-            context.RegisterImplementationSourceOutput(allInputs, (productionContext, inputs) =>
+            context.RegisterSourceOutput(allInputs, (productionContext, inputs) =>
                 Execute(new GeneratorContext(productionContext, inputs.Item1.Item1, inputs.Item1.Item2, inputs.Item2)));
         }
     }
