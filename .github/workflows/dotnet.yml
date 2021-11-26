@@ -51,9 +51,14 @@ jobs:
       uses: actions/download-artifact@v2
     - name: Get package version
       shell: pwsh
-      run: ls nuget
+      id: vars
+      run: |
+         $name = (ls nuget/*.nupkg)[0].Name
+         $version = $name.Substring($name.IndexOf(".") + 1)
+         $version = $version.Substring($version.LastIndexOf("."))
+         Write-Host "::set-output name={FunctionalTestPackageVersion}::{$version}"
     - name: Test
-      run: dotnet msbuild /t:Test eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=nuget 
+      run: dotnet msbuild /t:Test eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=nuget /p:FunctionalTestPackageVersion=${{ steps.vars.outputs.FunctionalTestPackageVersion }}
   publish:
     needs: [build, test]
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
