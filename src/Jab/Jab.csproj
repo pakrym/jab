@@ -22,7 +22,7 @@
 
     <ItemGroup>
         <!-- Package the generator in the analyzer directory of the nuget package -->
-        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/roslyn4.0" Visible="false" />
         <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
         <Content Include="build\Jab.targets" Pack="True" PackagePath="build" />
     </ItemGroup>
@@ -38,7 +38,7 @@
         </MSBuild>
 
         <ItemGroup>
-            <None Include="%(Roslyn3Assembly.Identity)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+            <None Include="%(Roslyn3Assembly.Identity)" Pack="true" PackagePath="analyzers/dotnet/roslyn3.11" Visible="false" />
         </ItemGroup>
     </Target>
     
