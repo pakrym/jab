@@ -4,20 +4,16 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Jab
 {
     [Generator]
     #pragma warning disable RS1001 // We don't want this to be discovered as analyzer but it simplifies testing
-    public class DependencyInjectionContainerGenerator : DiagnosticAnalyzer, ISourceGenerator
+    public class DependencyInjectionContainerGenerator : DiagnosticAnalyzer, IIncrementalGenerator
     #pragma warning restore RS1001 // We don't want this to be discovered as analyzer but it simplifies testing
     {
-        public void Initialize(GeneratorInitializationContext context)
-        {
-            context.RegisterForSyntaxNotifications(() => new SyntaxCollector());
-        }
-
         private void GenerateCallSiteWithCache(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
         {
             if (serviceCallSite is ErrorCallSite errorCallSite)
@@ -129,11 +125,6 @@ namespace Jab
                     valueCallback(codeWriter, w => w.AppendRaw(rootReference));
                     break;
             }
-        }
-
-        public void Execute(GeneratorExecutionContext context)
-        {
-            Execute(new GeneratorContext(context));
         }
 
         private void Execute(GeneratorContext context)
@@ -422,6 +413,23 @@ namespace Jab
                     Execute(new GeneratorContext(compilationContext, syntaxCollector));
                 });
             });
+        }
+
+        public void Initialize(IncrementalGeneratorInitializationContext context)
+        {
+            IncrementalValuesProvider<TypeDeclarationSyntax> providerTypes = context.SyntaxProvider.CreateSyntaxProvider(
+                (node, _) => SyntaxCollector.IsKnownAttribute(node),
+                (syntaxContext, _) => SyntaxCollector.GetCandidateType(syntaxContext.Node));
+
+            IncrementalValuesProvider<InvocationExpressionSyntax> getServiceCalls = context.SyntaxProvider.CreateSyntaxProvider(
+                (node, _) => SyntaxCollector.IsGetServiceExpression(node),
+                (syntaxContext, _) => (InvocationExpressionSyntax)syntaxContext.Node);
+
+            IncrementalValueProvider<((ImmutableArray<TypeDeclarationSyntax>, ImmutableArray<InvocationExpressionSyntax>), Compilation)> allInputs =
+                providerTypes.Collect().Combine(getServiceCalls.Collect()).Combine(context.CompilationProvider);
+
+            context.RegisterImplementationSourceOutput(allInputs, (productionContext, inputs) =>
+                Execute(new GeneratorContext(productionContext, inputs.Item1.Item1, inputs.Item1.Item2, inputs.Item2)));
         }
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = new[]
