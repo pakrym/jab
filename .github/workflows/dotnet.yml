@@ -56,13 +56,13 @@ jobs:
       shell: pwsh
       id: vars
       run: |
-         gci -Recurse
-         $name = (gci *.nupkg -Recurse)[0].Name
-         $version = $name.Substring($name.IndexOf(".") + 1)
-         $version = $version.Substring($version.LastIndexOf("."))
-         Write-Host "::set-output name={FunctionalTestPackageVersion}::{$version}"
+        gci -Recurse | %{ $_.FullName }
+        $name = (gci *.nupkg -Recurse)[0].Name
+        $version = $name.Substring($name.IndexOf(".") + 1)
+        $version = $version.Substring($version.LastIndexOf("."))
+        Write-Host "::set-output name={FunctionalTestPackageVersion}::{$version}"
     - name: Test
-      run: dotnet build /t:Test eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=nuget /p:FunctionalTestPackageVersion=${{ steps.vars.outputs.FunctionalTestPackageVersion }}
+      run: dotnet build /t:Test eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ steps.vars.outputs.FunctionalTestPackageVersion }}
   publish:
     needs: [build, test]
     runs-on: ubuntu-latest
