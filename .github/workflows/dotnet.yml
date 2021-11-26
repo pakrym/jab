@@ -17,11 +17,13 @@ jobs:
       matrix:
         config:
           - sdk: 5.0.x
-          - sdk: 6.0.x
+          - sdk: |
+              5.0.x
+              6.0.x
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET ${{ matrix.config.sdk }}
+    - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: |
