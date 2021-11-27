@@ -91,9 +91,8 @@ jobs:
         with:
           ref: main
       - name: Update package versions in the repo
-          shell: pwsh
-          id: vars
-          run: ./eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }}
+        shell: pwsh
+        run: ./eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }}
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         title: Update sample versions
