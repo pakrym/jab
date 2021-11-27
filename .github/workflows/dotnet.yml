@@ -92,7 +92,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Update package versions in the repo
         shell: pwsh
-        run: ./scripts/eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }} ${{ github.workspace }}
+        run: ./eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }} ${{ github.workspace }}
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
