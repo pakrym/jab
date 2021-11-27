@@ -8,6 +8,7 @@
         <Version>0.5.3-beta.$(GITHUB_RUN_NUMBER)</Version>
         <Version Condition="'$(IsRelease)' == 'true'">0.5.2</Version>
         <EnableDefaultItems>false</EnableDefaultItems>
+        <RootNamespace>Jab</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,8 +16,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="$(MSBuildProjectDirectory)/*.cs" />
-        <Compile Remove="$(MSBuildProjectDirectory)/Attributes.cs" />
+        <EmbeddedResource Include="$(MSBuildThisFileDirectory)/Attributes.cs" />
+        <Compile Include="$(MSBuildThisFileDirectory)/*.cs" />
+        <Compile Remove="$(MSBuildThisFileDirectory)/Attributes.cs" />
     </ItemGroup>
 
 </Project>

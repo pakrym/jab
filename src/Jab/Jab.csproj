@@ -29,7 +29,6 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-        <TfmSpecificPackageFile Include="Attributes.cs" PackagePath="contentFiles\cs\netstandard2.0\" BuildAction="Compile" />
     </ItemGroup>
     
     <Target Name="ReferenceCrossTargeting" BeforeTargets="_GetPackageFiles">

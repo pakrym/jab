@@ -9,6 +9,10 @@ namespace Jab
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new SyntaxCollector());
+            context.RegisterForPostInitialization(c =>
+            {
+                c.AddSource("Attributes.cs", ReadAttributesFile());
+            });
         }
 
         public void Execute(GeneratorExecutionContext context)
