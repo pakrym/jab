@@ -1,9 +1,9 @@
-param($NewVersion)
+param($NewVersion, $BasePath = "$PSScriptRoot/..")
 
 $regexPrefix = "<PackageReference Include=`"Jab`" Version=`""
 $regexToFind = "$regexPrefix([\w\d\.-]+)"
 
-Get-ChildItem -Path "$PSScriptRoot/.." -File -Recurse | ForEach-Object {
+Get-ChildItem -Path $BasePath -File -Recurse | ForEach-Object {
     $content = $_ | Get-Content -Raw
     if ($content -match $regexToFind) {
         Write-Host "Replacing text in file '$($_.FullName)'"
