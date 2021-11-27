@@ -42,6 +42,8 @@ jobs:
       with:
         name: nuget
         path: nuget/
+    outputs:
+      PackageVersion: ${{ steps.vars.outputs.PackageVersion }}
   test:
     needs: build
     strategy:
@@ -62,7 +64,7 @@ jobs:
         name: nuget
         path: nuget
     - name: Build
-      run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.vars.outputs.PackageVersion }}
+      run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
     - name: Test
       run: dotnet test --no-build eng/FunctionaTests.proj
   publish:
@@ -96,7 +98,7 @@ jobs:
           path: scripts
       - name: Update package versions in the repo
         shell: pwsh
-        run: ./scripts/eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.vars.PackageVersion }} ${{ github.workspace }}/main
+        run: ./scripts/eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }} ${{ github.workspace }}/main
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
