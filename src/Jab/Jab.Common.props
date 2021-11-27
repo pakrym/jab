@@ -16,9 +16,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="$(MSBuildProjectDirectory)/Attributes.cs" />
-        <Compile Include="$(MSBuildProjectDirectory)/*.cs" />
-        <Compile Remove="$(MSBuildProjectDirectory)/Attributes.cs" />
+        <EmbeddedResource Include="$(MSBuildThisFileDirectory)/Attributes.cs" />
+        <Compile Include="$(MSBuildThisFileDirectory)/*.cs" />
+        <Compile Remove="$(MSBuildThisFileDirectory)/Attributes.cs" />
     </ItemGroup>
 
 </Project>

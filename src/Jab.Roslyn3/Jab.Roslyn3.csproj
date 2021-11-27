@@ -10,10 +10,6 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Compile Include="../Jab/*.cs" />
-    </ItemGroup>
-
     <Import Project="../Jab/Jab.Common.props" />
 
 </Project>
