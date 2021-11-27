@@ -95,5 +95,6 @@ jobs:
         run: ./eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }}
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
-        title: Update sample versions
+        with:
+          title: Update sample versions
 
