@@ -29,6 +29,14 @@ jobs:
       run: dotnet test src --no-build --verbosity normal
     - name: Pack
       run: dotnet pack src --no-build --output nuget /p:IsRelease=${{ github.event.inputs.IsRelease }}
+    - name: Get package version
+      shell: pwsh
+      id: vars
+      run: |
+        $name = (gci nuget/*.nupkg -Recurse)[0].Name
+        $version = $name.Substring($name.IndexOf(".") + 1)
+        $version = $version.Substring(0, $version.LastIndexOf("."))
+        "::set-output name=PackageVersion::$version"
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:
@@ -53,16 +61,8 @@ jobs:
       with:
         name: nuget
         path: nuget
-    - name: Get package version
-      shell: pwsh
-      id: vars
-      run: |
-        $name = (gci nuget/*.nupkg -Recurse)[0].Name
-        $version = $name.Substring($name.IndexOf(".") + 1)
-        $version = $version.Substring(0, $version.LastIndexOf("."))
-        "::set-output name=FunctionalTestPackageVersion::$version"
     - name: Build
-      run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ steps.vars.outputs.FunctionalTestPackageVersion }}
+      run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
     - name: Test
       run: dotnet test --no-build eng/FunctionaTests.proj
   publish:
@@ -83,3 +83,18 @@ jobs:
     - name: Publish NuGet packages to NuGet
       run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source "nuget.org" --skip-duplicate --no-symbols true
       if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+  update_versions:
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: main
+      - name: Update package versions in the repo
+          shell: pwsh
+          id: vars
+          run: ./eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        title: Update sample versions
+
