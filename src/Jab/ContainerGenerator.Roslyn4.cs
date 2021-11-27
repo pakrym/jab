@@ -1,5 +1,8 @@
 #if ROSLYN4_0_OR_GREATER
 using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -22,6 +25,11 @@ namespace Jab
 
             context.RegisterSourceOutput(allInputs, (productionContext, inputs) =>
                 Execute(new GeneratorContext(productionContext, inputs.Item1.Item1, inputs.Item1.Item2, inputs.Item2)));
+
+            context.RegisterPostInitializationOutput(c =>
+            {
+                c.AddSource("Attributes.cs", ReadAttributesFile());
+            });
         }
     }
 }

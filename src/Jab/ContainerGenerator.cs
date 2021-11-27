@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -427,5 +430,13 @@ namespace Jab
             DiagnosticDescriptors.CyclicDependencyDetected,
             DiagnosticDescriptors.MissingServiceProviderAttribute,
         }.ToImmutableArray();
+
+        private static string ReadAttributesFile()
+        {
+            using var manifestResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Jab.Attributes.cs");
+            Debug.Assert(manifestResourceStream != null);
+            using var reader = new StreamReader(manifestResourceStream);
+            return reader.ReadToEnd();
+        }
     }
 }

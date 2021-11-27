@@ -21,6 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="Attributes.cs" />
         <!-- Package the generator in the analyzer directory of the nuget package -->
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/roslyn4.0" Visible="false" />
         <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
@@ -29,7 +30,6 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-        <TfmSpecificPackageFile Include="Attributes.cs" PackagePath="contentFiles\cs\netstandard2.0\" BuildAction="Compile" />
     </ItemGroup>
     
     <Target Name="ReferenceCrossTargeting" BeforeTargets="_GetPackageFiles">
