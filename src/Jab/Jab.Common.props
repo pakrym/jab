@@ -5,8 +5,8 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <GITHUB_RUN_NUMBER Condition="'$(GITHUB_RUN_NUMBER)' == ''">1</GITHUB_RUN_NUMBER>
-        <Version>0.5.1-beta.$(GITHUB_RUN_NUMBER)</Version>
-        <Version Condition="'$(IsRelease)' == 'true'">0.5.2</Version>
+        <Version>0.5.2-beta.$(GITHUB_RUN_NUMBER)</Version>
+        <Version Condition="'$(IsRelease)' == 'true'">0.5.1</Version>
         <EnableDefaultItems>false</EnableDefaultItems>
     </PropertyGroup>
 
