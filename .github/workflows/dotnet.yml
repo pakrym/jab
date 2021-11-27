@@ -29,11 +29,21 @@ jobs:
       run: dotnet test src --no-build --verbosity normal
     - name: Pack
       run: dotnet pack src --no-build --output nuget /p:IsRelease=${{ github.event.inputs.IsRelease }}
+    - name: Get package version
+      shell: pwsh
+      id: vars
+      run: |
+        $name = (gci nuget/*.nupkg -Recurse)[0].Name
+        $version = $name.Substring($name.IndexOf(".") + 1)
+        $version = $version.Substring(0, $version.LastIndexOf("."))
+        "::set-output name=PackageVersion::$version"
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:
         name: nuget
         path: nuget/
+    outputs:
+      PackageVersion: ${{ steps.vars.outputs.PackageVersion }}
   test:
     needs: build
     strategy:
@@ -53,19 +63,12 @@ jobs:
       with:
         name: nuget
         path: nuget
-    - name: Get package version
-      shell: pwsh
-      id: vars
-      run: |
-        $name = (gci nuget/*.nupkg -Recurse)[0].Name
-        $version = $name.Substring($name.IndexOf(".") + 1)
-        $version = $version.Substring(0, $version.LastIndexOf("."))
-        "::set-output name=FunctionalTestPackageVersion::$version"
     - name: Build
-      run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ steps.vars.outputs.FunctionalTestPackageVersion }}
+      run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
     - name: Test
       run: dotnet test --no-build eng/FunctionaTests.proj
   publish:
+    if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: [build, test]
     runs-on: ubuntu-latest
     steps:
@@ -82,4 +85,17 @@ jobs:
       run: dotnet nuget add source https://nuget.pkg.github.com/pakrym/index.json --name "github" --username NotUsed --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
     - name: Publish NuGet packages to NuGet
       run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source "nuget.org" --skip-duplicate --no-symbols true
-      if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+  update_versions:
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update package versions in the repo
+        shell: pwsh
+        run: ./scripts/eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }} ${{ github.workspace }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          title: Update sample versions
+          branch: update-versions
+
