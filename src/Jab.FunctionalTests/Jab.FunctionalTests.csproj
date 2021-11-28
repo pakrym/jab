@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
-  </PropertyGroup>
-
   <Import Project="../Jab.FunctionalTests.Common/Jab.FunctionalTests.Common.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(FunctionalTestTargetFrameworks)</TargetFrameworks>
+  </PropertyGroup>
 
 </Project>

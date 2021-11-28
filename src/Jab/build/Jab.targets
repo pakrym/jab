@@ -1,4 +1,7 @@
 <Project>
+    <PropertyGroup>
+        <DefineConstants Condition="'$(TargetFramework)' == 'net6.0' AND '$(LangVersion)'=='preview'" >$(DefineConstants);JAB_PREVIEW</DefineConstants>
+    </PropertyGroup>
     <Target Name="_JabMultiTargetRoslyn3"
             Condition="'$(SupportsRoslynComponentVersioning)' != 'true'"
             BeforeTargets="CoreCompile">
