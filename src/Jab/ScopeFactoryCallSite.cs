@@ -1,11 +1,10 @@
 using Microsoft.CodeAnalysis;
 
-namespace Jab
+namespace Jab;
+
+internal record ScopeFactoryCallSite: ServiceCallSite
 {
-    internal record ScopeFactoryCallSite: ServiceCallSite
+    public ScopeFactoryCallSite(ITypeSymbol serviceType) : base(serviceType, serviceType, ServiceLifetime.Transient, 0, false)
     {
-        public ScopeFactoryCallSite(ITypeSymbol serviceType) : base(serviceType, serviceType, ServiceLifetime.Transient, 0, false)
-        {
-        }
     }
 }

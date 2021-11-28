@@ -7,241 +7,452 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Jab
+namespace Jab;
+
+internal class KnownTypes
 {
-    internal class KnownTypes
+    public const string TransientAttributeShortName = "Transient";
+    public const string SingletonAttributeShortName = "Singleton";
+    public const string ScopedAttributeShortName = "Scoped";
+    public const string CompositionRootAttributeShortName = "ServiceProvider";
+    public const string ServiceProviderModuleAttributeShortName = "ServiceProviderModule";
+    public const string ImportAttributeShortName = "Import";
+
+    public const string TransientAttributeTypeName = $"{TransientAttributeShortName}Attribute";
+    public const string SingletonAttributeTypeName = $"{SingletonAttributeShortName}Attribute";
+    public const string ScopedAttributeTypeName = $"{ScopedAttributeShortName}Attribute";
+    public const string CompositionRootAttributeTypeName = $"{CompositionRootAttributeShortName}Attribute";
+    public const string ServiceProviderModuleAttributeTypeName = $"{ServiceProviderModuleAttributeShortName}Attribute";
+
+    public const string ImportAttributeTypeName = $"{ImportAttributeShortName}Attribute";
+
+    public const string TransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}";
+    public const string GenericTransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}`1";
+    public const string Generic2TransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}`2";
+
+    public const string SingletonAttributeMetadataName = $"Jab.{SingletonAttributeTypeName}";
+    public const string GenericSingletonAttributeMetadataName = $"Jab.{SingletonAttributeTypeName}`1";
+    public const string Generic2SingletonAttributeMetadataName = $"Jab.{SingletonAttributeTypeName}`2";
+
+
+    public const string ScopedAttributeMetadataName = $"Jab.{ScopedAttributeTypeName}";
+    public const string GenericScopedAttributeMetadataName = $"Jab.{ScopedAttributeTypeName}`1";
+    public const string Generic2ScopedAttributeMetadataName = $"Jab.{ScopedAttributeTypeName}`2";
+
+    public const string CompositionRootAttributeMetadataName = $"Jab.{CompositionRootAttributeTypeName}";
+    public const string ServiceProviderModuleAttributeMetadataName = $"Jab.{ServiceProviderModuleAttributeTypeName}";
+
+    public const string ImportAttributeMetadataName = $"Jab.{ImportAttributeTypeName}";
+    public const string GenericImportAttributeMetadataName = $"Jab.{ImportAttributeTypeName}`1";
+
+    public const string InstanceAttributePropertyName = "Instance";
+    public const string FactoryAttributePropertyName = "Factory";
+    public const string RootServicesAttributePropertyName = "RootServices";
+
+    private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
+    private const string IServiceProviderMetadataName = "System.IServiceProvider";
+    private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";
+    private const string IServiceScopeFactoryMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
+
+    public INamedTypeSymbol IEnumerableType { get; }
+    public INamedTypeSymbol IServiceProviderType { get; }
+    public INamedTypeSymbol CompositionRootAttributeType { get; }
+    public INamedTypeSymbol TransientAttributeType { get; }
+    public INamedTypeSymbol? GenericTransientAttributeType { get; }
+    public INamedTypeSymbol? Generic2TransientAttributeType { get; }
+
+    public INamedTypeSymbol SingletonAttribute { get; }
+    public INamedTypeSymbol? GenericSingletonAttribute { get; }
+    public INamedTypeSymbol? Generic2SingletonAttribute { get; }
+
+    public INamedTypeSymbol ImportAttribute { get; }
+    public INamedTypeSymbol? GenericImportAttribute { get; }
+
+    public INamedTypeSymbol ModuleAttribute { get; }
+    public INamedTypeSymbol ScopedAttribute { get; }
+    public INamedTypeSymbol? GenericScopedAttribute { get; }
+    public INamedTypeSymbol? Generic2ScopedAttribute { get; }
+    public INamedTypeSymbol? IServiceScopeType { get; }
+    public INamedTypeSymbol? IServiceScopeFactoryType { get; }
+
+    public KnownTypes(Compilation compilation, IAssemblySymbol assemblySymbol)
     {
-        public const string TransientAttributeShortName = "Transient";
-        public const string SingletonAttributeShortName = "Singleton";
-        public const string ScopedAttributeShortName = "Scoped";
-        public const string CompositionRootAttributeShortName = "ServiceProvider";
-        public const string ServiceProviderModuleAttributeShortName = "ServiceProviderModule";
-        public const string ImportAttributeShortName = "Import";
+        static INamedTypeSymbol GetTypeByMetadataNameOrThrow(IAssemblySymbol assemblySymbol, string fullyQualifiedMetadataName) =>
+            assemblySymbol.GetTypeByMetadataName(fullyQualifiedMetadataName)
+            ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
 
-        public const string TransientAttributeTypeName = $"{TransientAttributeShortName}Attribute";
-        public const string SingletonAttributeTypeName = $"{SingletonAttributeShortName}Attribute";
-        public const string ScopedAttributeTypeName = $"{ScopedAttributeShortName}Attribute";
-        public const string CompositionRootAttributeTypeName = $"{CompositionRootAttributeShortName}Attribute";
-        public const string ServiceProviderModuleAttributeTypeName = $"{ServiceProviderModuleAttributeShortName}Attribute";
+        static INamedTypeSymbol GetTypeFromCompilationByMetadataNameOrThrow(Compilation compilation, string fullyQualifiedMetadataName) =>
+            compilation.GetTypeByMetadataName(fullyQualifiedMetadataName)
+            ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
 
-        public const string ImportAttributeTypeName = $"{ImportAttributeShortName}Attribute";
+        IEnumerableType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IEnumerableMetadataName);
+        IServiceProviderType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IServiceProviderMetadataName);
+        IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
+        IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
 
-        public const string TransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}";
-        public const string GenericTransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}`1";
-        public const string Generic2TransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}`2";
+        CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, CompositionRootAttributeMetadataName);
 
-        public const string SingletonAttributeMetadataName = $"Jab.{SingletonAttributeTypeName}";
-        public const string GenericSingletonAttributeMetadataName = $"Jab.{SingletonAttributeTypeName}`1";
-        public const string Generic2SingletonAttributeMetadataName = $"Jab.{SingletonAttributeTypeName}`2";
+        TransientAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, TransientAttributeMetadataName);
+        GenericTransientAttributeType = assemblySymbol.GetTypeByMetadataName(GenericTransientAttributeMetadataName);
+        Generic2TransientAttributeType = assemblySymbol.GetTypeByMetadataName(Generic2TransientAttributeMetadataName);
 
+        SingletonAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, SingletonAttributeMetadataName);
+        GenericSingletonAttribute = assemblySymbol.GetTypeByMetadataName(GenericSingletonAttributeMetadataName);
+        Generic2SingletonAttribute = assemblySymbol.GetTypeByMetadataName(Generic2SingletonAttributeMetadataName);
 
-        public const string ScopedAttributeMetadataName = $"Jab.{ScopedAttributeTypeName}";
-        public const string GenericScopedAttributeMetadataName = $"Jab.{ScopedAttributeTypeName}`1";
-        public const string Generic2ScopedAttributeMetadataName = $"Jab.{ScopedAttributeTypeName}`2";
+        ScopedAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ScopedAttributeMetadataName);
+        GenericScopedAttribute = assemblySymbol.GetTypeByMetadataName(GenericScopedAttributeMetadataName);
+        Generic2ScopedAttribute = assemblySymbol.GetTypeByMetadataName(Generic2ScopedAttributeMetadataName);
 
-        public const string CompositionRootAttributeMetadataName = $"Jab.{CompositionRootAttributeTypeName}";
-        public const string ServiceProviderModuleAttributeMetadataName = $"Jab.{ServiceProviderModuleAttributeTypeName}";
+        ImportAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ImportAttributeMetadataName);
+        GenericImportAttribute = assemblySymbol.GetTypeByMetadataName(GenericImportAttributeMetadataName);
 
-        public const string ImportAttributeMetadataName = $"Jab.{ImportAttributeTypeName}";
-        public const string GenericImportAttributeMetadataName = $"Jab.{ImportAttributeTypeName}`1";
-
-        public const string InstanceAttributePropertyName = "Instance";
-        public const string FactoryAttributePropertyName = "Factory";
-        public const string RootServicesAttributePropertyName = "RootServices";
-
-        private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
-        private const string IServiceProviderMetadataName = "System.IServiceProvider";
-        private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";
-        private const string IServiceScopeFactoryMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
-
-        public INamedTypeSymbol IEnumerableType { get; }
-        public INamedTypeSymbol IServiceProviderType { get; }
-        public INamedTypeSymbol CompositionRootAttributeType { get; }
-        public INamedTypeSymbol TransientAttributeType { get; }
-        public INamedTypeSymbol? GenericTransientAttributeType { get; }
-        public INamedTypeSymbol? Generic2TransientAttributeType { get; }
-
-        public INamedTypeSymbol SingletonAttribute { get; }
-        public INamedTypeSymbol? GenericSingletonAttribute { get; }
-        public INamedTypeSymbol? Generic2SingletonAttribute { get; }
-
-        public INamedTypeSymbol ImportAttribute { get; }
-        public INamedTypeSymbol? GenericImportAttribute { get; }
-
-        public INamedTypeSymbol ModuleAttribute { get; }
-        public INamedTypeSymbol ScopedAttribute { get; }
-        public INamedTypeSymbol? GenericScopedAttribute { get; }
-        public INamedTypeSymbol? Generic2ScopedAttribute { get; }
-        public INamedTypeSymbol? IServiceScopeType { get; }
-        public INamedTypeSymbol? IServiceScopeFactoryType { get; }
-
-        public KnownTypes(Compilation compilation, IAssemblySymbol assemblySymbol)
-        {
-            static INamedTypeSymbol GetTypeByMetadataNameOrThrow(IAssemblySymbol assemblySymbol, string fullyQualifiedMetadataName) =>
-                assemblySymbol.GetTypeByMetadataName(fullyQualifiedMetadataName)
-                ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
-
-            static INamedTypeSymbol GetTypeFromCompilationByMetadataNameOrThrow(Compilation compilation, string fullyQualifiedMetadataName) =>
-                compilation.GetTypeByMetadataName(fullyQualifiedMetadataName)
-                ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
-
-            IEnumerableType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IEnumerableMetadataName);
-            IServiceProviderType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IServiceProviderMetadataName);
-            IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
-            IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
-
-            CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, CompositionRootAttributeMetadataName);
-
-            TransientAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, TransientAttributeMetadataName);
-            GenericTransientAttributeType = assemblySymbol.GetTypeByMetadataName(GenericTransientAttributeMetadataName);
-            Generic2TransientAttributeType = assemblySymbol.GetTypeByMetadataName(Generic2TransientAttributeMetadataName);
-
-            SingletonAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, SingletonAttributeMetadataName);
-            GenericSingletonAttribute = assemblySymbol.GetTypeByMetadataName(GenericSingletonAttributeMetadataName);
-            Generic2SingletonAttribute = assemblySymbol.GetTypeByMetadataName(Generic2SingletonAttributeMetadataName);
-
-            ScopedAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ScopedAttributeMetadataName);
-            GenericScopedAttribute = assemblySymbol.GetTypeByMetadataName(GenericScopedAttributeMetadataName);
-            Generic2ScopedAttribute = assemblySymbol.GetTypeByMetadataName(Generic2ScopedAttributeMetadataName);
-
-            ImportAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ImportAttributeMetadataName);
-            GenericImportAttribute = assemblySymbol.GetTypeByMetadataName(GenericImportAttributeMetadataName);
-
-            ModuleAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceProviderModuleAttributeMetadataName);
-        }
-
+        ModuleAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceProviderModuleAttributeMetadataName);
     }
-    internal class ServiceProviderBuilder
+
+}
+internal class ServiceProviderBuilder
+{
+    private readonly GeneratorContext _context;
+    private readonly KnownTypes _knownTypes;
+
+    public ServiceProviderBuilder(GeneratorContext context)
     {
-        private readonly GeneratorContext _context;
-        private readonly KnownTypes _knownTypes;
+        _context = context;
+        _knownTypes = new KnownTypes(context.Compilation, context.Compilation.Assembly);
+    }
 
-        public ServiceProviderBuilder(GeneratorContext context)
+    public ServiceProvider[] BuildRoots()
+    {
+        List<GetServiceCallCandidate> getServiceCallCandidates = new();
+
+        foreach (var candidateGetServiceCallGroup in _context.CandidateGetServiceCalls.GroupBy(c => c.SyntaxTree))
         {
-            _context = context;
-            _knownTypes = new KnownTypes(context.Compilation, context.Compilation.Assembly);
-        }
-
-        public ServiceProvider[] BuildRoots()
-        {
-            List<GetServiceCallCandidate> getServiceCallCandidates = new();
-
-            foreach (var candidateGetServiceCallGroup in _context.CandidateGetServiceCalls.GroupBy(c => c.SyntaxTree))
+            var semanticModel = _context.Compilation.GetSemanticModel(candidateGetServiceCallGroup.Key);
+            foreach (var candidateGetServiceCall in candidateGetServiceCallGroup)
             {
-                var semanticModel = _context.Compilation.GetSemanticModel(candidateGetServiceCallGroup.Key);
-                foreach (var candidateGetServiceCall in candidateGetServiceCallGroup)
-                {
-                    if (candidateGetServiceCall.Expression is MemberAccessExpressionSyntax
-                        {
-                            Name: GenericNameSyntax
-                            {
-                                IsUnboundGenericName: false,
-                                TypeArgumentList: { Arguments: { Count: 1 } arguments }
-                            }
-                        } memberAccessExpression)
+                if (candidateGetServiceCall.Expression is MemberAccessExpressionSyntax
                     {
-                        var containerTypeInfo = semanticModel.GetTypeInfo(memberAccessExpression.Expression);
-                        var serviceInfo = semanticModel.GetSymbolInfo(arguments[0]);
-                        if (containerTypeInfo.Type != null &&
-                            serviceInfo.Symbol is ITypeSymbol serviceType)
+                        Name: GenericNameSyntax
                         {
-                            getServiceCallCandidates.Add(new GetServiceCallCandidate(containerTypeInfo.Type, serviceType, candidateGetServiceCall.GetLocation()));
+                            IsUnboundGenericName: false,
+                            TypeArgumentList: { Arguments: { Count: 1 } arguments }
                         }
+                    } memberAccessExpression)
+                {
+                    var containerTypeInfo = semanticModel.GetTypeInfo(memberAccessExpression.Expression);
+                    var serviceInfo = semanticModel.GetSymbolInfo(arguments[0]);
+                    if (containerTypeInfo.Type != null &&
+                        serviceInfo.Symbol is ITypeSymbol serviceType)
+                    {
+                        getServiceCallCandidates.Add(new GetServiceCallCandidate(containerTypeInfo.Type, serviceType, candidateGetServiceCall.GetLocation()));
                     }
                 }
             }
+        }
 
-            List<ServiceProvider> compositionRoots = new();
+        List<ServiceProvider> compositionRoots = new();
 #pragma warning disable RS1024 // Compare symbols correctly
-            HashSet<ITypeSymbol> processedTypes = new(SymbolEqualityComparer.Default);
+        HashSet<ITypeSymbol> processedTypes = new(SymbolEqualityComparer.Default);
 #pragma warning restore RS1024 // Compare symbols correctly
-            foreach (var candidateTypeDeclaration in _context.CandidateTypes)
-            {
-                var semanticModel = _context.Compilation.GetSemanticModel(candidateTypeDeclaration.SyntaxTree);
-                var symbol = semanticModel.GetDeclaredSymbol(candidateTypeDeclaration);
-
-                if (symbol is ITypeSymbol typeSymbol &&
-                    processedTypes.Add(typeSymbol) &&
-                    TryCreateCompositionRoot(typeSymbol, getServiceCallCandidates, out var compositionRoot))
-                {
-                    compositionRoots.Add(compositionRoot);
-                }
-            }
-
-            return compositionRoots.ToArray();
-        }
-
-        private bool TryCreateCompositionRoot(ITypeSymbol typeSymbol, List<GetServiceCallCandidate> getServiceCallCandidates, [NotNullWhen(true)] out ServiceProvider? compositionRoot)
+        foreach (var candidateTypeDeclaration in _context.CandidateTypes)
         {
-            compositionRoot = null;
+            var semanticModel = _context.Compilation.GetSemanticModel(candidateTypeDeclaration.SyntaxTree);
+            var symbol = semanticModel.GetDeclaredSymbol(candidateTypeDeclaration);
 
-            var description = GetDescription(typeSymbol);
-            if (description == null)
+            if (symbol is ITypeSymbol typeSymbol &&
+                processedTypes.Add(typeSymbol) &&
+                TryCreateCompositionRoot(typeSymbol, getServiceCallCandidates, out var compositionRoot))
             {
-                return false;
-            }
-
-            EmitTypeDiagnostics(typeSymbol);
-
-            Dictionary<CallSiteCacheKey, ServiceCallSite> callSites = new();
-            foreach (var registration in description.ServiceRegistrations)
-            {
-                if (registration.ServiceType.IsUnboundGenericType)
-                {
-                    continue;
-                }
-                GetCallSite(registration.ServiceType, new ServiceResolutionContext(description, callSites, registration.ServiceType, registration.Location));
-            }
-
-            foreach (var rootService in description.RootServices)
-            {
-                GetCallSite(rootService, new ServiceResolutionContext(description, callSites, rootService, description.Location));
-            }
-
-            foreach (var getServiceCallCandidate in getServiceCallCandidates)
-            {
-                if (SymbolEqualityComparer.Default.Equals(getServiceCallCandidate.ProviderType, typeSymbol))
-                {
-                    GetCallSite(getServiceCallCandidate.ServiceType, new ServiceResolutionContext(description, callSites, getServiceCallCandidate.ServiceType, getServiceCallCandidate.Location));
-                }
-            }
-
-            compositionRoot = new ServiceProvider(typeSymbol, callSites.Values.ToArray(), _knownTypes);
-            return true;
-        }
-
-        private void EmitTypeDiagnostics(ITypeSymbol typeSymbol)
-        {
-            foreach (var declaringSyntaxReference in typeSymbol.DeclaringSyntaxReferences)
-            {
-                if (declaringSyntaxReference.GetSyntax() is ClassDeclarationSyntax typeDeclarationSyntax &&
-                    !typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
-                {
-                    _context.ReportDiagnostic(Diagnostic.Create(
-                        DiagnosticDescriptors.ServiceProviderTypeHasToBePartial,
-                        typeDeclarationSyntax.Identifier.GetLocation(),
-                        typeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
-                    ));
-                }
+                compositionRoots.Add(compositionRoot);
             }
         }
 
-        private ServiceCallSite? GetCallSite(
-            ITypeSymbol serviceType,
-            ServiceResolutionContext context)
+        return compositionRoots.ToArray();
+    }
+
+    private bool TryCreateCompositionRoot(ITypeSymbol typeSymbol, List<GetServiceCallCandidate> getServiceCallCandidates, [NotNullWhen(true)] out ServiceProvider? compositionRoot)
+    {
+        compositionRoot = null;
+
+        var description = GetDescription(typeSymbol);
+        if (description == null)
         {
-            if (context.CallSiteCache.TryGetValue(new CallSiteCacheKey(serviceType), out var cachedCallSite))
+            return false;
+        }
+
+        EmitTypeDiagnostics(typeSymbol);
+
+        Dictionary<CallSiteCacheKey, ServiceCallSite> callSites = new();
+        foreach (var registration in description.ServiceRegistrations)
+        {
+            if (registration.ServiceType.IsUnboundGenericType)
             {
-                return cachedCallSite;
+                continue;
+            }
+            GetCallSite(registration.ServiceType, new ServiceResolutionContext(description, callSites, registration.ServiceType, registration.Location));
+        }
+
+        foreach (var rootService in description.RootServices)
+        {
+            GetCallSite(rootService, new ServiceResolutionContext(description, callSites, rootService, description.Location));
+        }
+
+        foreach (var getServiceCallCandidate in getServiceCallCandidates)
+        {
+            if (SymbolEqualityComparer.Default.Equals(getServiceCallCandidate.ProviderType, typeSymbol))
+            {
+                GetCallSite(getServiceCallCandidate.ServiceType, new ServiceResolutionContext(description, callSites, getServiceCallCandidate.ServiceType, getServiceCallCandidate.Location));
+            }
+        }
+
+        compositionRoot = new ServiceProvider(typeSymbol, callSites.Values.ToArray(), _knownTypes);
+        return true;
+    }
+
+    private void EmitTypeDiagnostics(ITypeSymbol typeSymbol)
+    {
+        foreach (var declaringSyntaxReference in typeSymbol.DeclaringSyntaxReferences)
+        {
+            if (declaringSyntaxReference.GetSyntax() is ClassDeclarationSyntax typeDeclarationSyntax &&
+                !typeDeclarationSyntax.Modifiers.Any(SyntaxKind.PartialKeyword))
+            {
+                _context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.ServiceProviderTypeHasToBePartial,
+                    typeDeclarationSyntax.Identifier.GetLocation(),
+                    typeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
+                ));
+            }
+        }
+    }
+
+    private ServiceCallSite? GetCallSite(
+        ITypeSymbol serviceType,
+        ServiceResolutionContext context)
+    {
+        if (context.CallSiteCache.TryGetValue(new CallSiteCacheKey(serviceType), out var cachedCallSite))
+        {
+            return cachedCallSite;
+        }
+
+        if (!context.TryAdd(serviceType))
+        {
+            var diagnostic = Diagnostic.Create(DiagnosticDescriptors.CyclicDependencyDetected,
+                context.RequestLocation,
+                context.RequestService.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                context.ToString(serviceType));
+
+            _context.ReportDiagnostic(
+                diagnostic);
+
+            return new ErrorCallSite(serviceType, diagnostic);
+        }
+
+        try
+        {
+            return TryCreateSpecial(serviceType, context) ??
+                   TryCreateExact(serviceType, context) ??
+                   TryCreateEnumerable(serviceType, context) ??
+                   TryCreateGeneric(serviceType, context);
+        }
+        catch
+        {
+            context.Remove(serviceType);
+            throw;
+        }
+    }
+
+    private ServiceCallSite? TryCreateSpecial(ITypeSymbol serviceType, ServiceResolutionContext context)
+    {
+        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceProviderType))
+        {
+            var callSite = new ServiceProviderCallSite(serviceType);
+            context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
+        }
+
+        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceScopeFactoryType))
+        {
+            var callSite = new ScopeFactoryCallSite(serviceType);
+            context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
+        }
+
+        return null;
+    }
+
+    private ServiceCallSite? TryCreateGeneric(
+        ITypeSymbol serviceType,
+        ServiceResolutionContext context)
+    {
+        if (serviceType is INamedTypeSymbol { IsGenericType: true })
+        {
+            for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
+            {
+                var registration = context.ProviderDescription.ServiceRegistrations[i];
+
+                var callSite = TryCreateGeneric(serviceType, registration, 0, context);
+                if (callSite != null)
+                {
+                    return callSite;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private ServiceCallSite? TryCreateGeneric(
+        ITypeSymbol serviceType,
+        ServiceRegistration registration,
+        int reverseIndex,
+        ServiceResolutionContext context)
+    {
+        if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
+            registration.ServiceType.IsUnboundGenericType &&
+            SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, genericType.ConstructedFrom))
+        {
+            var implementationType = registration.ImplementationType!.ConstructedFrom.Construct(genericType.TypeArguments, genericType.TypeArgumentNullableAnnotations);
+            return CreateConstructorCallSite(registration, genericType, implementationType, reverseIndex, context);
+        }
+
+        return null;
+    }
+
+    private ServiceCallSite? TryCreateEnumerable(ITypeSymbol serviceType, ServiceResolutionContext context)
+    {
+        static ServiceLifetime GetCommonLifetime(IEnumerable<ServiceCallSite> callSites)
+        {
+            var commonLifetime = ServiceLifetime.Singleton;
+
+            foreach (var serviceCallSite in callSites)
+            {
+                if (serviceCallSite.Lifetime < commonLifetime)
+                {
+                    commonLifetime = serviceCallSite.Lifetime;
+                }
             }
 
-            if (!context.TryAdd(serviceType))
+            return commonLifetime;
+        }
+
+        if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
+            SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _knownTypes.IEnumerableType))
+        {
+            var enumerableService = genericType.TypeArguments[0];
+            var items = new List<ServiceCallSite>();
+            int reverseIndex = 0;
+            for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
             {
-                var diagnostic = Diagnostic.Create(DiagnosticDescriptors.CyclicDependencyDetected,
-                    context.RequestLocation,
-                    context.RequestService.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                    serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                    context.ToString(serviceType));
+                var registration = context.ProviderDescription.ServiceRegistrations[i];
+
+                var itemCallSite = TryCreateGeneric(enumerableService, registration, reverseIndex, context) ??
+                                   TryCreateExact(registration, enumerableService, reverseIndex, context);
+                if (itemCallSite != null)
+                {
+                    reverseIndex++;
+                    items.Add(itemCallSite);
+                }
+            }
+
+            var serviceCallSites = items.ToArray();
+            Array.Reverse(serviceCallSites);
+            var callSite = new ArrayServiceCallSite(
+                genericType,
+                genericType,
+                enumerableService,
+                serviceCallSites,
+                // Pick a most common lifetime
+                GetCommonLifetime(items));
+
+            context.CallSiteCache[new CallSiteCacheKey(reverseIndex, serviceType)] = callSite;
+
+            return callSite;
+        }
+
+        return null;
+    }
+
+    private ServiceCallSite? TryCreateExact(ITypeSymbol serviceType, ServiceResolutionContext context)
+    {
+        for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
+        {
+            var registration = context.ProviderDescription.ServiceRegistrations[i];
+
+            if (TryCreateExact(registration, serviceType, 0, context) is { } callSite)
+            {
+                return callSite;
+            }
+        }
+
+        return null;
+    }
+
+    private ServiceCallSite? TryCreateExact(ServiceRegistration registration, ITypeSymbol serviceType, int reverseIndex, ServiceResolutionContext context)
+    {
+        if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, serviceType))
+        {
+            return CreateCallSite(registration, reverseIndex: reverseIndex, context: context);
+        }
+
+        return null;
+    }
+
+    private ServiceCallSite CreateCallSite(
+        ServiceRegistration registration,
+        int reverseIndex,
+        ServiceResolutionContext context)
+    {
+        var cacheKey = new CallSiteCacheKey(reverseIndex, registration.ServiceType);
+
+        if (context.CallSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
+        {
+            return callSite;
+        }
+
+        switch (registration)
+        {
+            case {InstanceMember: { } instanceMember}:
+                callSite = new MemberCallSite(registration.ServiceType, instanceMember, registration.Lifetime, reverseIndex, false);
+                break;
+            case {FactoryMember: { } factoryMember}:
+                callSite = new MemberCallSite(registration.ServiceType, factoryMember, registration.Lifetime, reverseIndex, null);
+                break;
+            default:
+                var implementationType = registration.ImplementationType ??
+                                         registration.ServiceType;
+
+                callSite = CreateConstructorCallSite(registration, registration.ServiceType, implementationType, reverseIndex, context);
+                break;
+        }
+
+        context.CallSiteCache[cacheKey] = callSite;
+
+        return callSite;
+    }
+
+    private ServiceCallSite CreateConstructorCallSite(
+        ServiceRegistration registration,
+        INamedTypeSymbol serviceType,
+        INamedTypeSymbol implementationType,
+        int reverseIndex,
+        ServiceResolutionContext context)
+    {
+        var cacheKey = new CallSiteCacheKey(reverseIndex, registration.ServiceType);
+
+        if (context.CallSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
+        {
+            return callSite;
+        }
+
+        context.TryAdd(implementationType);
+        try
+        {
+            var ctor = SelectConstructor(implementationType, context.ProviderDescription);
+            if (ctor == null)
+            {
+                var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ImplementationTypeRequiresPublicConstructor,
+                    registration.Location,
+                    implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
                 _context.ReportDiagnostic(
                     diagnostic);
@@ -249,731 +460,519 @@ namespace Jab
                 return new ErrorCallSite(serviceType, diagnostic);
             }
 
-            try
+            var parameters = new List<ServiceCallSite>();
+            var namedParameters = new List<KeyValuePair<IParameterSymbol, ServiceCallSite>>();
+            var diagnostics = new List<Diagnostic>();
+            foreach (var parameterSymbol in ctor.Parameters)
             {
-                return TryCreateSpecial(serviceType, context) ??
-                       TryCreateExact(serviceType, context) ??
-                       TryCreateEnumerable(serviceType, context) ??
-                       TryCreateGeneric(serviceType, context);
-            }
-            catch
-            {
-                context.Remove(serviceType);
-                throw;
-            }
-        }
-
-        private ServiceCallSite? TryCreateSpecial(ITypeSymbol serviceType, ServiceResolutionContext context)
-        {
-            if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceProviderType))
-            {
-                var callSite = new ServiceProviderCallSite(serviceType);
-                context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
-            }
-
-            if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceScopeFactoryType))
-            {
-                var callSite = new ScopeFactoryCallSite(serviceType);
-                context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
-            }
-
-            return null;
-        }
-
-        private ServiceCallSite? TryCreateGeneric(
-            ITypeSymbol serviceType,
-            ServiceResolutionContext context)
-        {
-            if (serviceType is INamedTypeSymbol { IsGenericType: true })
-            {
-                for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
+                var parameterCallSite = GetCallSite(parameterSymbol.Type, context);
+                if (parameterSymbol.IsOptional)
                 {
-                    var registration = context.ProviderDescription.ServiceRegistrations[i];
-
-                    var callSite = TryCreateGeneric(serviceType, registration, 0, context);
-                    if (callSite != null)
+                    if (parameterCallSite != null)
                     {
-                        return callSite;
+                        namedParameters.Add(new KeyValuePair<IParameterSymbol, ServiceCallSite>(parameterSymbol, parameterCallSite));
+                    }
+                }
+                else
+                {
+                    if (parameterCallSite == null)
+                    {
+                        var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
+                            registration.Location,
+                            parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                            implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+
+                        diagnostics.Add(diagnostic);
+                        _context.ReportDiagnostic(diagnostic);
+                    }
+                    else
+                    {
+                        parameters.Add(parameterCallSite);
                     }
                 }
             }
 
-            return null;
-        }
-
-        private ServiceCallSite? TryCreateGeneric(
-            ITypeSymbol serviceType,
-            ServiceRegistration registration,
-            int reverseIndex,
-            ServiceResolutionContext context)
-        {
-            if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
-                registration.ServiceType.IsUnboundGenericType &&
-                SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, genericType.ConstructedFrom))
+            if (diagnostics.Count > 0)
             {
-                var implementationType = registration.ImplementationType!.ConstructedFrom.Construct(genericType.TypeArguments, genericType.TypeArgumentNullableAnnotations);
-                return CreateConstructorCallSite(registration, genericType, implementationType, reverseIndex, context);
+                return new ErrorCallSite(serviceType, diagnostics.ToArray());
             }
 
-            return null;
-        }
-
-        private ServiceCallSite? TryCreateEnumerable(ITypeSymbol serviceType, ServiceResolutionContext context)
-        {
-            static ServiceLifetime GetCommonLifetime(IEnumerable<ServiceCallSite> callSites)
-            {
-                var commonLifetime = ServiceLifetime.Singleton;
-
-                foreach (var serviceCallSite in callSites)
-                {
-                    if (serviceCallSite.Lifetime < commonLifetime)
-                    {
-                        commonLifetime = serviceCallSite.Lifetime;
-                    }
-                }
-
-                return commonLifetime;
-            }
-
-            if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
-                SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _knownTypes.IEnumerableType))
-            {
-                var enumerableService = genericType.TypeArguments[0];
-                var items = new List<ServiceCallSite>();
-                int reverseIndex = 0;
-                for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
-                {
-                    var registration = context.ProviderDescription.ServiceRegistrations[i];
-
-                    var itemCallSite = TryCreateGeneric(enumerableService, registration, reverseIndex, context) ??
-                                       TryCreateExact(registration, enumerableService, reverseIndex, context);
-                    if (itemCallSite != null)
-                    {
-                        reverseIndex++;
-                        items.Add(itemCallSite);
-                    }
-                }
-
-                var serviceCallSites = items.ToArray();
-                Array.Reverse(serviceCallSites);
-                var callSite = new ArrayServiceCallSite(
-                    genericType,
-                    genericType,
-                    enumerableService,
-                    serviceCallSites,
-                    // Pick a most common lifetime
-                    GetCommonLifetime(items));
-
-                context.CallSiteCache[new CallSiteCacheKey(reverseIndex, serviceType)] = callSite;
-
-                return callSite;
-            }
-
-            return null;
-        }
-
-        private ServiceCallSite? TryCreateExact(ITypeSymbol serviceType, ServiceResolutionContext context)
-        {
-            for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
-            {
-                var registration = context.ProviderDescription.ServiceRegistrations[i];
-
-                if (TryCreateExact(registration, serviceType, 0, context) is { } callSite)
-                {
-                    return callSite;
-                }
-            }
-
-            return null;
-        }
-
-        private ServiceCallSite? TryCreateExact(ServiceRegistration registration, ITypeSymbol serviceType, int reverseIndex, ServiceResolutionContext context)
-        {
-            if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, serviceType))
-            {
-                return CreateCallSite(registration, reverseIndex: reverseIndex, context: context);
-            }
-
-            return null;
-        }
-
-        private ServiceCallSite CreateCallSite(
-            ServiceRegistration registration,
-            int reverseIndex,
-            ServiceResolutionContext context)
-        {
-            var cacheKey = new CallSiteCacheKey(reverseIndex, registration.ServiceType);
-
-            if (context.CallSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
-            {
-                return callSite;
-            }
-
-            switch (registration)
-            {
-                case {InstanceMember: { } instanceMember}:
-                    callSite = new MemberCallSite(registration.ServiceType, instanceMember, registration.Lifetime, reverseIndex, false);
-                    break;
-                case {FactoryMember: { } factoryMember}:
-                    callSite = new MemberCallSite(registration.ServiceType, factoryMember, registration.Lifetime, reverseIndex, null);
-                    break;
-                default:
-                    var implementationType = registration.ImplementationType ??
-                                             registration.ServiceType;
-
-                    callSite = CreateConstructorCallSite(registration, registration.ServiceType, implementationType, reverseIndex, context);
-                    break;
-            }
+            callSite = new ConstructorCallSite(
+                serviceType,
+                implementationType,
+                parameters.ToArray(),
+                namedParameters.ToArray(),
+                registration.Lifetime,
+                reverseIndex,
+                // TODO: this can be optimized to avoid check for all the types
+                isDisposable: null
+            );
 
             context.CallSiteCache[cacheKey] = callSite;
 
             return callSite;
         }
-
-        private ServiceCallSite CreateConstructorCallSite(
-            ServiceRegistration registration,
-            INamedTypeSymbol serviceType,
-            INamedTypeSymbol implementationType,
-            int reverseIndex,
-            ServiceResolutionContext context)
+        catch
         {
-            var cacheKey = new CallSiteCacheKey(reverseIndex, registration.ServiceType);
+            context.Remove(implementationType);
+            throw;
+        }
+    }
 
-            if (context.CallSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
-            {
-                return callSite;
-            }
+    private bool CanSatisfy(ITypeSymbol serviceType, ServiceProviderDescription description)
+    {
+        INamedTypeSymbol? genericType = null;
 
-            context.TryAdd(implementationType);
-            try
-            {
-                var ctor = SelectConstructor(implementationType, context.ProviderDescription);
-                if (ctor == null)
-                {
-                    var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ImplementationTypeRequiresPublicConstructor,
-                        registration.Location,
-                        implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
-
-                    _context.ReportDiagnostic(
-                        diagnostic);
-
-                    return new ErrorCallSite(serviceType, diagnostic);
-                }
-
-                var parameters = new List<ServiceCallSite>();
-                var namedParameters = new List<KeyValuePair<IParameterSymbol, ServiceCallSite>>();
-                var diagnostics = new List<Diagnostic>();
-                foreach (var parameterSymbol in ctor.Parameters)
-                {
-                    var parameterCallSite = GetCallSite(parameterSymbol.Type, context);
-                    if (parameterSymbol.IsOptional)
-                    {
-                        if (parameterCallSite != null)
-                        {
-                            namedParameters.Add(new KeyValuePair<IParameterSymbol, ServiceCallSite>(parameterSymbol, parameterCallSite));
-                        }
-                    }
-                    else
-                    {
-                        if (parameterCallSite == null)
-                        {
-                            var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
-                                registration.Location,
-                                parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                                implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
-
-                            diagnostics.Add(diagnostic);
-                            _context.ReportDiagnostic(diagnostic);
-                        }
-                        else
-                        {
-                            parameters.Add(parameterCallSite);
-                        }
-                    }
-                }
-
-                if (diagnostics.Count > 0)
-                {
-                    return new ErrorCallSite(serviceType, diagnostics.ToArray());
-                }
-
-                callSite = new ConstructorCallSite(
-                    serviceType,
-                    implementationType,
-                    parameters.ToArray(),
-                    namedParameters.ToArray(),
-                    registration.Lifetime,
-                    reverseIndex,
-                    // TODO: this can be optimized to avoid check for all the types
-                    isDisposable: null
-                    );
-
-                context.CallSiteCache[cacheKey] = callSite;
-
-                return callSite;
-            }
-            catch
-            {
-                context.Remove(implementationType);
-                throw;
-            }
+        if (serviceType is INamedTypeSymbol {IsGenericType: true} genericServiceType)
+        {
+            genericType = genericServiceType;
         }
 
-        private bool CanSatisfy(ITypeSymbol serviceType, ServiceProviderDescription description)
+        if (genericType != null &&
+            SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _knownTypes.IEnumerableType))
         {
-            INamedTypeSymbol? genericType = null;
+            // We can always satisfy IEnumerables
+            return true;
+        }
 
-            if (serviceType is INamedTypeSymbol {IsGenericType: true} genericServiceType)
+        foreach (var registration in description.ServiceRegistrations)
+        {
+            if (SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, serviceType))
             {
-                genericType = genericServiceType;
+                return true;
             }
 
             if (genericType != null &&
-                SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _knownTypes.IEnumerableType))
+                registration.ServiceType.IsUnboundGenericType &&
+                SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, genericType.ConstructedFrom))
             {
-                // We can always satisfy IEnumerables
                 return true;
             }
+        }
 
-            foreach (var registration in description.ServiceRegistrations)
+        return false;
+    }
+
+    private IMethodSymbol? SelectConstructor(INamedTypeSymbol implementationType, ServiceProviderDescription description)
+    {
+        IMethodSymbol? selectedCtor = null;
+        IMethodSymbol? candidate = null;
+        foreach (var constructor in implementationType.Constructors)
+        {
+            if (constructor.DeclaredAccessibility == Accessibility.Public)
             {
-                if (SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, serviceType))
+                // Pick a shortest candidate just in case we don't find
+                // any applicable ctor and need to produce diagnostics
+                if (candidate == null ||
+                    candidate.Parameters.Length > constructor.Parameters.Length)
                 {
-                    return true;
+                    candidate = constructor;
                 }
 
-                if (genericType != null &&
-                    registration.ServiceType.IsUnboundGenericType &&
-                    SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, genericType.ConstructedFrom))
+                if (constructor.Parameters.Length > (selectedCtor?.Parameters.Length ?? -1))
                 {
-                    return true;
+                    bool allSatisfied = true;
+                    foreach (var constructorParameter in constructor.Parameters)
+                    {
+                        if (!CanSatisfy(constructorParameter.Type, description) &&
+                            !constructorParameter.IsOptional)
+                        {
+                            allSatisfied = false;
+                            break;
+                        }
+                    }
+
+                    if (allSatisfied)
+                    {
+                        selectedCtor = constructor;
+                    }
                 }
             }
 
-            return false;
         }
 
-        private IMethodSymbol? SelectConstructor(INamedTypeSymbol implementationType, ServiceProviderDescription description)
+        // Return a candidate so we can produce diagnostics for required services in a simple case
+        return selectedCtor ?? candidate;
+    }
+
+    private ServiceProviderDescription? GetDescription(ITypeSymbol serviceProviderType)
+    {
+        bool isCompositionRoot = false;
+        bool isModule = false;
+        Location? location = null;
+        List<ServiceRegistration> registrations = new();
+        List<ITypeSymbol> rootServices = new();
+        foreach (var attributeData in serviceProviderType.GetAttributes())
         {
-            IMethodSymbol? selectedCtor = null;
-            IMethodSymbol? candidate = null;
-            foreach (var constructor in implementationType.Constructors)
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.CompositionRootAttributeType))
             {
-                if (constructor.DeclaredAccessibility == Accessibility.Public)
+                location = attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation();
+                isCompositionRoot = true;
+                foreach (var namedArgument in attributeData.NamedArguments)
                 {
-                    // Pick a shortest candidate just in case we don't find
-                    // any applicable ctor and need to produce diagnostics
-                    if (candidate == null ||
-                        candidate.Parameters.Length > constructor.Parameters.Length)
+                    if (namedArgument.Key == KnownTypes.RootServicesAttributePropertyName)
                     {
-                        candidate = constructor;
-                    }
-
-                    if (constructor.Parameters.Length > (selectedCtor?.Parameters.Length ?? -1))
-                    {
-                        bool allSatisfied = true;
-                        foreach (var constructorParameter in constructor.Parameters)
+                        foreach (var typedConstant in namedArgument.Value.Values)
                         {
-                            if (!CanSatisfy(constructorParameter.Type, description) &&
-                                !constructorParameter.IsOptional)
-                            {
-                                allSatisfied = false;
-                                break;
-                            }
-                        }
-
-                        if (allSatisfied)
-                        {
-                            selectedCtor = constructor;
-                        }
-                    }
-                }
-
-            }
-
-            // Return a candidate so we can produce diagnostics for required services in a simple case
-            return selectedCtor ?? candidate;
-        }
-
-        private ServiceProviderDescription? GetDescription(ITypeSymbol serviceProviderType)
-        {
-            bool isCompositionRoot = false;
-            bool isModule = false;
-            Location? location = null;
-            List<ServiceRegistration> registrations = new();
-            List<ITypeSymbol> rootServices = new();
-            foreach (var attributeData in serviceProviderType.GetAttributes())
-            {
-                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.CompositionRootAttributeType))
-                {
-                    location = attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation();
-                    isCompositionRoot = true;
-                    foreach (var namedArgument in attributeData.NamedArguments)
-                    {
-                        if (namedArgument.Key == KnownTypes.RootServicesAttributePropertyName)
-                        {
-                            foreach (var typedConstant in namedArgument.Value.Values)
-                            {
-                                rootServices.Add(ExtractType(typedConstant));
-                            }
+                            rootServices.Add(ExtractType(typedConstant));
                         }
                     }
                 }
-                else if (TryGetModuleImport(attributeData, _knownTypes, out var innerModuleType))
-                {
-                    ProcessModule(serviceProviderType, registrations, innerModuleType, attributeData);
-                }
-                else if (TryCreateRegistration(serviceProviderType, attributeData, _knownTypes, out var registration))
-                {
-                    registrations.Add(registration);
-                }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ModuleAttribute))
-                {
-                    isModule = true;
-                }
             }
-
-            if (isCompositionRoot)
+            else if (TryGetModuleImport(attributeData, _knownTypes, out var innerModuleType))
             {
-                return new ServiceProviderDescription(registrations, rootServices.ToArray(), location);
+                ProcessModule(serviceProviderType, registrations, innerModuleType, attributeData);
             }
-
-            if (registrations.Count > 0 && !isModule)
+            else if (TryCreateRegistration(serviceProviderType, attributeData, _knownTypes, out var registration))
             {
-                _context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingServiceProviderAttribute,
-                    ExtractSymbolNameLocation(serviceProviderType),
-                    serviceProviderType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
-                ));
+                registrations.Add(registration);
             }
-
-            return null;
-        }
-
-        private void ProcessModule(ITypeSymbol serviceProviderType, List<ServiceRegistration> registrations, INamedTypeSymbol moduleType, AttributeData importAttributeData)
-        {
-            // TODO: idempotency
-            bool isModule = false;
-            // If module it in another assembly use KnownTypes native to that assembly
-            var knownTypes =
-                SymbolEqualityComparer.Default.Equals(moduleType.ContainingAssembly, _context.Compilation.Assembly) ?
-                    _knownTypes :
-                    new KnownTypes(_context.Compilation, moduleType.ContainingAssembly);
-
-            foreach (var attributeData in moduleType.GetAttributes())
+            else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ModuleAttribute))
             {
-                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ModuleAttribute))
-                {
-                    isModule = true;
-                }
-                else if (TryGetModuleImport(attributeData, knownTypes, out var innerModuleType))
-                {
-                    ProcessModule(serviceProviderType, registrations, innerModuleType, importAttributeData);
-                }
-                else if (TryCreateRegistration(serviceProviderType, attributeData, knownTypes, out var registration))
-                {
-                    registrations.Add(registration);
-                }
-            }
-
-            if (!isModule)
-            {
-                _context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.ImportedTypeNotMarkedWithModuleAttribute,
-                    importAttributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
-                    moduleType.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat),
-                    knownTypes.ModuleAttribute.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)
-                ));
+                isModule = true;
             }
         }
 
-        private bool TryGetModuleImport(AttributeData attributeData, KnownTypes knownTypes, [NotNullWhen(true)] out INamedTypeSymbol? moduleType)
+        if (isCompositionRoot)
         {
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ImportAttribute) ||
-                SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass?.ConstructedFrom, knownTypes.GenericImportAttribute))
-            {
-                if (attributeData.AttributeClass is { IsGenericType: true })
-                {
-                    moduleType = (INamedTypeSymbol)attributeData.AttributeClass.TypeArguments[0];
-                }
-                else
-                {
-                    moduleType = ExtractType(attributeData.ConstructorArguments[0]);
-                }
-
-                return true;
-            }
-
-            moduleType = null;
-            return false;
+            return new ServiceProviderDescription(registrations, rootServices.ToArray(), location);
         }
 
-        private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, KnownTypes knownTypes, [NotNullWhen(true)] out ServiceRegistration? registration)
+        if (registrations.Count > 0 && !isModule)
         {
-            registration = null;
-
-            if (attributeData.AttributeClass == null)
-            {
-                return false;
-            }
-
-            if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.TransientAttributeType) ||
-                SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericTransientAttributeType) ||
-                SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2TransientAttributeType)) &&
-                TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Transient, out registration))
-            {
-                return true;
-            }
-
-            if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.SingletonAttribute)||
-                 SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericSingletonAttribute) ||
-                 SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2SingletonAttribute)) &&
-                TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Singleton, out registration))
-            {
-                return true;
-            }
-
-            if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ScopedAttribute)||
-                 SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericScopedAttribute) ||
-                 SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2ScopedAttribute))  &&
-                TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Scoped, out registration))
-            {
-                return true;
-            }
-
-            return false;
+            _context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.MissingServiceProviderAttribute,
+                ExtractSymbolNameLocation(serviceProviderType),
+                serviceProviderType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
+            ));
         }
 
-        private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, ServiceLifetime serviceLifetime, [NotNullWhen(true)] out ServiceRegistration? registration)
+        return null;
+    }
+
+    private void ProcessModule(ITypeSymbol serviceProviderType, List<ServiceRegistration> registrations, INamedTypeSymbol moduleType, AttributeData importAttributeData)
+    {
+        // TODO: idempotency
+        bool isModule = false;
+        // If module it in another assembly use KnownTypes native to that assembly
+        var knownTypes =
+            SymbolEqualityComparer.Default.Equals(moduleType.ContainingAssembly, _context.Compilation.Assembly) ?
+                _knownTypes :
+                new KnownTypes(_context.Compilation, moduleType.ContainingAssembly);
+
+        foreach (var attributeData in moduleType.GetAttributes())
         {
-            registration = null;
-
-            string? instanceMemberName = null;
-            string? factoryMemberName = null;
-            foreach (var namedArgument in attributeData.NamedArguments)
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ModuleAttribute))
             {
-                if (namedArgument.Key == KnownTypes.InstanceAttributePropertyName)
-                {
-                    instanceMemberName = (string?)namedArgument.Value.Value;
-                }
-                else if (namedArgument.Key == KnownTypes.FactoryAttributePropertyName)
-                {
-                    factoryMemberName = (string?)namedArgument.Value.Value;
-                }
+                isModule = true;
             }
-
-            ISymbol? instanceMember = null;
-            if (instanceMemberName != null &&
-                !TryFindMember(serviceProviderType, attributeData, instanceMemberName, KnownTypes.InstanceAttributePropertyName, out instanceMember))
+            else if (TryGetModuleImport(attributeData, knownTypes, out var innerModuleType))
             {
-                return false;
+                ProcessModule(serviceProviderType, registrations, innerModuleType, importAttributeData);
             }
-
-            ISymbol? factoryMember = null;
-            if (factoryMemberName != null&&
-                !TryFindMember(serviceProviderType, attributeData, factoryMemberName, KnownTypes.FactoryAttributePropertyName, out factoryMember))
+            else if (TryCreateRegistration(serviceProviderType, attributeData, knownTypes, out var registration))
             {
-                return false;
+                registrations.Add(registration);
             }
+        }
 
-            INamedTypeSymbol serviceType;
-            INamedTypeSymbol? implementationType;
+        if (!isModule)
+        {
+            _context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.ImportedTypeNotMarkedWithModuleAttribute,
+                importAttributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
+                moduleType.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat),
+                knownTypes.ModuleAttribute.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)
+            ));
+        }
+    }
 
-            if (attributeData.AttributeClass is { IsGenericType: true } attributeClass)
+    private bool TryGetModuleImport(AttributeData attributeData, KnownTypes knownTypes, [NotNullWhen(true)] out INamedTypeSymbol? moduleType)
+    {
+        if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ImportAttribute) ||
+            SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass?.ConstructedFrom, knownTypes.GenericImportAttribute))
+        {
+            if (attributeData.AttributeClass is { IsGenericType: true })
             {
-                serviceType = (INamedTypeSymbol)attributeClass.TypeArguments[0];
-                implementationType = attributeClass.TypeArguments.Length == 2 ? (INamedTypeSymbol)attributeClass.TypeArguments[1] : null;
+                moduleType = (INamedTypeSymbol)attributeData.AttributeClass.TypeArguments[0];
             }
             else
             {
-                serviceType = ExtractType(attributeData.ConstructorArguments[0]);
-                implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
+                moduleType = ExtractType(attributeData.ConstructorArguments[0]);
             }
-
-            registration = new ServiceRegistration(
-                serviceLifetime,
-                serviceType,
-                implementationType,
-                instanceMember,
-                factoryMember,
-                attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation());
 
             return true;
         }
 
-        private bool TryFindMember(ITypeSymbol typeSymbol, AttributeData attributeData, string memberName, string parameterName, [NotNullWhen(true)] out ISymbol? instanceMember)
+        moduleType = null;
+        return false;
+    }
+
+    private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, KnownTypes knownTypes, [NotNullWhen(true)] out ServiceRegistration? registration)
+    {
+        registration = null;
+
+        if (attributeData.AttributeClass == null)
         {
-            instanceMember = null;
+            return false;
+        }
 
-            var members = typeSymbol.GetMembers(memberName);
-            if (members.Length == 0)
-            {
-                _context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeNotFound,
-                    attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
-                    memberName,
-                    parameterName
-                ));
-                return false;
-            }
-
-            if (members.Length > 1)
-            {
-                _context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeAmbiguous,
-                    attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
-                    memberName,
-                    parameterName
-                ));
-                return false;
-            }
-
-            instanceMember = members[0];
+        if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.TransientAttributeType) ||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericTransientAttributeType) ||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2TransientAttributeType)) &&
+            TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Transient, out registration))
+        {
             return true;
         }
 
-        private INamedTypeSymbol ExtractType(TypedConstant typedConstant)
+        if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.SingletonAttribute)||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericSingletonAttribute) ||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2SingletonAttribute)) &&
+            TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Singleton, out registration))
         {
-            if (typedConstant.Kind != TypedConstantKind.Type)
-            {
-                throw new InvalidOperationException($"Unexpected constant kind '{typedConstant.Kind}', expected 'Type'");
-            }
-
-            if (typedConstant.Value == null)
-            {
-                throw new InvalidOperationException($"Unexpected null value for type constant.");
-            }
-
-            return (INamedTypeSymbol) typedConstant.Value;
+            return true;
         }
 
-        private Location? ExtractSymbolNameLocation(ITypeSymbol symbol)
+        if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ScopedAttribute)||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericScopedAttribute) ||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2ScopedAttribute))  &&
+            TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Scoped, out registration))
         {
-            foreach (var declaringSyntaxReference in symbol.DeclaringSyntaxReferences)
-            {
-                var syntax = declaringSyntaxReference.GetSyntax();
-                if (syntax is TypeDeclarationSyntax declarationSyntax)
-                {
-                    return declarationSyntax.Identifier.GetLocation();
-                }
-
-                return syntax.GetLocation();
-            }
-
-            return null;
+            return true;
         }
 
-        private readonly struct CallSiteCacheKey : IEquatable<CallSiteCacheKey>
+        return false;
+    }
+
+    private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, ServiceLifetime serviceLifetime, [NotNullWhen(true)] out ServiceRegistration? registration)
+    {
+        registration = null;
+
+        string? instanceMemberName = null;
+        string? factoryMemberName = null;
+        foreach (var namedArgument in attributeData.NamedArguments)
         {
-            public CallSiteCacheKey(ITypeSymbol type) : this(0, type)
+            if (namedArgument.Key == KnownTypes.InstanceAttributePropertyName)
             {
+                instanceMemberName = (string?)namedArgument.Value.Value;
+            }
+            else if (namedArgument.Key == KnownTypes.FactoryAttributePropertyName)
+            {
+                factoryMemberName = (string?)namedArgument.Value.Value;
+            }
+        }
+
+        ISymbol? instanceMember = null;
+        if (instanceMemberName != null &&
+            !TryFindMember(serviceProviderType, attributeData, instanceMemberName, KnownTypes.InstanceAttributePropertyName, out instanceMember))
+        {
+            return false;
+        }
+
+        ISymbol? factoryMember = null;
+        if (factoryMemberName != null&&
+            !TryFindMember(serviceProviderType, attributeData, factoryMemberName, KnownTypes.FactoryAttributePropertyName, out factoryMember))
+        {
+            return false;
+        }
+
+        INamedTypeSymbol serviceType;
+        INamedTypeSymbol? implementationType;
+
+        if (attributeData.AttributeClass is { IsGenericType: true } attributeClass)
+        {
+            serviceType = (INamedTypeSymbol)attributeClass.TypeArguments[0];
+            implementationType = attributeClass.TypeArguments.Length == 2 ? (INamedTypeSymbol)attributeClass.TypeArguments[1] : null;
+        }
+        else
+        {
+            serviceType = ExtractType(attributeData.ConstructorArguments[0]);
+            implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
+        }
+
+        registration = new ServiceRegistration(
+            serviceLifetime,
+            serviceType,
+            implementationType,
+            instanceMember,
+            factoryMember,
+            attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation());
+
+        return true;
+    }
+
+    private bool TryFindMember(ITypeSymbol typeSymbol, AttributeData attributeData, string memberName, string parameterName, [NotNullWhen(true)] out ISymbol? instanceMember)
+    {
+        instanceMember = null;
+
+        var members = typeSymbol.GetMembers(memberName);
+        if (members.Length == 0)
+        {
+            _context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeNotFound,
+                attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
+                memberName,
+                parameterName
+            ));
+            return false;
+        }
+
+        if (members.Length > 1)
+        {
+            _context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeAmbiguous,
+                attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
+                memberName,
+                parameterName
+            ));
+            return false;
+        }
+
+        instanceMember = members[0];
+        return true;
+    }
+
+    private INamedTypeSymbol ExtractType(TypedConstant typedConstant)
+    {
+        if (typedConstant.Kind != TypedConstantKind.Type)
+        {
+            throw new InvalidOperationException($"Unexpected constant kind '{typedConstant.Kind}', expected 'Type'");
+        }
+
+        if (typedConstant.Value == null)
+        {
+            throw new InvalidOperationException($"Unexpected null value for type constant.");
+        }
+
+        return (INamedTypeSymbol) typedConstant.Value;
+    }
+
+    private Location? ExtractSymbolNameLocation(ITypeSymbol symbol)
+    {
+        foreach (var declaringSyntaxReference in symbol.DeclaringSyntaxReferences)
+        {
+            var syntax = declaringSyntaxReference.GetSyntax();
+            if (syntax is TypeDeclarationSyntax declarationSyntax)
+            {
+                return declarationSyntax.Identifier.GetLocation();
             }
 
-            public CallSiteCacheKey(int reverseIndex, ITypeSymbol type)
+            return syntax.GetLocation();
+        }
+
+        return null;
+    }
+
+    private readonly struct CallSiteCacheKey : IEquatable<CallSiteCacheKey>
+    {
+        public CallSiteCacheKey(ITypeSymbol type) : this(0, type)
+        {
+        }
+
+        public CallSiteCacheKey(int reverseIndex, ITypeSymbol type)
+        {
+            ReverseIndex = reverseIndex;
+            Type = type;
+        }
+
+        public int ReverseIndex { get; }
+        public ITypeSymbol Type { get; }
+
+        public bool Equals(CallSiteCacheKey other)
+        {
+            return ReverseIndex == other.ReverseIndex && SymbolEqualityComparer.Default.Equals(Type, other.Type);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is CallSiteCacheKey other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
             {
-                ReverseIndex = reverseIndex;
-                Type = type;
+                return (ReverseIndex * 397) ^ SymbolEqualityComparer.Default.GetHashCode(Type);
+            }
+        }
+    }
+
+    private class ServiceResolutionContext
+    {
+        private readonly HashSet<ServiceChainItem> _chain = new();
+        private int _index;
+
+        public Dictionary<CallSiteCacheKey, ServiceCallSite> CallSiteCache { get; }
+        public ITypeSymbol RequestService { get; }
+        public ServiceProviderDescription ProviderDescription { get; }
+        public Location? RequestLocation { get; }
+
+        public ServiceResolutionContext(
+            ServiceProviderDescription providerDescription,
+            Dictionary<CallSiteCacheKey, ServiceCallSite> serviceCallSites,
+            ITypeSymbol requestService,
+            Location? requestLocation)
+        {
+            CallSiteCache = serviceCallSites;
+            RequestService = requestService;
+            ProviderDescription = providerDescription;
+            RequestLocation = requestLocation;
+        }
+
+        public bool TryAdd(ITypeSymbol typeSymbol)
+        {
+            var serviceChainItem = new ServiceChainItem(typeSymbol, _index);
+            if (_chain.Contains(serviceChainItem))
+            {
+                return false;
             }
 
-            public int ReverseIndex { get; }
-            public ITypeSymbol Type { get; }
+            _index++;
+            _chain.Add(serviceChainItem);
+            return true;
+        }
 
-            public bool Equals(CallSiteCacheKey other)
+        public void Remove(ITypeSymbol typeSymbol)
+        {
+            _chain.Remove(new ServiceChainItem(typeSymbol, 0));
+            _index--;
+        }
+
+        public string ToString(ITypeSymbol typeSymbol)
+        {
+            StringBuilder builder = new();
+            foreach (var serviceChainItem in _chain.OrderBy(c => c.Index))
             {
-                return ReverseIndex == other.ReverseIndex && SymbolEqualityComparer.Default.Equals(Type, other.Type);
+                builder.Append(serviceChainItem.TypeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+                builder.Append(" -> ");
+            }
+            builder.Append(typeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+            return builder.ToString();
+        }
+
+        private struct ServiceChainItem : IEquatable<ServiceChainItem>
+        {
+            public ITypeSymbol TypeSymbol { get; }
+            public int Index { get; }
+
+            public ServiceChainItem(ITypeSymbol typeSymbol, int index)
+            {
+                TypeSymbol = typeSymbol;
+                Index = index;
+            }
+
+            public bool Equals(ServiceChainItem other)
+            {
+                return SymbolEqualityComparer.Default.Equals(TypeSymbol, other.TypeSymbol);
             }
 
             public override bool Equals(object? obj)
             {
-                return obj is CallSiteCacheKey other && Equals(other);
+                return obj is ServiceChainItem other && Equals(other);
             }
 
             public override int GetHashCode()
             {
-                unchecked
-                {
-                    return (ReverseIndex * 397) ^ SymbolEqualityComparer.Default.GetHashCode(Type);
-                }
-            }
-        }
-
-        private class ServiceResolutionContext
-        {
-            private readonly HashSet<ServiceChainItem> _chain = new();
-            private int _index;
-
-            public Dictionary<CallSiteCacheKey, ServiceCallSite> CallSiteCache { get; }
-            public ITypeSymbol RequestService { get; }
-            public ServiceProviderDescription ProviderDescription { get; }
-            public Location? RequestLocation { get; }
-
-            public ServiceResolutionContext(
-                ServiceProviderDescription providerDescription,
-                Dictionary<CallSiteCacheKey, ServiceCallSite> serviceCallSites,
-                ITypeSymbol requestService,
-                Location? requestLocation)
-            {
-                CallSiteCache = serviceCallSites;
-                RequestService = requestService;
-                ProviderDescription = providerDescription;
-                RequestLocation = requestLocation;
-            }
-
-            public bool TryAdd(ITypeSymbol typeSymbol)
-            {
-                var serviceChainItem = new ServiceChainItem(typeSymbol, _index);
-                if (_chain.Contains(serviceChainItem))
-                {
-                    return false;
-                }
-
-                _index++;
-                _chain.Add(serviceChainItem);
-                return true;
-            }
-
-            public void Remove(ITypeSymbol typeSymbol)
-            {
-                _chain.Remove(new ServiceChainItem(typeSymbol, 0));
-                _index--;
-            }
-
-            public string ToString(ITypeSymbol typeSymbol)
-            {
-                StringBuilder builder = new();
-                foreach (var serviceChainItem in _chain.OrderBy(c => c.Index))
-                {
-                    builder.Append(serviceChainItem.TypeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
-                    builder.Append(" -> ");
-                }
-                builder.Append(typeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
-                return builder.ToString();
-            }
-
-            private struct ServiceChainItem : IEquatable<ServiceChainItem>
-            {
-                public ITypeSymbol TypeSymbol { get; }
-                public int Index { get; }
-
-                public ServiceChainItem(ITypeSymbol typeSymbol, int index)
-                {
-                    TypeSymbol = typeSymbol;
-                    Index = index;
-                }
-
-                public bool Equals(ServiceChainItem other)
-                {
-                    return SymbolEqualityComparer.Default.Equals(TypeSymbol, other.TypeSymbol);
-                }
-
-                public override bool Equals(object? obj)
-                {
-                    return obj is ServiceChainItem other && Equals(other);
-                }
-
-                public override int GetHashCode()
-                {
-                    return SymbolEqualityComparer.Default.GetHashCode(TypeSymbol);
-                }
+                return SymbolEqualityComparer.Default.GetHashCode(TypeSymbol);
             }
         }
     }

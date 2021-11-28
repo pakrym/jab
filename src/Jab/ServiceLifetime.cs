@@ -1,9 +1,8 @@
-﻿namespace Jab
+﻿namespace Jab;
+
+internal enum ServiceLifetime
 {
-    internal enum ServiceLifetime
-    {
-        Transient,
-        Scoped,
-        Singleton,
-    }
+    Transient,
+    Scoped,
+    Singleton,
 }
