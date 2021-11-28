@@ -7,8 +7,8 @@ on:
     branches: [ main ]
   workflow_dispatch:
     inputs:
-      IsRelease:
-        description: 'Release?'
+      ReleaseVersion:
+        description: 'Release Version'
         required: true
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
     - name: Test
       run: dotnet test src --no-build --verbosity normal
     - name: Pack
-      run: dotnet pack src --no-build --output nuget /p:IsRelease=${{ github.event.inputs.IsRelease }}
+      run: dotnet pack src --no-build --output nuget /p:ReleaseVersion=${{ github.event.inputs.ReleaseVersion }}
     - name: Get package version
       shell: pwsh
       id: vars
