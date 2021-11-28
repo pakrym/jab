@@ -172,7 +172,7 @@ namespace Jab
                             WriteDispose(codeWriter, root, onlyScoped: false);
 
                             codeWriter.Line($"[DebuggerHidden]");
-                            codeWriter.Line($"public T GetService<T>() => ((IServiceProvider<T>)this).GetService();");
+                            codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : default;");
                             codeWriter.Line();
 
                             codeWriter.Line($"public Scope CreateScope() => new Scope(this);");
@@ -199,7 +199,7 @@ namespace Jab
                                 codeWriter.Line();
 
                                 codeWriter.Line($"[DebuggerHidden]");
-                                codeWriter.Line($"public T GetService<T>() => ((IServiceProvider<T>)this).GetService();");
+                                codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : default;");
                                 codeWriter.Line();
 
                                 foreach (var rootService in root.RootCallSites)

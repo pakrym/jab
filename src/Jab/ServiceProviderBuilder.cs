@@ -18,19 +18,32 @@ namespace Jab
         public const string ServiceProviderModuleAttributeShortName = "ServiceProviderModule";
         public const string ImportAttributeShortName = "Import";
 
-        public const string TransientAttributeTypeName = TransientAttributeShortName + "Attribute";
-        public const string SingletonAttributeTypeName = SingletonAttributeShortName + "Attribute";
-        public const string ScopedAttributeTypeName = ScopedAttributeShortName + "Attribute";
-        public const string CompositionRootAttributeTypeName = CompositionRootAttributeShortName + "Attribute";
-        public const string ServiceProviderModuleAttributeTypeName = ServiceProviderModuleAttributeShortName + "Attribute";
-        public const string ImportAttributeTypeName = ImportAttributeShortName + "Attribute";
+        public const string TransientAttributeTypeName = $"{TransientAttributeShortName}Attribute";
+        public const string SingletonAttributeTypeName = $"{SingletonAttributeShortName}Attribute";
+        public const string ScopedAttributeTypeName = $"{ScopedAttributeShortName}Attribute";
+        public const string CompositionRootAttributeTypeName = $"{CompositionRootAttributeShortName}Attribute";
+        public const string ServiceProviderModuleAttributeTypeName = $"{ServiceProviderModuleAttributeShortName}Attribute";
 
-        public const string TransientAttributeMetadataName = "Jab." + TransientAttributeTypeName;
-        public const string SingletonAttributeMetadataName = "Jab." + SingletonAttributeTypeName;
-        public const string ScopedAttributeMetadataName = "Jab." + ScopedAttributeTypeName;
-        public const string CompositionRootAttributeMetadataName = "Jab." + CompositionRootAttributeTypeName;
-        public const string ServiceProviderModuleAttributeMetadataName = "Jab." + ServiceProviderModuleAttributeTypeName;
-        public const string ImportAttributeMetadataName = "Jab." + ImportAttributeTypeName;
+        public const string ImportAttributeTypeName = $"{ImportAttributeShortName}Attribute";
+
+        public const string TransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}";
+        public const string GenericTransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}`1";
+        public const string Generic2TransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}`2";
+
+        public const string SingletonAttributeMetadataName = $"Jab.{SingletonAttributeTypeName}";
+        public const string GenericSingletonAttributeMetadataName = $"Jab.{SingletonAttributeTypeName}`1";
+        public const string Generic2SingletonAttributeMetadataName = $"Jab.{SingletonAttributeTypeName}`2";
+
+
+        public const string ScopedAttributeMetadataName = $"Jab.{ScopedAttributeTypeName}";
+        public const string GenericScopedAttributeMetadataName = $"Jab.{ScopedAttributeTypeName}`1";
+        public const string Generic2ScopedAttributeMetadataName = $"Jab.{ScopedAttributeTypeName}`2";
+
+        public const string CompositionRootAttributeMetadataName = $"Jab.{CompositionRootAttributeTypeName}";
+        public const string ServiceProviderModuleAttributeMetadataName = $"Jab.{ServiceProviderModuleAttributeTypeName}";
+
+        public const string ImportAttributeMetadataName = $"Jab.{ImportAttributeTypeName}";
+        public const string GenericImportAttributeMetadataName = $"Jab.{ImportAttributeTypeName}`1";
 
         public const string InstanceAttributePropertyName = "Instance";
         public const string FactoryAttributePropertyName = "Factory";
@@ -45,10 +58,20 @@ namespace Jab
         public INamedTypeSymbol IServiceProviderType { get; }
         public INamedTypeSymbol CompositionRootAttributeType { get; }
         public INamedTypeSymbol TransientAttributeType { get; }
+        public INamedTypeSymbol? GenericTransientAttributeType { get; }
+        public INamedTypeSymbol? Generic2TransientAttributeType { get; }
+
         public INamedTypeSymbol SingletonAttribute { get; }
+        public INamedTypeSymbol? GenericSingletonAttribute { get; }
+        public INamedTypeSymbol? Generic2SingletonAttribute { get; }
+
         public INamedTypeSymbol ImportAttribute { get; }
+        public INamedTypeSymbol? GenericImportAttribute { get; }
+
         public INamedTypeSymbol ModuleAttribute { get; }
         public INamedTypeSymbol ScopedAttribute { get; }
+        public INamedTypeSymbol? GenericScopedAttribute { get; }
+        public INamedTypeSymbol? Generic2ScopedAttribute { get; }
         public INamedTypeSymbol? IServiceScopeType { get; }
         public INamedTypeSymbol? IServiceScopeFactoryType { get; }
 
@@ -68,12 +91,25 @@ namespace Jab
             IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
 
             CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, CompositionRootAttributeMetadataName);
+
             TransientAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, TransientAttributeMetadataName);
+            GenericTransientAttributeType = assemblySymbol.GetTypeByMetadataName(GenericTransientAttributeMetadataName);
+            Generic2TransientAttributeType = assemblySymbol.GetTypeByMetadataName(Generic2TransientAttributeMetadataName);
+
             SingletonAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, SingletonAttributeMetadataName);
+            GenericSingletonAttribute = assemblySymbol.GetTypeByMetadataName(GenericSingletonAttributeMetadataName);
+            Generic2SingletonAttribute = assemblySymbol.GetTypeByMetadataName(Generic2SingletonAttributeMetadataName);
+
             ScopedAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ScopedAttributeMetadataName);
+            GenericScopedAttribute = assemblySymbol.GetTypeByMetadataName(GenericScopedAttributeMetadataName);
+            Generic2ScopedAttribute = assemblySymbol.GetTypeByMetadataName(Generic2ScopedAttributeMetadataName);
+
             ImportAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ImportAttributeMetadataName);
+            GenericImportAttribute = assemblySymbol.GetTypeByMetadataName(GenericImportAttributeMetadataName);
+
             ModuleAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceProviderModuleAttributeMetadataName);
         }
+
     }
     internal class ServiceProviderBuilder
     {
@@ -567,7 +603,8 @@ namespace Jab
             List<ServiceRegistration> registrations = new();
             List<ITypeSymbol> rootServices = new();
             foreach (var attributeData in serviceProviderType.GetAttributes())
-            {if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.CompositionRootAttributeType))
+            {
+                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.CompositionRootAttributeType))
                 {
                     location = attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation();
                     isCompositionRoot = true;
@@ -582,9 +619,9 @@ namespace Jab
                         }
                     }
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.ImportAttribute))
+                else if (TryGetModuleImport(attributeData, _knownTypes, out var innerModuleType))
                 {
-                    ProcessModule(serviceProviderType, registrations, ExtractType(attributeData.ConstructorArguments[0]), attributeData);
+                    ProcessModule(serviceProviderType, registrations, innerModuleType, attributeData);
                 }
                 else if (TryCreateRegistration(serviceProviderType, attributeData, _knownTypes, out var registration))
                 {
@@ -628,9 +665,9 @@ namespace Jab
                 {
                     isModule = true;
                 }
-                else if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ImportAttribute))
+                else if (TryGetModuleImport(attributeData, knownTypes, out var innerModuleType))
                 {
-                    ProcessModule(serviceProviderType, registrations, ExtractType(attributeData.ConstructorArguments[0]), importAttributeData);
+                    ProcessModule(serviceProviderType, registrations, innerModuleType, importAttributeData);
                 }
                 else if (TryCreateRegistration(serviceProviderType, attributeData, knownTypes, out var registration))
                 {
@@ -649,23 +686,55 @@ namespace Jab
             }
         }
 
+        private bool TryGetModuleImport(AttributeData attributeData, KnownTypes knownTypes, [NotNullWhen(true)] out INamedTypeSymbol? moduleType)
+        {
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ImportAttribute) ||
+                SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass?.ConstructedFrom, knownTypes.GenericImportAttribute))
+            {
+                if (attributeData.AttributeClass is { IsGenericType: true })
+                {
+                    moduleType = (INamedTypeSymbol)attributeData.AttributeClass.TypeArguments[0];
+                }
+                else
+                {
+                    moduleType = ExtractType(attributeData.ConstructorArguments[0]);
+                }
+
+                return true;
+            }
+
+            moduleType = null;
+            return false;
+        }
+
         private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, KnownTypes knownTypes, [NotNullWhen(true)] out ServiceRegistration? registration)
         {
             registration = null;
 
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.TransientAttributeType) &&
+            if (attributeData.AttributeClass == null)
+            {
+                return false;
+            }
+
+            if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.TransientAttributeType) ||
+                SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericTransientAttributeType) ||
+                SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2TransientAttributeType)) &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Transient, out registration))
             {
                 return true;
             }
 
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.SingletonAttribute) &&
+            if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.SingletonAttribute)||
+                 SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericSingletonAttribute) ||
+                 SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2SingletonAttribute)) &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Singleton, out registration))
             {
                 return true;
             }
 
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ScopedAttribute) &&
+            if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ScopedAttribute)||
+                 SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericScopedAttribute) ||
+                 SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2ScopedAttribute))  &&
                 TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Scoped, out registration))
             {
                 return true;
@@ -706,8 +775,19 @@ namespace Jab
                 return false;
             }
 
-            var serviceType = ExtractType(attributeData.ConstructorArguments[0]);
-            var implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
+            INamedTypeSymbol serviceType;
+            INamedTypeSymbol? implementationType;
+
+            if (attributeData.AttributeClass is { IsGenericType: true } attributeClass)
+            {
+                serviceType = (INamedTypeSymbol)attributeClass.TypeArguments[0];
+                implementationType = attributeClass.TypeArguments.Length == 2 ? (INamedTypeSymbol)attributeClass.TypeArguments[1] : null;
+            }
+            else
+            {
+                serviceType = ExtractType(attributeData.ConstructorArguments[0]);
+                implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
+            }
 
             registration = new ServiceRegistration(
                 serviceLifetime,

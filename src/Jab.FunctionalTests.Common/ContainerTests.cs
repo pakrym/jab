@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using JabTests;
 using Xunit;
@@ -20,6 +21,14 @@ namespace JabTests
         [ServiceProvider]
         [Transient(typeof(IService), typeof(ServiceImplementation))]
         internal partial class CanCreateTransientServiceContainer { }
+
+        [Fact]
+        public void GetServiceForUnregisteredServiceNull()
+        {
+            CanCreateTransientServiceContainer c = new();
+            Assert.Null(c.GetService<IService2>());
+            Assert.Null(c.CreateScope().GetService<IService2>());
+        }
 
         [Fact]
         public void CanCreateTransientServiceWithConstructorParameters()
@@ -676,5 +685,42 @@ namespace JabTests
 
         [ServiceProvider]
         internal partial class CanResolveIServiceProviderContainer { }
+
+#if JAB_PREVIEW
+        [Fact]
+        public void CanUseGenericAttributes()
+        {
+            CanUseGenericAttributesContainer c = new();
+            var moduleService = c.GetService<IModuleService>();
+
+            var singleton = c.GetService<IService>();
+            var singleton2 = c.GetService<IService>();
+
+            var transient = c.GetService<IService3>();
+            var transient2 = c.GetService<IService3>();
+
+            var scope = c.CreateScope();
+            var scoped = scope.GetService<IService2>();
+            var scoped2 = scope.GetService<IService2>();
+
+            var scope2 = c.CreateScope();
+            var scoped3 = scope2.GetService<IService2>();
+
+            Assert.NotSame(transient, transient2);
+
+            Assert.Same(singleton, singleton2);
+            Assert.Same(scoped, scoped2);
+            Assert.NotSame(scoped2, scoped3);
+
+            Assert.NotNull(moduleService);
+        }
+
+        [ServiceProvider]
+        [Import<IModule>]
+        [Singleton<IService, ServiceImplementation>]
+        [Scoped<IService2, ServiceImplementation>]
+        [Transient<IService3, ServiceImplementation>]
+        internal partial class CanUseGenericAttributesContainer { }
+#endif
     }
 }

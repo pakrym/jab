@@ -91,6 +91,66 @@ namespace Jab
         }
     }
 
+#if JAB_PREVIEW
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
+    internal class ImportAttribute<TModule> : ImportAttribute
+    {
+        public ImportAttribute() : base(typeof(TModule))
+        {
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
+    internal class TransientAttribute<TService> : TransientAttribute
+    {
+        public TransientAttribute() : base(typeof(TService))
+        {
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
+    internal class TransientAttribute<TService, TImpl> : TransientAttribute
+    {
+        public TransientAttribute() : base(typeof(TService), typeof(TImpl))
+        {
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
+    internal class ScopedAttribute<TService> : ScopedAttribute
+    {
+        public ScopedAttribute() : base(typeof(TService))
+        {
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
+    internal class ScopedAttribute<TService, TImpl> : ScopedAttribute
+    {
+        public ScopedAttribute() : base(typeof(TService), typeof(TImpl))
+        {
+        }
+    }
+
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
+    internal class SingletonAttribute<TService> : SingletonAttribute
+    {
+        public SingletonAttribute() : base(typeof(TService))
+        {
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
+    internal class SingletonAttribute<TService, TImpl> : SingletonAttribute
+    {
+        public SingletonAttribute() : base(typeof(TService), typeof(TImpl))
+        {
+        }
+    }
+
+#endif
+
     internal interface IServiceProvider<T>
     {
         T GetService();

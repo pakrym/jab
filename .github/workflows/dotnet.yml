@@ -49,12 +49,10 @@ jobs:
     strategy:
       matrix:
         config:
-          - sdk: |
-              3.1.x
-              5.0.x
-          - sdk: |
-              3.1.x
-              6.0.x
+          - sdk: 5.0.x
+            tfm: net5.0
+          - sdk: 6.0.x
+            tfm: net5.0
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -63,10 +61,20 @@ jobs:
       with:
         name: nuget
         path: nuget
-    - name: Build
-      run: dotnet build eng/FunctionaTests.proj /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ matrix.sdk }}
+    - name: Get package version
+      shell: pwsh
+      id: vars
+      run: |
+        $name = (gci nuget/*.nupkg -Recurse)[0].Name
+        $version = $name.Substring($name.IndexOf(".") + 1)
+        $version = $version.Substring(0, $version.LastIndexOf("."))
+        "::set-output name=FunctionalTestPackageVersion::$version"
     - name: Test
-      run: dotnet test --no-build eng/FunctionaTests.proj
+      run: dotnet test --no-build eng/FunctionaTests.proj /p:FunctionalTestTargetFrameworks=${{ matrix.tfm }} /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
   publish:
     if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: [build, test]
