@@ -724,3 +724,6 @@ namespace JabTests
 #endif
     }
 }
+
+[ServiceProvider]
+internal partial class CanGenerateInGlobalNamespace { }

@@ -129,12 +129,15 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                 var codeWriter = new CodeWriter();
                 codeWriter.UseNamespace("Jab");
                 codeWriter.UseNamespace("System.Diagnostics");
-                using (codeWriter.Namespace($"{root.Type.ContainingNamespace.ToDisplayString()}"))
+                using (root.Type.ContainingNamespace.IsGlobalNamespace ?
+                           default :
+                           codeWriter.Namespace($"{root.Type.ContainingNamespace.ToDisplayString()}"))
                 {
                     // TODO: implement infinite nesting
                     using CodeWriter.CodeWriterScope? parentTypeScope = root.Type.ContainingType is {} containingType ?
                         codeWriter.Scope($"{SyntaxFacts.GetText(containingType.DeclaredAccessibility)} partial class {containingType.Name}") :
                         null;
+
                     codeWriter.Append($"{SyntaxFacts.GetText(root.Type.DeclaredAccessibility)} partial class {root.Type.Name}");
                     WriteInterfaces(codeWriter, root, false);
                     using (codeWriter.Scope())
@@ -347,7 +350,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         {
             if (serviceCallSite.IsMainImplementation)
             {
-                codeWriter.Append($"   IServiceProvider<{serviceCallSite.ServiceType}>,");
+                codeWriter.Line($"   IServiceProvider<{serviceCallSite.ServiceType}>,");
             }
         }
 
