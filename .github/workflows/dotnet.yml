@@ -75,7 +75,7 @@ jobs:
         $version = $version.Substring(0, $version.LastIndexOf("."))
         "::set-output name=FunctionalTestPackageVersion::$version"
     - name: Test
-      run: dotnet test --no-build eng/FunctionaTests.proj /p:FunctionalTestTargetFrameworks=${{ matrix.tfm }} /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
+      run: dotnet test eng/FunctionaTests.proj /p:FunctionalTestTargetFrameworks=${{ matrix.tfm }} /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
   publish:
     if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: [build, test]
