@@ -33,7 +33,7 @@
     
     <Target Name="ReferenceCrossTargeting" BeforeTargets="_GetPackageFiles">
         <MSBuild Projects="../Jab.Roslyn3/Jab.Roslyn3.csproj" Targets="GetTargetPath">
-            <Output ItemName="Roslyn3Assembly" TaskParameter="TargetOutputs"/>
+            <Output ItemName="Roslyn3Assembly" TaskParameter="TargetOutputs" />
         </MSBuild>
 
         <ItemGroup>

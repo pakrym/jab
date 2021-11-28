@@ -1,11 +1,4 @@
 #if ROSLYN4_0_OR_GREATER
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-
 namespace Jab
 {
     public partial class ContainerGenerator : IIncrementalGenerator

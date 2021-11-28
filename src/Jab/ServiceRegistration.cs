@@ -1,24 +1,11 @@
-﻿using Microsoft.CodeAnalysis;
+﻿namespace Jab;
 
-namespace Jab
+internal record ServiceRegistration(ServiceLifetime Lifetime, INamedTypeSymbol ServiceType, INamedTypeSymbol? ImplementationType, ISymbol? InstanceMember, ISymbol? FactoryMember, Location? Location)
 {
-    internal record ServiceRegistration
-    {
-        public INamedTypeSymbol ServiceType { get; }
-        public INamedTypeSymbol? ImplementationType { get; }
-        public ISymbol? InstanceMember { get; }
-        public ISymbol? FactoryMember { get; }
-        public ServiceLifetime Lifetime { get; }
-        public Location? Location { get; }
-
-        public ServiceRegistration(ServiceLifetime lifetime, INamedTypeSymbol serviceType, INamedTypeSymbol? implementationType, ISymbol? instanceMember, ISymbol? factoryMember, Location? location)
-        {
-            Lifetime = lifetime;
-            ServiceType = serviceType;
-            ImplementationType = implementationType;
-            InstanceMember = instanceMember;
-            FactoryMember = factoryMember;
-            Location = location;
-        }
-    }
+    public INamedTypeSymbol ServiceType { get; } = ServiceType;
+    public INamedTypeSymbol? ImplementationType { get; } = ImplementationType;
+    public ISymbol? InstanceMember { get; } = InstanceMember;
+    public ISymbol? FactoryMember { get; } = FactoryMember;
+    public ServiceLifetime Lifetime { get; } = Lifetime;
+    public Location? Location { get; } = Location;
 }
