@@ -48,12 +48,12 @@ jobs:
     needs: build
     strategy:
       matrix:
-        NET 5:
-          sdk: 5.0.x
-          tfm: net5.0
-        NET 6:
-          sdk: 6.0.x
-          tfm: net5.0
+        sdk: [5.0.x, 6.0.x]
+        include:
+          - sdk: 5.0.x
+            tfm: net5.0
+          - sdk: 6.0.x
+            tfm: net6.0
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
