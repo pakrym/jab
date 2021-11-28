@@ -1,14 +1,11 @@
-using Microsoft.CodeAnalysis;
+namespace Jab;
 
-namespace Jab
+internal record ErrorCallSite : ServiceCallSite
 {
-    internal record ErrorCallSite : ServiceCallSite
+    public ErrorCallSite(ITypeSymbol serviceType, params Diagnostic[] diagnostic) : base(serviceType, serviceType, ServiceLifetime.Transient, ReverseIndex: 0, IsDisposable: false)
     {
-        public ErrorCallSite(ITypeSymbol serviceType, params Diagnostic[] diagnostic) : base(serviceType, serviceType, ServiceLifetime.Transient, reverseIndex: 0, isDisposable: false)
-        {
-            Diagnostic = diagnostic;
-        }
-
-        public Diagnostic[] Diagnostic { get; }
+        Diagnostic = diagnostic;
     }
+
+    public Diagnostic[] Diagnostic { get; }
 }

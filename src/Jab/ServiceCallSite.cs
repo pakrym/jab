@@ -1,23 +1,11 @@
-﻿using Microsoft.CodeAnalysis;
+﻿namespace Jab;
 
-namespace Jab
+internal abstract record ServiceCallSite(ITypeSymbol ServiceType, ITypeSymbol ImplementationType, ServiceLifetime Lifetime, int ReverseIndex, bool? IsDisposable)
 {
-    internal abstract record ServiceCallSite
-    {
-        protected ServiceCallSite(ITypeSymbol serviceType, ITypeSymbol implementationType, ServiceLifetime lifetime, int reverseIndex, bool? isDisposable)
-        {
-            ServiceType = serviceType;
-            ImplementationType = implementationType;
-            Lifetime = lifetime;
-            ReverseIndex = reverseIndex;
-            IsDisposable = isDisposable;
-        }
-
-        public ITypeSymbol ServiceType { get; }
-        public ITypeSymbol ImplementationType { get; }
-        public ServiceLifetime Lifetime { get; }
-        public int ReverseIndex { get; }
-        public bool? IsDisposable { get; }
-        public bool IsMainImplementation => ReverseIndex == 0;
-    }
+    public ITypeSymbol ServiceType { get; } = ServiceType;
+    public ITypeSymbol ImplementationType { get; } = ImplementationType;
+    public ServiceLifetime Lifetime { get; } = Lifetime;
+    public int ReverseIndex { get; } = ReverseIndex;
+    public bool? IsDisposable { get; } = IsDisposable;
+    public bool IsMainImplementation => ReverseIndex == 0;
 }

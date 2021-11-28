@@ -1,18 +1,15 @@
-using Microsoft.CodeAnalysis;
+namespace Jab;
 
-namespace Jab
+internal struct GetServiceCallCandidate
 {
-    internal struct GetServiceCallCandidate
-    {
-        public ITypeSymbol ProviderType { get; }
-        public ITypeSymbol ServiceType { get; }
-        public Location? Location { get; }
+    public ITypeSymbol ProviderType { get; }
+    public ITypeSymbol ServiceType { get; }
+    public Location? Location { get; }
 
-        public GetServiceCallCandidate(ITypeSymbol providerType, ITypeSymbol serviceType, Location? location)
-        {
-            ProviderType = providerType;
-            ServiceType = serviceType;
-            Location = location;
-        }
+    public GetServiceCallCandidate(ITypeSymbol providerType, ITypeSymbol serviceType, Location? location)
+    {
+        ProviderType = providerType;
+        ServiceType = serviceType;
+        Location = location;
     }
 }
