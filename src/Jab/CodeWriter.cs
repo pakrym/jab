@@ -186,7 +186,10 @@ internal class CodeWriter
 
     private void AppendType(INamedTypeSymbol namedTypeSymbol)
     {
-        UseNamespace(namedTypeSymbol.ContainingNamespace.ToDisplayString());
+        if (!namedTypeSymbol.ContainingNamespace.IsGlobalNamespace)
+        {
+            UseNamespace(namedTypeSymbol.ContainingNamespace.ToDisplayString());
+        }
         AppendRaw(namedTypeSymbol.ToDisplayString());
     }
 
