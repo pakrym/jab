@@ -1,9 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using System.Runtime.CompilerServices;
+
 namespace Jab;
 
 internal delegate void CodeWriterDelegate(CodeWriter writer);
+
 internal class CodeWriter
 {
     private const int DefaultLength = 1024;
@@ -29,10 +32,8 @@ internal class CodeWriter
         _scopes.Push(new CodeWriterScope(this, "", false));
     }
 
-    public CodeWriterScope Scope(FormattableString line, string start = "{", string end = "}", bool newLine = true)
+    public CodeWriterScope Scope([InterpolatedStringHandlerArgument("")] ref AppendInterpolatedStringHandler handler, string start = "{", string end = "}", bool newLine = true)
     {
-        Line(line);
-
         return ScopeRaw(start, end, newLine);
     }
 
@@ -57,87 +58,68 @@ internal class CodeWriter
         return Scope($"namespace {@namespace}");
     }
 
-    public CodeWriter Append(FormattableString formattableString)
+    public CodeWriter Append([InterpolatedStringHandlerArgument("")] ref AppendInterpolatedStringHandler handler) => this;
+
+    private void AppendFormatted<T>(string format, T argument, int index)
     {
-        if (formattableString.ArgumentCount == 0)
+        const string literalFormatString = "L";
+        const string declarationFormatString = "D"; // :D :)
+        const string identifierFormatString = "I";
+
+        var isLiteral = format == literalFormatString;
+        var isDeclaration = format == declarationFormatString;
+        var isIdentifier = format == identifierFormatString;
+        switch (argument)
         {
-            return AppendRaw(formattableString.ToString());
+            case CodeWriterDelegate d:
+                Append(d);
+                break;
+            case Type t:
+                AppendType(t);
+                break;
+            case INamedTypeSymbol t:
+                AppendType(t);
+                break;
+            case CodeWriterDeclaration declaration:
+                if (isDeclaration)
+                {
+                    Declaration(declaration);
+                }
+                else
+                {
+                    Identifier(declaration.ActualName);
+                }
+
+                break;
+            default:
+                if (isLiteral)
+                {
+                    Literal(argument);
+                    return;
+                }
+
+                string? s = argument?.ToString();
+
+                if (s == null)
+                {
+                    throw new ArgumentNullException(index.ToString());
+                }
+
+                if (isDeclaration)
+                {
+                    Declaration(s);
+                }
+                else if (isIdentifier)
+                {
+                    Identifier(s);
+                }
+                else
+                {
+                    AppendRaw(s);
+                }
+
+                break;
         }
-
-        const string literalFormatString = ":L";
-        const string declarationFormatString = ":D"; // :D :)
-        const string identifierFormatString = ":I";
-        foreach ((string Text, bool IsLiteral) in GetPathParts(formattableString.Format))
-        {
-            string text = Text;
-            if (IsLiteral)
-            {
-                AppendRaw(text);
-                continue;
-            }
-
-            var formatSeparatorIndex = text.IndexOf(':');
-
-            int index = int.Parse(formatSeparatorIndex == -1
-                ? text
-                : text.Substring(0, formatSeparatorIndex));
-
-            var argument = formattableString.GetArgument(index);
-            var isLiteral = text.EndsWith(literalFormatString);
-            var isDeclaration = text.EndsWith(declarationFormatString);
-            var isIdentifier = text.EndsWith(identifierFormatString);
-            switch (argument)
-            {
-                case CodeWriterDelegate d:
-                    Append(d);
-                    break;
-                case Type t:
-                    AppendType(t);
-                    break;
-                case INamedTypeSymbol t:
-                    AppendType(t);
-                    break;
-                case CodeWriterDeclaration declaration:
-                    if (isDeclaration)
-                    {
-                        Declaration(declaration);
-                    }
-                    else
-                    {
-                        Identifier(declaration.ActualName);
-                    }
-                    break;
-                default:
-                    if (isLiteral)
-                    {
-                        Literal(argument);
-                        continue;
-                    }
-
-                    string? s = argument?.ToString();
-
-                    if (s == null)
-                    {
-                        throw new ArgumentNullException(index.ToString());
-                    }
-
-                    if (isDeclaration)
-                    {
-                        Declaration(s);
-                    }
-                    else if (isIdentifier)
-                    {
-                        Identifier(s);
-                    }
-                    else
-                    {
-                        AppendRaw(s);
-                    }
-                    break;
-            }
-        }
-
-        return this;
     }
 
     public void UseNamespace(string @namespace)
@@ -258,7 +240,7 @@ internal class CodeWriter
         _ => null
     };
 
-    public CodeWriter Literal(object? o)
+    public CodeWriter Literal<T>(T o)
     {
         return AppendRaw(o switch
         {
@@ -274,11 +256,9 @@ internal class CodeWriter
         });
     }
 
-    public CodeWriter Line(FormattableString formattableString)
+    public CodeWriter Line([InterpolatedStringHandlerArgument("")] ref AppendInterpolatedStringHandler handler)
     {
-        Append(formattableString);
         Line();
-
         return this;
     }
 
@@ -537,60 +517,8 @@ internal class CodeWriter
     {
         Identifier(declaration.ActualName);
     }
-    public static IEnumerable<(string Text, bool IsLiteral)> GetPathParts(string? path)
-    {
-        if (path == null)
-        {
-            yield break;
-        }
 
-        var index = 0;
-        var currentPart = new StringBuilder();
-        var innerPart = new StringBuilder();
-        while (index < path.Length)
-        {
-            if (path[index] == '{')
-            {
-                var innerIndex = index + 1;
-                while (innerIndex < path.Length)
-                {
-                    if (path[innerIndex] == '}')
-                    {
-                        if (currentPart.Length > 0)
-                        {
-                            yield return (currentPart.ToString(), true);
-                            currentPart.Clear();
-                        }
-
-                        yield return (innerPart.ToString(), false);
-                        innerPart.Clear();
-
-                        break;
-                    }
-
-                    innerPart.Append(path[innerIndex]);
-                    innerIndex++;
-                }
-
-                if (innerPart.Length > 0)
-                {
-                    currentPart.Append('{');
-                    currentPart.Append(innerPart);
-                }
-                index = innerIndex + 1;
-                continue;
-            }
-            currentPart.Append(path[index]);
-            index++;
-        }
-
-        if (currentPart.Length > 0)
-        {
-            yield return (currentPart.ToString(), true);
-        }
-    }
-
-    public static bool IsCSharpKeyword(string? name)
+    private static bool IsCSharpKeyword(string? name)
     {
         switch (name)
         {
@@ -731,6 +659,32 @@ internal class CodeWriter
             }
 
             _actualName = actualName;
+        }
+    }
+
+    [InterpolatedStringHandler]
+    public ref struct AppendInterpolatedStringHandler
+    {
+        private readonly CodeWriter _writer;
+
+        public AppendInterpolatedStringHandler(int literalLength, int formattedCount, CodeWriter writer)
+        {
+            _writer = writer;
+        }
+
+        public void AppendLiteral(string s)
+        {
+            _writer.AppendRaw(s);
+        }
+
+        public void AppendFormatted<T>(T value)
+        {
+            _writer.AppendFormatted("", value, 0);
+        }
+
+        public void AppendFormatted<T>(T value, string? format)
+        {
+            _writer.AppendFormatted(format ?? "", value, 0);
         }
     }
 }
