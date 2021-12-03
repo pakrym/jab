@@ -365,14 +365,9 @@ internal class ServiceProviderBuilder
 
     private ServiceCallSite? TryCreateExact(ITypeSymbol serviceType, ServiceResolutionContext context)
     {
-        for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
+        if (context.ProviderDescription.ServiceRegistrationsLookup.TryGetValue(serviceType, out var registration))
         {
-            var registration = context.ProviderDescription.ServiceRegistrations[i];
-
-            if (TryCreateExact(registration, serviceType, 0, context) is { } callSite)
-            {
-                return callSite;
-            }
+            return CreateCallSite(registration, reverseIndex: 0, context: context);
         }
 
         return null;
