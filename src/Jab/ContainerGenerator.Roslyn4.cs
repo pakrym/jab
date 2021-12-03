@@ -6,18 +6,23 @@ namespace Jab
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             IncrementalValuesProvider<TypeDeclarationSyntax> providerTypes = context.SyntaxProvider.CreateSyntaxProvider(
-                (node, _) => SyntaxCollector.IsKnownAttribute(node),
-                (syntaxContext, _) => SyntaxCollector.GetCandidateType(syntaxContext.Node));
+                (node, _) => SyntaxCollector.IsCandidateType(node),
+                (syntaxContext, _) => (TypeDeclarationSyntax)syntaxContext.Node);
 
             IncrementalValuesProvider<InvocationExpressionSyntax> getServiceCalls = context.SyntaxProvider.CreateSyntaxProvider(
                 (node, _) => SyntaxCollector.IsGetServiceExpression(node),
                 (syntaxContext, _) => (InvocationExpressionSyntax)syntaxContext.Node);
 
-            IncrementalValueProvider<((ImmutableArray<TypeDeclarationSyntax>, ImmutableArray<InvocationExpressionSyntax>), Compilation)> allInputs =
-                providerTypes.Collect().Combine(getServiceCalls.Collect()).Combine(context.CompilationProvider);
+            var collectedServiceCalls = getServiceCalls.Collect();
 
-            context.RegisterSourceOutput(allInputs, (productionContext, inputs) =>
-                Execute(new GeneratorContext(productionContext, inputs.Item1.Item1, inputs.Item1.Item2, inputs.Item2)));
+            var providers = providerTypes.Combine(collectedServiceCalls).Combine(context.CompilationProvider);
+
+            context.RegisterSourceOutput(providers, (productionContext, inputs) =>
+                Execute(new GeneratorContext(
+                    productionContext,
+                    ImmutableArray.Create(inputs.Item1.Item1),
+                    inputs.Item1.Item2,
+                    inputs.Item2)));
 
             context.RegisterPostInitializationOutput(c =>
             {
