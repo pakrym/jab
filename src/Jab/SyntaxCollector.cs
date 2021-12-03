@@ -8,9 +8,9 @@ internal class SyntaxCollector : ISyntaxReceiver
 
     public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
     {
-        if (IsKnownAttribute(syntaxNode))
+        if (IsCandidateType(syntaxNode))
         {
-            CandidateTypes.Add(GetCandidateType(syntaxNode));
+            CandidateTypes.Add((TypeDeclarationSyntax)syntaxNode);
         }
 
         else if (syntaxNode is InvocationExpressionSyntax invocationExpressionSyntax &&
@@ -25,23 +25,28 @@ internal class SyntaxCollector : ISyntaxReceiver
         return syntaxNode is InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax { Name: GenericNameSyntax { Identifier: { Text: "GetService" } } } };
     }
 
-    public static TypeDeclarationSyntax GetCandidateType(SyntaxNode syntaxNode)
+    public static bool IsCandidateType(SyntaxNode syntax)
     {
-        if (syntaxNode is AttributeSyntax
-            {
-                Parent: AttributeListSyntax
-                {
-                    Parent: TypeDeclarationSyntax type
-                }
-            })
+        if (syntax is not TypeDeclarationSyntax typeDeclarationSyntax)
         {
-            return type;
+            return false;
         }
 
-        throw new InvalidOperationException("Node doesn't have a candidate type");
+        foreach (var attributeList in typeDeclarationSyntax.AttributeLists)
+        {
+            foreach (var attribute in attributeList.Attributes)
+            {
+                if (IsKnownAttribute(attribute))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
-    public static bool IsKnownAttribute(SyntaxNode syntaxNode)
+    private static bool IsKnownAttribute(SyntaxNode syntaxNode)
     {
         if (syntaxNode is AttributeSyntax
             {
