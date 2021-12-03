@@ -1,8 +1,23 @@
 ﻿namespace Jab;
 
-internal record ServiceProviderDescription(IReadOnlyList<ServiceRegistration> ServiceRegistrations, ITypeSymbol[] RootServices, Location? Location)
+internal record ServiceProviderDescription
 {
-    public Location? Location { get; } = Location;
-    public ITypeSymbol[] RootServices { get; } = RootServices;
-    public IReadOnlyList<ServiceRegistration> ServiceRegistrations { get; } = ServiceRegistrations;
+    public ServiceProviderDescription(IReadOnlyList<ServiceRegistration> serviceRegistrations, ITypeSymbol[] rootServices, Location? location)
+    {
+        Location = location;
+        RootServices = rootServices;
+        ServiceRegistrations = serviceRegistrations;
+        ServiceRegistrationsLookup = new Dictionary<ITypeSymbol, ServiceRegistration>(SymbolEqualityComparer.Default);
+
+        foreach (var registration in serviceRegistrations)
+        {
+            ServiceRegistrationsLookup[registration.ServiceType] = registration;
+        }
+    }
+
+    public Dictionary<ITypeSymbol,ServiceRegistration> ServiceRegistrationsLookup { get; }
+
+    public Location? Location { get; }
+    public ITypeSymbol[] RootServices { get; }
+    public IReadOnlyList<ServiceRegistration> ServiceRegistrations { get; }
 }
