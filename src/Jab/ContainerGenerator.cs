@@ -400,7 +400,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             compilationStartAnalysisContext.RegisterSyntaxNodeAction(analysisContext =>
             {
                 syntaxCollector.OnVisitSyntaxNode(analysisContext.Node);
-            }, SyntaxKind.Attribute, SyntaxKind.InvocationExpression);
+            }, SyntaxKind.ClassDeclaration, SyntaxKind.InterfaceDeclaration, SyntaxKind.InvocationExpression);
 
             compilationStartAnalysisContext.RegisterCompilationEndAction(compilationContext =>
             {
