@@ -197,5 +197,38 @@ interface {{|#1:Container|}} {{}}
                     .WithLocation(1)
                     .WithArguments("Container"));
         }
+
+        [Fact]
+        public async Task ProducesJAB0010IfGetServiceCallTypeUnregistered()
+        {
+            string testCode = $@"
+interface IService {{}}
+[ServiceProvider]
+public partial class Container {{
+    public T GetService<T>() => default;
+    public static void Main() {{ var container = new Container(); {{|#1:container.GetService<IService>()|}}; }}
+}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0010")
+                    .WithLocation(1)
+                    .WithArguments("IService"));
+        }
+
+        [Fact]
+        public async Task ProducesJAB0010IfRootServicesTypeUnregistered()
+        {
+            string testCode = $@"
+interface IService {{}}
+[{{|#1:ServiceProvider(RootServices=new[] {{ typeof(IService) }})|}}]
+public partial class Container {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0010")
+                    .WithLocation(1)
+                    .WithArguments("IService"));
+        }
     }
 }

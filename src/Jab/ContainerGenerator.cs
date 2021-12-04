@@ -420,6 +420,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         DiagnosticDescriptors.ImplementationTypeRequiresPublicConstructor,
         DiagnosticDescriptors.CyclicDependencyDetected,
         DiagnosticDescriptors.MissingServiceProviderAttribute,
+        DiagnosticDescriptors.NoServiceTypeRegistered,
     }.ToImmutableArray();
 
     private static string ReadAttributesFile()

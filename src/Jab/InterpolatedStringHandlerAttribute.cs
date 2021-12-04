@@ -9,3 +9,8 @@ public sealed class InterpolatedStringHandlerArgumentAttribute : Attribute
 {
     public InterpolatedStringHandlerArgumentAttribute (params string[] arguments){}
 }
+
+
+public sealed class IsExternalInit : Attribute
+{
+}
