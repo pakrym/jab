@@ -186,14 +186,32 @@ internal class ServiceProviderBuilder
 
         foreach (var rootService in description.RootServices)
         {
-            GetCallSite(rootService, new ServiceResolutionContext(description, callSites, rootService, description.Location));
+            var serviceType = rootService.Service;
+            var callSite = GetCallSite(serviceType, new ServiceResolutionContext(description, callSites, serviceType, description.Location));
+            if (callSite == null)
+            {
+                _context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.NoServiceTypeRegistered,
+                    rootService.Location,
+                    serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
+                ));
+            }
         }
 
         foreach (var getServiceCallCandidate in getServiceCallCandidates)
         {
             if (SymbolEqualityComparer.Default.Equals(getServiceCallCandidate.ProviderType, typeSymbol))
             {
-                GetCallSite(getServiceCallCandidate.ServiceType, new ServiceResolutionContext(description, callSites, getServiceCallCandidate.ServiceType, getServiceCallCandidate.Location));
+                var serviceType = getServiceCallCandidate.ServiceType;
+                var callSite = GetCallSite(serviceType, new ServiceResolutionContext(description, callSites, serviceType, getServiceCallCandidate.Location));
+                if (callSite == null)
+                {
+                    _context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.NoServiceTypeRegistered,
+                        getServiceCallCandidate.Location,
+                        serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
+                    ));
+                }
             }
         }
 
@@ -260,12 +278,14 @@ internal class ServiceProviderBuilder
         {
             var callSite = new ServiceProviderCallSite(serviceType);
             context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
+            return callSite;
         }
 
         if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceScopeFactoryType))
         {
             var callSite = new ScopeFactoryCallSite(serviceType);
             context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
+            return callSite;
         }
 
         return null;
@@ -587,7 +607,7 @@ internal class ServiceProviderBuilder
         bool isModule = false;
         Location? location = null;
         List<ServiceRegistration> registrations = new();
-        List<ITypeSymbol> rootServices = new();
+        List<RootService> rootServices = new();
         foreach (var attributeData in serviceProviderType.GetAttributes())
         {
             if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.CompositionRootAttributeType))
@@ -600,7 +620,7 @@ internal class ServiceProviderBuilder
                     {
                         foreach (var typedConstant in namedArgument.Value.Values)
                         {
-                            rootServices.Add(ExtractType(typedConstant));
+                            rootServices.Add(new(ExtractType(typedConstant), attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation()));
                         }
                     }
                 }

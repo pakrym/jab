@@ -9,3 +9,5 @@ internal record ServiceRegistration(ServiceLifetime Lifetime, INamedTypeSymbol S
     public ServiceLifetime Lifetime { get; } = Lifetime;
     public Location? Location { get; } = Location;
 }
+
+internal record RootService(INamedTypeSymbol Service, Location? Location);

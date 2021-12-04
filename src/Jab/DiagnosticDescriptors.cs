@@ -37,4 +37,8 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor MissingServiceProviderAttribute = new("JAB0009",
         "A type contains service registrations but no ServiceProvider or ServiceProviderModule attribute",
         "The type '{0}' contains service registration but is missing ServiceProvider or ServiceProviderModule attribute", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor NoServiceTypeRegistered = new("JAB0010",
+        "The service registration not found",
+        "The service '{0}' is not registered", "Usage", DiagnosticSeverity.Error, true);
 }

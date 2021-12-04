@@ -26,7 +26,8 @@ namespace JabTests
         public void GetServiceForUnregisteredServiceNull()
         {
             CanCreateTransientServiceContainer c = new();
-            Assert.Null(c.GetService<IService2>());
+            var provider = (IServiceProvider)c;
+            Assert.Null(provider.GetService(typeof(IService2)));
             Assert.Null(c.CreateScope().GetService<IService2>());
         }
 
