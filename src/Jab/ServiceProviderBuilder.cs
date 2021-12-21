@@ -453,7 +453,7 @@ internal class ServiceProviderBuilder
         int reverseIndex,
         ServiceResolutionContext context)
     {
-        var cacheKey = new CallSiteCacheKey(reverseIndex, registration.ServiceType);
+        var cacheKey = new CallSiteCacheKey(reverseIndex, serviceType);
 
         if (context.CallSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
         {

@@ -192,7 +192,7 @@ namespace JabTests
             Assert.NotSame(service2, service3);
         }
 
-        [ServiceProvider(RootServices = new [] {typeof(IEnumerable<IAnotherService>)})]
+        [ServiceProvider(RootServices = new[] { typeof(IEnumerable<IAnotherService>) })]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
@@ -219,7 +219,7 @@ namespace JabTests
             Assert.Same(enumerable, c.GetService<IEnumerable<IAnotherService>>());
         }
 
-        [ServiceProvider(RootServices = new [] {typeof(IEnumerable<IAnotherService>)})]
+        [ServiceProvider(RootServices = new[] { typeof(IEnumerable<IAnotherService>) })]
         [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
@@ -271,7 +271,7 @@ namespace JabTests
             Assert.IsType<AnotherServiceImplementation>(service.InnerService);
         }
 
-        [ServiceProvider(RootServices = new [] {typeof(IService<IAnotherService>)})]
+        [ServiceProvider(RootServices = new[] { typeof(IService<IAnotherService>) })]
         [Transient(typeof(IService<>), typeof(ServiceImplementation<>))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         internal partial class CanResolveOpenGenericServiceContainer { }
@@ -288,7 +288,7 @@ namespace JabTests
             Assert.Same(c.Instance, array[1]);
         }
 
-        [ServiceProvider(RootServices = new [] {typeof(IEnumerable<IService<IAnotherService>>)})]
+        [ServiceProvider(RootServices = new[] { typeof(IEnumerable<IService<IAnotherService>>) })]
         [Transient(typeof(IService<>), typeof(ServiceImplementation<>))]
         [Singleton(typeof(IService<IAnotherService>), Instance = nameof(Instance))]
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
@@ -338,7 +338,7 @@ namespace JabTests
         public void CanExtendModules()
         {
             CanExtendModulesContainer c = new();
-            var serviceImplementation =  Assert.IsType<ServiceImplementation<IAnotherService>>(c.GetService<IService<IAnotherService>>());
+            var serviceImplementation = Assert.IsType<ServiceImplementation<IAnotherService>>(c.GetService<IService<IAnotherService>>());
             Assert.IsType<AnotherServiceImplementation>(serviceImplementation.InnerService);
         }
 
@@ -355,7 +355,7 @@ namespace JabTests
         public void CanOverrideModules()
         {
             CanOverrideModulesContainer c = new();
-            var serviceImplementation =  Assert.IsType<ServiceImplementation>(c.GetService<IService>());
+            var serviceImplementation = Assert.IsType<ServiceImplementation>(c.GetService<IService>());
         }
 
         [ServiceProviderModule]
@@ -454,7 +454,7 @@ namespace JabTests
             Assert.Same(array1_2[2], array2[2]);
         }
 
-        [ServiceProvider(RootServices = new [] { typeof(IEnumerable<IService>) })]
+        [ServiceProvider(RootServices = new[] { typeof(IEnumerable<IService>) })]
         [Transient(typeof(IService), typeof(ServiceImplementation))]
         [Scoped(typeof(IService), typeof(ServiceImplementation))]
         [Singleton(typeof(IService), typeof(ServiceImplementation))]
@@ -667,7 +667,7 @@ namespace JabTests
             Assert.NotNull(service);
         }
 
-        [ServiceProvider(RootServices = new [] { typeof(IEnumerable<IService>) })]
+        [ServiceProvider(RootServices = new[] { typeof(IEnumerable<IService>) })]
         [Transient(typeof(IService), typeof(ServiceImplementation))]
         internal partial class CanResolveServicesUsingIServiceProviderContainer { }
 
@@ -791,6 +791,42 @@ namespace JabTests
         [Scoped(typeof(IService), typeof(ServiceImplementation))]
         [Scoped(typeof(IService1), typeof(ServiceImplementation))]
         partial class CanGetMultipleIEnumerableScopedContainer
+        {
+        }
+
+        [Fact]
+        public void CanGetMultipleOpenGenericSingleton()
+        {
+            CanGetMultipleOpenGenericSingletonContainer c = new();
+            Assert.NotNull(c.GetService<IService<IService1>>());
+            Assert.NotNull(c.GetService<IService<IAnotherService>>());
+        }
+
+        [ServiceProvider]
+        [Singleton(typeof(IService<>), typeof(ServiceImplementation<>))]
+        [Singleton(typeof(IService1), typeof(ServiceImplementation))]
+        [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        partial class CanGetMultipleOpenGenericSingletonContainer
+        {
+        }
+
+        [Fact]
+        public void CanGetMultipleOpenGenericScoped()
+        {
+            CanGetMultipleOpenGenericScopedContainer c = new();
+            Assert.NotNull(c.GetService<IService<IService1>>());
+            Assert.NotNull(c.GetService<IService<IAnotherService>>());
+
+            var scope = c.CreateScope();
+            Assert.NotNull(scope.GetService<IService<IService1>>());
+            Assert.NotNull(scope.GetService<IService<IAnotherService>>());
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService<>), typeof(ServiceImplementation<>))]
+        [Scoped(typeof(IService1), typeof(ServiceImplementation))]
+        [Scoped(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
+        partial class CanGetMultipleOpenGenericScopedContainer
         {
         }
 
