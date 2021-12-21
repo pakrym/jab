@@ -418,10 +418,20 @@ internal class ServiceProviderBuilder
         switch (registration)
         {
             case {InstanceMember: { } instanceMember}:
-                callSite = new MemberCallSite(registration.ServiceType, instanceMember, registration.Lifetime, reverseIndex, false);
+                callSite = new MemberCallSite(registration.ServiceType,
+                    instanceMember,
+                    isScopeMember: false,
+                    registration.Lifetime,
+                    reverseIndex,
+                    false);
                 break;
             case {FactoryMember: { } factoryMember}:
-                callSite = new MemberCallSite(registration.ServiceType, factoryMember, registration.Lifetime, reverseIndex, null);
+                callSite = new MemberCallSite(registration.ServiceType,
+                    factoryMember,
+                    isScopeMember: registration.IsScopeMember,
+                    registration.Lifetime,
+                    reverseIndex,
+                    null);
                 break;
             default:
                 var implementationType = registration.ImplementationType ??
@@ -769,14 +779,27 @@ internal class ServiceProviderBuilder
 
         ISymbol? instanceMember = null;
         if (instanceMemberName != null &&
-            !TryFindMember(serviceProviderType, attributeData, instanceMemberName, KnownTypes.InstanceAttributePropertyName, out instanceMember))
+            !TryFindMember(serviceProviderType,
+                attributeData,
+                instanceMemberName,
+                KnownTypes.InstanceAttributePropertyName,
+                includeScope: false,
+                out instanceMember,
+                out var _))
         {
             return false;
         }
 
         ISymbol? factoryMember = null;
-        if (factoryMemberName != null&&
-            !TryFindMember(serviceProviderType, attributeData, factoryMemberName, KnownTypes.FactoryAttributePropertyName, out factoryMember))
+        bool isScopeMember = false;
+        if (factoryMemberName != null &&
+            !TryFindMember(serviceProviderType,
+                attributeData,
+                factoryMemberName,
+                KnownTypes.FactoryAttributePropertyName,
+                includeScope: serviceLifetime == ServiceLifetime.Scoped,
+                out factoryMember,
+                out isScopeMember))
         {
             return false;
         }
@@ -801,17 +824,34 @@ internal class ServiceProviderBuilder
             implementationType,
             instanceMember,
             factoryMember,
-            attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation());
+            attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
+            isScopeMember);
 
         return true;
     }
 
-    private bool TryFindMember(ITypeSymbol typeSymbol, AttributeData attributeData, string memberName, string parameterName, [NotNullWhen(true)] out ISymbol? instanceMember)
+    private bool TryFindMember(ITypeSymbol typeSymbol,
+        AttributeData attributeData,
+        string memberName,
+        string parameterName,
+        bool includeScope,
+        [NotNullWhen(true)] out ISymbol? instanceMember,
+        out bool isScopeMember)
     {
         instanceMember = null;
+        isScopeMember = false;
 
-        var members = typeSymbol.GetMembers(memberName);
-        if (members.Length == 0)
+        List<ISymbol> members = new(typeSymbol.GetMembers(memberName));
+
+        if (includeScope)
+        {
+            foreach (var scopeType in typeSymbol.GetTypeMembers("Scope"))
+            {
+                members.AddRange(scopeType.GetMembers(memberName));
+            }
+        }
+
+        if (members.Count == 0)
         {
             _context.ReportDiagnostic(Diagnostic.Create(
                 DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeNotFound,
@@ -822,7 +862,7 @@ internal class ServiceProviderBuilder
             return false;
         }
 
-        if (members.Length > 1)
+        if (members.Count > 1)
         {
             _context.ReportDiagnostic(Diagnostic.Create(
                 DiagnosticDescriptors.MemberReferencedByInstanceOrFactoryAttributeAmbiguous,
@@ -834,6 +874,7 @@ internal class ServiceProviderBuilder
         }
 
         instanceMember = members[0];
+        isScopeMember = SymbolEqualityComparer.Default.Equals(instanceMember.ContainingType, typeSymbol);
         return true;
     }
 

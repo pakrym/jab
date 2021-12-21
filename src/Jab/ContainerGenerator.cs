@@ -61,7 +61,6 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         }
     }
 
-
     private void GenerateCallSite(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
     {
         switch (serviceCallSite)
@@ -89,7 +88,19 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             case MemberCallSite memberCallSite:
                 valueCallback(codeWriter, w =>
                 {
-                    w.Append($"{rootReference}.{memberCallSite.Member.Name}");
+                    if (!memberCallSite.Member.IsStatic)
+                    {
+                        if (memberCallSite.IsScopeMember)
+                        {
+                            w.Append($"{rootReference}.");
+                        }
+                        else
+                        {
+                            w.Append($"this.");
+                        }
+                    }
+
+                    w.Append($"{memberCallSite.Member.Name}");
                     if (memberCallSite.Member is IMethodSymbol)
                     {
                         w.AppendRaw("()");
@@ -128,6 +139,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             {
                 var codeWriter = new CodeWriter();
                 codeWriter.UseNamespace("Jab");
+                codeWriter.UseNamespace("System");
                 codeWriter.UseNamespace("System.Diagnostics");
                 using (root.Type.ContainingNamespace.IsGlobalNamespace ?
                            default :
@@ -142,25 +154,42 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     WriteInterfaces(codeWriter, root, false);
                     using (codeWriter.Scope())
                     {
-                        WriteCacheLocations(root, codeWriter, onlyScoped: false);
+                        codeWriter.Line($"private Scope _rootScope;");
+                        WriteCacheLocations(root, codeWriter, isScope: false);
 
                         foreach (var rootService in root.RootCallSites)
                         {
                             var rootServiceType = rootService.ServiceType;
-                            using (rootService.IsMainImplementation ?
-                                       codeWriter.Scope($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()") :
-                                       codeWriter.Scope($"private {rootServiceType} {GetResolutionServiceName(rootService)}()"))
+                            if (rootService.IsMainImplementation)
                             {
-                                GenerateCallSiteWithCache(codeWriter,
-                                    "this",
-                                    rootService,
-                                    (w, v) => w.Line($"return {v};"));
+                                codeWriter.Append($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()");
                             }
+                            else
+                            {
+                                codeWriter.Append($"private {rootServiceType} {GetResolutionServiceName(rootService)}()");
+                            }
+
+                            if (rootService.Lifetime == ServiceLifetime.Scoped)
+                            {
+                                codeWriter.Line($" => GetRootScope().GetService<{rootServiceType}>();");
+                            }
+                            else
+                            {
+                                codeWriter.Line();
+                                using (codeWriter.Scope())
+                                {
+                                    GenerateCallSiteWithCache(codeWriter,
+                                        "this",
+                                        rootService,
+                                        (w, v) => w.Line($"return {v};"));
+                                }
+                            }
+
                             codeWriter.Line();
                         }
 
                         WriteServiceProvider(codeWriter, root);
-                        WriteDispose(codeWriter, root, onlyScoped: false);
+                        WriteDispose(codeWriter, root, isScoped: false);
 
                         codeWriter.Line($"[DebuggerHidden]");
                         codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : default;");
@@ -179,7 +208,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                         WriteInterfaces(codeWriter, root, true);
                         using (codeWriter.Scope())
                         {
-                            WriteCacheLocations(root, codeWriter, onlyScoped: true);
+                            WriteCacheLocations(root, codeWriter, isScope: true);
                             codeWriter.Line($"private {root.Type} _root;");
                             codeWriter.Line();
 
@@ -225,7 +254,18 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                                 codeWriter.Line($"{root.KnownTypes.IServiceProviderType} {root.KnownTypes.IServiceScopeType}.ServiceProvider => this;");
                                 codeWriter.Line();
                             }
-                            WriteDispose(codeWriter, root, onlyScoped: true);
+                            WriteDispose(codeWriter, root, isScoped: true);
+                        }
+
+                        using (codeWriter.Scope($"private Scope GetRootScope()"))
+                        {
+                            codeWriter.Line($"if (_rootScope == default)");
+                            codeWriter.Line($"lock (this)");
+                            using (codeWriter.Scope($"if (_rootScope == default)"))
+                            {
+                                codeWriter.Line($"_rootScope = CreateScope();");
+                            }
+                            codeWriter.Line($"return _rootScope;");
                         }
                     }
                 }
@@ -258,14 +298,14 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         codeWriter.Line();
     }
 
-    private void WriteDispose(CodeWriter codeWriter, ServiceProvider root, bool onlyScoped)
+    private void WriteDispose(CodeWriter codeWriter, ServiceProvider root, bool isScoped)
     {
         codeWriter.Line($"private {typeof(List<object>)} _disposables;");
         codeWriter.Line();
 
         using (codeWriter.Scope($"private void TryAddDisposable(object value)"))
         {
-            codeWriter.Line($"if (value is {typeof(IDisposable)} || value is System.IAsyncDisposable)");
+            codeWriter.Line($"if (value is {typeof(IDisposable)} || value is IAsyncDisposable)");
             using (codeWriter.Scope($"lock (this)"))
             {
                 codeWriter.Line($"(_disposables ??= new {typeof(List<object>)}()).Add(value);");
@@ -281,10 +321,16 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             foreach (var rootService in root.RootCallSites)
             {
                 if (rootService.IsDisposable == false ||
-                    rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped ||
+                    (rootService.Lifetime == ServiceLifetime.Singleton && isScoped) ||
+                    (rootService.Lifetime == ServiceLifetime.Scoped && !isScoped) ||
                     rootService.Lifetime == ServiceLifetime.Transient) continue;
 
                 codeWriter.Line($"TryDispose({GetCacheLocation(rootService)});");
+            }
+
+            if (!isScoped)
+            {
+                codeWriter.Line($"TryDispose(_rootScope);");
             }
 
             using (codeWriter.Scope($"if (_disposables != null)"))
@@ -315,10 +361,16 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             foreach (var rootService in root.RootCallSites)
             {
                 if (rootService.IsDisposable == false ||
-                    rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped ||
+                    (rootService.Lifetime == ServiceLifetime.Singleton && isScoped) ||
+                    (rootService.Lifetime == ServiceLifetime.Scoped && !isScoped) ||
                     rootService.Lifetime == ServiceLifetime.Transient) continue;
 
                 codeWriter.Line($"await TryDispose({GetCacheLocation(rootService)});");
+            }
+
+            if (!isScoped)
+            {
+                codeWriter.Line($"await TryDispose(_rootScope);");
             }
 
             using (codeWriter.Scope($"if (_disposables != null)"))
@@ -334,6 +386,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
     private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root, bool isScope)
     {
         codeWriter.Line($" : {typeof(IDisposable)},");
+        codeWriter.Line($"   IAsyncDisposable,");
         codeWriter.Line($"   {typeof(IServiceProvider)},");
 
         if (!isScope && root.KnownTypes.IServiceScopeFactoryType != null)
@@ -358,11 +411,12 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         codeWriter.Line();
     }
 
-    private void WriteCacheLocations(ServiceProvider root, CodeWriter codeWriter, bool onlyScoped)
+    private void WriteCacheLocations(ServiceProvider root, CodeWriter codeWriter, bool isScope)
     {
         foreach (var rootService in root.RootCallSites)
         {
-            if ((rootService.Lifetime == ServiceLifetime.Singleton && onlyScoped) ||
+            if ((rootService.Lifetime == ServiceLifetime.Singleton && isScope) ||
+                (rootService.Lifetime == ServiceLifetime.Scoped && !isScope) ||
                 rootService.Lifetime == ServiceLifetime.Transient) continue;
 
             codeWriter.Line($"private {rootService.ImplementationType} {GetCacheLocation(rootService)};");
@@ -374,7 +428,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
     {
         if (!serviceCallSite.IsMainImplementation)
         {
-            return $"Get{serviceCallSite.ServiceType.Name}_{serviceCallSite.ReverseIndex}";
+            return $"Get{GetServiceExpandedName(serviceCallSite.ServiceType)}_{serviceCallSite.ReverseIndex}";
         }
 
         throw new InvalidOperationException("Main implementation should be resolved via GetService<T> call");
@@ -384,10 +438,31 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
     {
         if (!serviceCallSite.IsMainImplementation)
         {
-            return $"_{serviceCallSite.ServiceType.Name}_{serviceCallSite.ReverseIndex}";
+            return $"_{GetServiceExpandedName(serviceCallSite.ServiceType)}_{serviceCallSite.ReverseIndex}";
         }
 
-        return $"_{serviceCallSite.ServiceType.Name}";
+        return $"_{GetServiceExpandedName(serviceCallSite.ServiceType)}";
+    }
+
+    private string GetServiceExpandedName(ITypeSymbol serviceType)
+    {
+        StringBuilder builder = new();
+
+        void Traverse(ITypeSymbol symbol)
+        {
+            builder.Append(symbol.Name);
+            if (symbol is INamedTypeSymbol { IsGenericType: true } genericType)
+            {
+                builder.Append("_");
+                foreach (var typeArgument in genericType.TypeArguments)
+                {
+                    Traverse(typeArgument);
+                }
+            }
+        }
+
+        Traverse(serviceType);
+        return builder.ToString();
     }
 
     public override void Initialize(AnalysisContext context)
