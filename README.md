@@ -143,6 +143,31 @@ IService service = scope.GetService<IService>();
 
 When the scope is disposed all `IDisposable` and `IAsyncDisposable` services that were resolved from it are disposed as well.
 
+### Generic registration attributes 
+
+You can use generic attributes to register services if your project targets `net6.0` and has `LangVersion` set to preview.
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+    <LangVersion>preview</TargetFrameworks>
+  </PropertyGroup>
+
+</Project>
+
+```
+
+Generic attributes allow declaration to be more compact by avoiding the `typeof` calls:
+
+``` C#
+[ServiceProvider]
+[Scoped<IService, ServiceImplementation>]
+[Import<IMyModule>]
+internal partial class MyServiceProvider { }
+```
+
 ### Modules
 
 Often, a set of service registrations would represent a distinct set of functionality that can be included into arbitrary 
