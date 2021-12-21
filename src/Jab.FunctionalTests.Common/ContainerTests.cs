@@ -687,6 +687,113 @@ namespace JabTests
         [ServiceProvider]
         internal partial class CanResolveIServiceProviderContainer { }
 
+        [Fact]
+        public void CanGetSingletonServiceFromFactory()
+        {
+            GetSingletonServiceFromFactoryServiceContainer c = new();
+            Assert.Same(c.GetService<ServiceImplementation>(), c.GetService<IService>());
+        }
+
+        [ServiceProvider]
+        [Singleton(typeof(ServiceImplementation))]
+        [Singleton(typeof(IService), Factory = nameof(IServiceFactory))]
+        partial class GetSingletonServiceFromFactoryServiceContainer
+        {
+            public IService IServiceFactory() => GetService<ServiceImplementation>();
+        }
+
+        [Fact]
+        public void CanGetScopedServiceFromFactory()
+        {
+            GetScopedServiceFromFactoryServiceContainer c = new();
+            Assert.Same(c.GetService<ServiceImplementation>(), c.GetService<IService>());
+
+            var scope = c.CreateScope();
+            Assert.Same(scope.GetService<ServiceImplementation>(), scope.GetService<IService>());
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(ServiceImplementation))]
+        [Scoped(typeof(IService), Factory = nameof(Scope.IServiceFactory))]
+        partial class GetScopedServiceFromFactoryServiceContainer
+        {
+            public partial class Scope
+            {
+                public IService IServiceFactory() => GetService<ServiceImplementation>();
+            }
+        }
+
+        [Fact]
+        public void CanGetScopedServiceFromStaticFactory()
+        {
+            CanGetScopedServiceFromStaticFactoryContainer c = new();
+            Assert.NotNull(c.GetService<IService>());
+
+            var scope = c.CreateScope();
+            Assert.NotNull(scope.GetService<IService>());
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), Factory = nameof(Scope.IServiceFactory))]
+        partial class CanGetScopedServiceFromStaticFactoryContainer
+        {
+            public partial class Scope
+            {
+                public static IService IServiceFactory() => new ServiceImplementation();
+            }
+        }
+
+        [Fact]
+        public void CanGetScopedServiceFromStaticRootFactory()
+        {
+            CanGetScopedServiceFromStaticRootFactoryContainer c = new();
+            Assert.NotNull(c.GetService<IService>());
+
+            var scope = c.CreateScope();
+            Assert.NotNull(scope.GetService<IService>());
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), Factory = nameof(IServiceFactory))]
+        partial class CanGetScopedServiceFromStaticRootFactoryContainer
+        {
+            public static IService IServiceFactory() => new ServiceImplementation();
+        }
+
+        [Fact]
+        public void CanGetMultipleIEnumerableSingleton()
+        {
+            CanGetMultipleIEnumerableServiceSingletonContainer c = new();
+            Assert.NotEmpty(c.GetService<IEnumerable<IService>>());
+            Assert.NotEmpty(c.GetService<IEnumerable<IService1>>());
+        }
+
+        [ServiceProvider]
+        [Singleton(typeof(IService), typeof(ServiceImplementation))]
+        [Singleton(typeof(IService1), typeof(ServiceImplementation))]
+        partial class CanGetMultipleIEnumerableServiceSingletonContainer
+        {
+        }
+
+        [Fact]
+        public void CanGetMultipleIEnumerableScoped()
+        {
+            CanGetMultipleIEnumerableScopedContainer c = new();
+            Assert.NotEmpty(c.GetService<IEnumerable<IService>>());
+            Assert.NotEmpty(c.GetService<IEnumerable<IService1>>());
+
+            var scope = c.CreateScope();
+            Assert.NotEmpty(scope.GetService<IEnumerable<IService>>());
+            Assert.NotEmpty(scope.GetService<IEnumerable<IService1>>());
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), typeof(ServiceImplementation))]
+        [Scoped(typeof(IService1), typeof(ServiceImplementation))]
+        partial class CanGetMultipleIEnumerableScopedContainer
+        {
+        }
+
 #if JAB_PREVIEW
         [Fact]
         public void CanUseGenericAttributes()
