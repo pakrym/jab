@@ -141,6 +141,8 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                 codeWriter.UseNamespace("Jab");
                 codeWriter.UseNamespace("System");
                 codeWriter.UseNamespace("System.Diagnostics");
+                codeWriter.UseNamespace("System.Diagnostics.CodeAnalysis");
+                codeWriter.Line($"using static Jab.JabHelpers;");
                 using (root.Type.ContainingNamespace.IsGlobalNamespace ?
                            default :
                            codeWriter.Namespace($"{root.Type.ContainingNamespace.ToDisplayString()}"))
@@ -154,7 +156,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     WriteInterfaces(codeWriter, root, false);
                     using (codeWriter.Scope())
                     {
-                        codeWriter.Line($"private Scope _rootScope;");
+                        codeWriter.Line($"private Scope? _rootScope;");
                         WriteCacheLocations(root, codeWriter, isScope: false);
 
                         foreach (var rootService in root.RootCallSites)
@@ -192,7 +194,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                         WriteDispose(codeWriter, root, isScoped: false);
 
                         codeWriter.Line($"[DebuggerHidden]");
-                        codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : default;");
+                        codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : throw CreateServiceNotFoundException<T>();");
                         codeWriter.Line();
 
                         codeWriter.Line($"public Scope CreateScope() => new Scope(this);");
@@ -219,7 +221,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                             codeWriter.Line();
 
                             codeWriter.Line($"[DebuggerHidden]");
-                            codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : default;");
+                            codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : throw CreateServiceNotFoundException<T>();");
                             codeWriter.Line();
 
                             foreach (var rootService in root.RootCallSites)
@@ -280,7 +282,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
 
     private void WriteServiceProvider(CodeWriter codeWriter, ServiceProvider root)
     {
-        using (codeWriter.Scope($"{typeof(object)} {typeof(IServiceProvider)}.GetService({typeof(Type)} type)"))
+        using (codeWriter.Scope($"{typeof(object)}? {typeof(IServiceProvider)}.GetService({typeof(Type)} type)"))
         {
             foreach (var rootRootCallSite in root.RootCallSites)
             {
@@ -300,10 +302,10 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
 
     private void WriteDispose(CodeWriter codeWriter, ServiceProvider root, bool isScoped)
     {
-        codeWriter.Line($"private {typeof(List<object>)} _disposables;");
+        codeWriter.Line($"private {typeof(List<object>)}? _disposables;");
         codeWriter.Line();
 
-        using (codeWriter.Scope($"private void TryAddDisposable(object value)"))
+        using (codeWriter.Scope($"private void TryAddDisposable(object? value)"))
         {
             codeWriter.Line($"if (value is {typeof(IDisposable)} || value is IAsyncDisposable)");
             using (codeWriter.Scope($"lock (this)"))
@@ -315,7 +317,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
 
         using (codeWriter.Scope($"public void Dispose()"))
         {
-            codeWriter.LineRaw("void TryDispose(object value) => (value as IDisposable)?.Dispose();");
+            codeWriter.LineRaw("void TryDispose(object? value) => (value as IDisposable)?.Dispose();");
             codeWriter.Line();
 
             foreach (var rootService in root.RootCallSites)
@@ -344,7 +346,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
 
         using (codeWriter.Scope($"public async {typeof(ValueTask)} DisposeAsync()"))
         {
-            using (codeWriter.Scope($"{typeof(ValueTask)} TryDispose(object value)"))
+            using (codeWriter.Scope($"{typeof(ValueTask)} TryDispose(object? value)"))
             {
                 using (codeWriter.Scope($"if (value is System.IAsyncDisposable asyncDisposable)"))
                 {
@@ -419,7 +421,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                 (rootService.Lifetime == ServiceLifetime.Scoped && !isScope) ||
                 rootService.Lifetime == ServiceLifetime.Transient) continue;
 
-            codeWriter.Line($"private {rootService.ImplementationType} {GetCacheLocation(rootService)};");
+            codeWriter.Line($"private {rootService.ImplementationType}? {GetCacheLocation(rootService)};");
         }
         codeWriter.Line();
     }
