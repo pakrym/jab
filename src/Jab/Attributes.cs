@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 #nullable enable
 
@@ -154,5 +155,13 @@ namespace Jab
     internal interface IServiceProvider<T>
     {
         T GetService();
+    }
+
+    internal static class JabHelpers
+    {
+        public static InvalidOperationException CreateServiceNotFoundException<T>()
+        {
+            return new InvalidOperationException($"Service Type {typeof(T)} not registered");
+        }
     }
 }

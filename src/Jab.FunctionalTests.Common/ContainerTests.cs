@@ -28,7 +28,7 @@ namespace JabTests
             CanCreateTransientServiceContainer c = new();
             var provider = (IServiceProvider)c;
             Assert.Null(provider.GetService(typeof(IService2)));
-            Assert.Null(c.CreateScope().GetService<IService2>());
+            Assert.Throws<InvalidOperationException>(() => c.CreateScope().GetService<IService2>());
         }
 
         [Fact]
