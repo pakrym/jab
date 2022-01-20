@@ -30,8 +30,6 @@
 
   <ItemGroup Condition="'$(FunctionalTestPackageVersion)' == ''" >
     <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\Jab.Roslyn3\Jab.Roslyn3.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
 
-  <Import Condition="'$(FunctionalTestPackageVersion)' == ''" Project="..\Jab\build\Jab.targets" />
 </Project>

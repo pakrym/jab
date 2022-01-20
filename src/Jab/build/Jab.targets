@@ -4,6 +4,7 @@
     </PropertyGroup>
     <Target Name="_JabMultiTargetRoslyn3"
             Condition="'$(SupportsRoslynComponentVersioning)' != 'true'"
+            AfterTargets="ResolvePackageDependenciesForBuild;ResolveNuGetPackageAssets"
             BeforeTargets="CoreCompile">
         <ItemGroup>
             <Analyzer Remove="@(Analyzer)"
