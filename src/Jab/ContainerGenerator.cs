@@ -60,6 +60,38 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             codeWriter.Append($"{reference}.{GetResolutionServiceName(other)}()");
         }
     }
+    
+    private static string GetCallerName(bool isScopeMember, string rootReference)
+    {
+        return isScopeMember ? rootReference : "this";
+    }
+
+    private static void AppendMethodCallWithoutBrackets(CodeWriter codeWriter, ISymbol method, string callerName)
+    {
+        if (!method.IsStatic)
+        {
+            codeWriter.Append($"{callerName}.");
+        }
+
+        codeWriter.Append($"{method.Name}");
+    }
+
+    private void AppendParameters(CodeWriter codeWriter, ServiceCallSite[] parameters, KeyValuePair<IParameterSymbol, ServiceCallSite>[] optionalParameters)
+    {
+        foreach (var parameter in parameters)
+        {
+            WriteResolutionCall(codeWriter, parameter, "this");
+            codeWriter.AppendRaw(", ");
+        }
+
+        foreach (var pair in optionalParameters)
+        {
+            codeWriter.Append($"{pair.Key.Name}: ");
+            WriteResolutionCall(codeWriter, pair.Value, "this");
+            codeWriter.AppendRaw(", ");
+        }
+        codeWriter.RemoveTrailingComma();
+    }
 
     private void GenerateCallSite(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
     {
@@ -69,70 +101,23 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                 valueCallback(codeWriter, w =>
                 {
                     w.Append($"new {transientCallSite.ImplementationType}(");
-                    foreach (var parameter in transientCallSite.Parameters)
-                    {
-                        WriteResolutionCall(codeWriter, parameter, "this");
-                        w.AppendRaw(", ");
-                    }
-
-                    foreach (var pair in transientCallSite.OptionalParameter)
-                    {
-                        w.Append($"{pair.Key.Name}: ");
-                        WriteResolutionCall(codeWriter, pair.Value, "this");
-                        w.AppendRaw(", ");
-                    }
-                    w.RemoveTrailingComma();
+                    AppendParameters(w, transientCallSite.Parameters, transientCallSite.OptionalParameters);
                     w.Append($")");
                 });
                 break;
             case MemberCallSite memberCallSite:
                 valueCallback(codeWriter, w =>
                 {
-                    if (!memberCallSite.Member.IsStatic)
-                    {
-                        if (memberCallSite.IsScopeMember)
-                        {
-                            w.Append($"{rootReference}.");
-                        }
-                        else
-                        {
-                            w.Append($"this.");
-                        }
-                    }
-
-                    w.Append($"{memberCallSite.Member.Name}");
+                    AppendMethodCallWithoutBrackets(w, memberCallSite.Member, GetCallerName(memberCallSite.IsScopeMember, rootReference));
                 });
                 break;
             case MethodCallSite methodCallSite:
                 valueCallback(codeWriter, w =>
                 {
-                    if (!methodCallSite.Member.IsStatic)
-                    {
-                        if (methodCallSite.IsScopeMember)
-                        {
-                            w.Append($"{rootReference}.");
-                        }
-                        else
-                        {
-                            w.Append($"this.");
-                        }
-                    }
+                    AppendMethodCallWithoutBrackets(w, methodCallSite.Member, GetCallerName(methodCallSite.IsScopeMember, rootReference));
 
-                    w.Append($"{methodCallSite.Member.Name}(");
-
-                    foreach (var parameter in methodCallSite.Parameters)
-                    {
-                        WriteResolutionCall(codeWriter, parameter, "this");
-                        w.AppendRaw(", ");
-                    }
-
-                    foreach (var pair in methodCallSite.OptionalParameter)
-                    {
-                        w.Append($"{pair.Key.Name}: ");
-                        WriteResolutionCall(codeWriter, pair.Value, "this");
-                        w.AppendRaw(", ");
-                    }
-                    w.RemoveTrailingComma();
+                    w.AppendRaw("(");
+                    AppendParameters(w, methodCallSite.Parameters, methodCallSite.OptionalParameters);
                     w.Append($")");
                 });
                 break;
