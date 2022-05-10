@@ -441,21 +441,17 @@ internal class ServiceProviderBuilder
 
         switch (registration)
         {
-            case {InstanceMember: { } instanceMember}:
-                callSite = new MemberCallSite(registration.ServiceType,
-                    instanceMember,
-                    isScopeMember: false,
-                    registration.Lifetime,
-                    reverseIndex,
-                    false);
+            case { InstanceMember: { } instanceMember } when instanceMember is not IMethodSymbol:
+                callSite = CreateMemberCallSite(registration, instanceMember, false, reverseIndex);
                 break;
-            case {FactoryMember: { } factoryMember}:
-                callSite = new MemberCallSite(registration.ServiceType,
-                    factoryMember,
-                    isScopeMember: registration.IsScopeMember,
-                    registration.Lifetime,
-                    reverseIndex,
-                    null);
+            case { FactoryMember: { } factoryMember } when factoryMember is not IMethodSymbol:
+                callSite = CreateMemberCallSite(registration, factoryMember, registration.IsScopeMember, reverseIndex);
+                break;
+            case { InstanceMember: { } instanceMember } when instanceMember is IMethodSymbol instanceMethod:
+                callSite = CreateMethodCallSite(registration, instanceMethod, false, reverseIndex, context);
+                break;
+            case { FactoryMember: { } factoryMember } when factoryMember is IMethodSymbol factoryMethod:
+                callSite = CreateMethodCallSite(registration, factoryMethod, registration.IsScopeMember, reverseIndex, context);
                 break;
             default:
                 var implementationType = registration.ImplementationType ??
@@ -467,6 +463,55 @@ internal class ServiceProviderBuilder
 
         context.CallSiteCache[cacheKey] = callSite;
 
+        return callSite;
+    }
+
+    private ServiceCallSite CreateMemberCallSite(
+        ServiceRegistration registration,
+        ISymbol instanceMember,
+        bool isScopeMember,
+        int reverseIndex)
+    {
+        var callSite = new MemberCallSite(registration.ServiceType,
+                    instanceMember,
+                    isScopeMember: isScopeMember,
+                    registration.Lifetime,
+                    reverseIndex,
+                    false);
+        return callSite;
+    }
+    private ServiceCallSite CreateMethodCallSite(
+        ServiceRegistration registration,
+        IMethodSymbol instanceMember,
+        bool isScopeMember,
+        int reverseIndex,
+        ServiceResolutionContext context)
+    {
+        var cacheKey = new CallSiteCacheKey(reverseIndex, registration.ServiceType);
+
+        if (context.CallSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
+        {
+            return callSite;
+        }
+
+        var implementationType = registration.ImplementationType ??
+                                 registration.ServiceType;
+
+        var (parameters, namedParameters, diagnostics) = GetParameters(instanceMember, registration, implementationType, context);
+
+        if (diagnostics.Count > 0)
+        {
+            return new ErrorCallSite(registration.ServiceType, diagnostics.ToArray());
+        }
+
+        callSite = new MethodCallSite(registration.ServiceType,
+                    instanceMember,
+                    isScopeMember: isScopeMember,
+                    parameters.ToArray(),
+                    namedParameters.ToArray(),
+                    registration.Lifetime,
+                    reverseIndex,
+                    false);
         return callSite;
     }
 
@@ -500,37 +545,7 @@ internal class ServiceProviderBuilder
                 return new ErrorCallSite(serviceType, diagnostic);
             }
 
-            var parameters = new List<ServiceCallSite>();
-            var namedParameters = new List<KeyValuePair<IParameterSymbol, ServiceCallSite>>();
-            var diagnostics = new List<Diagnostic>();
-            foreach (var parameterSymbol in ctor.Parameters)
-            {
-                var parameterCallSite = GetCallSite(parameterSymbol.Type, context);
-                if (parameterSymbol.IsOptional)
-                {
-                    if (parameterCallSite != null)
-                    {
-                        namedParameters.Add(new KeyValuePair<IParameterSymbol, ServiceCallSite>(parameterSymbol, parameterCallSite));
-                    }
-                }
-                else
-                {
-                    if (parameterCallSite == null)
-                    {
-                        var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
-                            registration.Location,
-                            parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                            implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
-
-                        diagnostics.Add(diagnostic);
-                        _context.ReportDiagnostic(diagnostic);
-                    }
-                    else
-                    {
-                        parameters.Add(parameterCallSite);
-                    }
-                }
-            }
+            var (parameters, namedParameters, diagnostics) = GetParameters(ctor, registration, implementationType, context);
 
             if (diagnostics.Count > 0)
             {
@@ -557,6 +572,47 @@ internal class ServiceProviderBuilder
             context.Remove(implementationType);
             throw;
         }
+    }
+
+    private (List<ServiceCallSite> Parameters, List<KeyValuePair<IParameterSymbol, ServiceCallSite>> NamedParameters, List<Diagnostic> Diagnostics) GetParameters(
+        IMethodSymbol methodSymbol,
+        ServiceRegistration registration, 
+        INamedTypeSymbol implementationType, 
+        ServiceResolutionContext context)
+    {
+
+        var parameters = new List<ServiceCallSite>();
+        var namedParameters = new List<KeyValuePair<IParameterSymbol, ServiceCallSite>>();
+        var diagnostics = new List<Diagnostic>();
+        foreach (var parameterSymbol in methodSymbol.Parameters)
+        {
+            var parameterCallSite = GetCallSite(parameterSymbol.Type, context);
+            if (parameterSymbol.IsOptional)
+            {
+                if (parameterCallSite != null)
+                {
+                    namedParameters.Add(new KeyValuePair<IParameterSymbol, ServiceCallSite>(parameterSymbol, parameterCallSite));
+                }
+            }
+            else
+            {
+                if (parameterCallSite == null)
+                {
+                    var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
+                        registration.Location,
+                        parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                        implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+
+                    diagnostics.Add(diagnostic);
+                    _context.ReportDiagnostic(diagnostic);
+                }
+                else
+                {
+                    parameters.Add(parameterCallSite);
+                }
+            }
+        }
+        return (parameters, namedParameters, diagnostics);
     }
 
     private bool CanSatisfy(ITypeSymbol serviceType, ServiceProviderDescription description)

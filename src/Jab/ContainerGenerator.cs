@@ -101,20 +101,39 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     }
 
                     w.Append($"{memberCallSite.Member.Name}");
-                    if (memberCallSite.Member is IMethodSymbol method)
+                });
+                break;
+            case MethodCallSite methodCallSite:
+                valueCallback(codeWriter, w =>
+                {
+                    if (!methodCallSite.Member.IsStatic)
                     {
-                        if (method.TypeArguments.Length > 0)
+                        if (methodCallSite.IsScopeMember)
                         {
-                            w.AppendRaw("<");
-                            foreach (var typeArgument in method.TypeArguments)
-                            {
-                                w.Append($"{typeArgument}, ");
-                            }
-                            w.RemoveTrailingComma();
-                            w.AppendRaw(">");
+                            w.Append($"{rootReference}.");
                         }
-                        w.AppendRaw("()");
+                        else
+                        {
+                            w.Append($"this.");
+                        }
                     }
+
+                    w.Append($"{methodCallSite.Member.Name}(");
+
+                    foreach (var parameter in methodCallSite.Parameters)
+                    {
+                        WriteResolutionCall(codeWriter, parameter, "this");
+                        w.AppendRaw(", ");
+                    }
+
+                    foreach (var pair in methodCallSite.OptionalParameter)
+                    {
+                        w.Append($"{pair.Key.Name}: ");
+                        WriteResolutionCall(codeWriter, pair.Value, "this");
+                        w.AppendRaw(", ");
+                    }
+                    w.RemoveTrailingComma();
+                    w.Append($")");
                 });
                 break;
             case ArrayServiceCallSite arrayServiceCallSite:
