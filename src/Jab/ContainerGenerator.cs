@@ -101,8 +101,18 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     }
 
                     w.Append($"{memberCallSite.Member.Name}");
-                    if (memberCallSite.Member is IMethodSymbol)
+                    if (memberCallSite.Member is IMethodSymbol method)
                     {
+                        if (method.TypeArguments.Length > 0)
+                        {
+                            w.AppendRaw("<");
+                            foreach (var typeArgument in method.TypeArguments)
+                            {
+                                w.Append($"{typeArgument}, ");
+                            }
+                            w.RemoveTrailingComma();
+                            w.AppendRaw(">");
+                        }
                         w.AppendRaw("()");
                     }
                 });

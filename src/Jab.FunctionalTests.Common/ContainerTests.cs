@@ -176,6 +176,28 @@ namespace JabTests
         }
 
         [Fact]
+        public void CanUseGenericFactory()
+        {
+            CanUseGenericFactoryContainer c = new();
+            var service = c.GetService<IService<IService2>>();
+            Assert.NotNull(service.InnerService);
+            Assert.Equal(1, c.FactoryInvocationCount);
+        }
+
+        [ServiceProvider]
+        [Transient(typeof(IService<>), Factory = nameof(CreateMyIServiceInstance))]
+        [Transient(typeof(IService2), typeof(ServiceImplementation))]
+        internal partial class CanUseGenericFactoryContainer
+        {
+            public int FactoryInvocationCount;
+            public IService<T> CreateMyIServiceInstance<T>()
+            {
+                FactoryInvocationCount++;
+                return new ServiceImplementation<T>(this.GetService<T>());
+            }
+        }
+
+        [Fact]
         public void CanResolveIEnumerableOfTransients()
         {
             CanResolveIEnumerableOfTransientsContainer c = new();
