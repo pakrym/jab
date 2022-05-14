@@ -184,7 +184,7 @@ namespace JabTests
             Assert.Equal(1, c.FactoryInvocationCount);
         }
 
-        [ServiceProvider(RootServices = new[] { typeof(IService<IService2>) })]
+        [ServiceProvider]
         [Transient(typeof(IService<>), Factory = nameof(CreateMyIServiceInstance))]
         [Transient(typeof(IService2), typeof(ServiceImplementation))]
         internal partial class CanUseGenericFactoryContainer
