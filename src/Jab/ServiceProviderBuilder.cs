@@ -134,7 +134,9 @@ internal class ServiceProviderBuilder
                     var containerTypeInfo = semanticModel.GetTypeInfo(memberAccessExpression.Expression);
                     var serviceInfo = semanticModel.GetSymbolInfo(arguments[0]);
                     if (containerTypeInfo.Type != null &&
-                        serviceInfo.Symbol is ITypeSymbol serviceType)
+                        serviceInfo.Symbol is ITypeSymbol serviceType &&
+                        serviceType.TypeKind != TypeKind.TypeParameter
+                        )
                     {
                         getServiceCallCandidates.Add(new GetServiceCallCandidate(containerTypeInfo.Type, serviceType, candidateGetServiceCall.GetLocation()));
                     }
@@ -322,8 +324,30 @@ internal class ServiceProviderBuilder
             registration.ServiceType.IsUnboundGenericType &&
             SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, genericType.ConstructedFrom))
         {
-            var implementationType = registration.ImplementationType!.ConstructedFrom.Construct(genericType.TypeArguments, genericType.TypeArgumentNullableAnnotations);
-            return CreateConstructorCallSite(registration, genericType, implementationType, reverseIndex, context);
+            // TODO: This can use better error reporting
+            if (registration.FactoryMember is IMethodSymbol factoryMethod)
+            {
+                var constructedFactoryMethod = factoryMethod.ConstructedFrom.Construct(genericType.TypeArguments, genericType.TypeArgumentNullableAnnotations);
+                var callSite = new MemberCallSite(genericType,
+                    constructedFactoryMethod,
+                    isScopeMember: registration.IsScopeMember,
+                    registration.Lifetime,
+                    reverseIndex,
+                    null);
+
+                context.CallSiteCache[new CallSiteCacheKey(reverseIndex, serviceType)] = callSite;
+
+                return callSite;
+            }
+            else if (registration.ImplementationType != null)
+            {
+                var implementationType = registration.ImplementationType.ConstructedFrom.Construct(genericType.TypeArguments, genericType.TypeArgumentNullableAnnotations);
+                return CreateConstructorCallSite(registration, genericType, implementationType, reverseIndex, context);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Can't construct generic callsite for {serviceType}");
+            }
         }
 
         return null;
