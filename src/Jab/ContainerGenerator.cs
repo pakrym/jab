@@ -508,6 +508,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         DiagnosticDescriptors.CyclicDependencyDetected,
         DiagnosticDescriptors.MissingServiceProviderAttribute,
         DiagnosticDescriptors.NoServiceTypeRegistered,
+        DiagnosticDescriptors.ImplementationTypeAndFactoryNotAllowed,
     }.ToImmutableArray();
 
     private static string ReadAttributesFile()

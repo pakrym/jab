@@ -41,4 +41,8 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor NoServiceTypeRegistered = new("JAB0010",
         "The service registration not found",
         "The service '{0}' is not registered", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor ImplementationTypeAndFactoryNotAllowed = new("JAB0011",
+        "Can't specify both the implementation type and factory/instance.",
+        "Can't specify both the implementation type and factory/instance, for service '{0}'", "Usage", DiagnosticSeverity.Error, true);
 }

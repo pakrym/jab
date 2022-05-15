@@ -148,6 +148,29 @@ public partial class Container {{}}
         }
 
         [Fact]
+        public async Task ProducesJAB0011WhenBothImplementationAndFactory()
+        {
+            string testCode = $@"
+public class Service {{ private Service() {{}} }}
+[ServiceProvider]
+[{{|#1:Transient(typeof(Service), typeof(Service), Factory=nameof(F))|}}]
+[{{|#2:Singleton(typeof(Service), typeof(Service), Instance=nameof(F))|}}]
+public partial class Container {{
+    public Service F() => null;
+}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0011")
+                    .WithLocation(1)
+                    .WithArguments("Service"),
+                DiagnosticResult
+                    .CompilerError("JAB0011")
+                    .WithLocation(2)
+                    .WithArguments("Service"));
+        }
+
+        [Fact]
         public async Task ProducesJAB0008WhenCircularChainDetected()
         {
             string testCode = $@"

@@ -801,6 +801,29 @@ internal class ServiceProviderBuilder
             }
         }
 
+        INamedTypeSymbol serviceType;
+        INamedTypeSymbol? implementationType;
+
+        if (attributeData.AttributeClass is { IsGenericType: true } attributeClass)
+        {
+            serviceType = (INamedTypeSymbol)attributeClass.TypeArguments[0];
+            implementationType = attributeClass.TypeArguments.Length == 2 ? (INamedTypeSymbol)attributeClass.TypeArguments[1] : null;
+        }
+        else
+        {
+            serviceType = ExtractType(attributeData.ConstructorArguments[0]);
+            implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
+        }
+
+        if (implementationType != null &&
+            (instanceMemberName != null || factoryMemberName != null))
+        {
+            _context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.ImplementationTypeAndFactoryNotAllowed,
+                attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
+                serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)));
+        }
+
         ISymbol? instanceMember = null;
         if (instanceMemberName != null &&
             !TryFindMember(serviceProviderType,
@@ -826,20 +849,6 @@ internal class ServiceProviderBuilder
                 out isScopeMember))
         {
             return false;
-        }
-
-        INamedTypeSymbol serviceType;
-        INamedTypeSymbol? implementationType;
-
-        if (attributeData.AttributeClass is { IsGenericType: true } attributeClass)
-        {
-            serviceType = (INamedTypeSymbol)attributeClass.TypeArguments[0];
-            implementationType = attributeClass.TypeArguments.Length == 2 ? (INamedTypeSymbol)attributeClass.TypeArguments[1] : null;
-        }
-        else
-        {
-            serviceType = ExtractType(attributeData.ConstructorArguments[0]);
-            implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
         }
 
         registration = new ServiceRegistration(
