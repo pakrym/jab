@@ -66,7 +66,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         return isScopeMember ? rootReference : "this";
     }
 
-    private static void AppendMethodCallWithoutBrackets(CodeWriter codeWriter, ISymbol method, string callerName)
+    private static void AppendMemberReference(CodeWriter codeWriter, ISymbol method, string callerName)
     {
         if (!method.IsStatic)
         {
@@ -74,6 +74,23 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         }
 
         codeWriter.Append($"{method.Name}");
+    }
+
+    private static void AppendMemberGenericParameters(CodeWriter codeWriter, ISymbol symbol)
+    {
+        if (symbol is IMethodSymbol method)
+        {
+            if (method.TypeArguments.Length > 0)
+            {
+                codeWriter.AppendRaw("<");
+                foreach (var typeArgument in method.TypeArguments)
+                {
+                    codeWriter.Append($"{typeArgument}, ");
+                }
+                codeWriter.RemoveTrailingComma();
+                codeWriter.AppendRaw(">");
+            }
+        }
     }
 
     private void AppendParameters(CodeWriter codeWriter, ServiceCallSite[] parameters, KeyValuePair<IParameterSymbol, ServiceCallSite>[] optionalParameters)
@@ -108,13 +125,15 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             case MemberCallSite memberCallSite:
                 valueCallback(codeWriter, w =>
                 {
-                    AppendMethodCallWithoutBrackets(w, memberCallSite.Member, GetCallerName(memberCallSite.IsScopeMember, rootReference));
+                    AppendMemberReference(w, memberCallSite.Member, GetCallerName(memberCallSite.IsScopeMember, rootReference));
+                    AppendMemberGenericParameters(w, memberCallSite.Member);
                 });
                 break;
             case MethodCallSite methodCallSite:
                 valueCallback(codeWriter, w =>
                 {
-                    AppendMethodCallWithoutBrackets(w, methodCallSite.Member, GetCallerName(methodCallSite.IsScopeMember, rootReference));
+                    AppendMemberReference(w, methodCallSite.Member, GetCallerName(methodCallSite.IsScopeMember, rootReference));
+                    AppendMemberGenericParameters(w, methodCallSite.Member);
 
                     w.AppendRaw("(");
                     AppendParameters(w, methodCallSite.Parameters, methodCallSite.OptionalParameters);
