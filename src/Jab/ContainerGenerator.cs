@@ -60,6 +60,55 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             codeWriter.Append($"{reference}.{GetResolutionServiceName(other)}()");
         }
     }
+    
+    private static string GetCallerName(bool isScopeMember, string rootReference)
+    {
+        return isScopeMember ? rootReference : "this";
+    }
+
+    private static void AppendMemberReference(CodeWriter codeWriter, ISymbol method, string callerName)
+    {
+        if (!method.IsStatic)
+        {
+            codeWriter.Append($"{callerName}.");
+        }
+
+        codeWriter.Append($"{method.Name}");
+    }
+
+    private static void AppendMemberGenericParameters(CodeWriter codeWriter, ISymbol symbol)
+    {
+        if (symbol is IMethodSymbol method)
+        {
+            if (method.TypeArguments.Length > 0)
+            {
+                codeWriter.AppendRaw("<");
+                foreach (var typeArgument in method.TypeArguments)
+                {
+                    codeWriter.Append($"{typeArgument}, ");
+                }
+                codeWriter.RemoveTrailingComma();
+                codeWriter.AppendRaw(">");
+            }
+        }
+    }
+
+    private void AppendParameters(CodeWriter codeWriter, ServiceCallSite[] parameters, KeyValuePair<IParameterSymbol, ServiceCallSite>[] optionalParameters)
+    {
+        foreach (var parameter in parameters)
+        {
+            WriteResolutionCall(codeWriter, parameter, "this");
+            codeWriter.AppendRaw(", ");
+        }
+
+        foreach (var pair in optionalParameters)
+        {
+            codeWriter.Append($"{pair.Key.Name}: ");
+            WriteResolutionCall(codeWriter, pair.Value, "this");
+            codeWriter.AppendRaw(", ");
+        }
+        codeWriter.RemoveTrailingComma();
+    }
 
     private void GenerateCallSite(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
     {
@@ -69,52 +118,26 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                 valueCallback(codeWriter, w =>
                 {
                     w.Append($"new {transientCallSite.ImplementationType}(");
-                    foreach (var parameter in transientCallSite.Parameters)
-                    {
-                        WriteResolutionCall(codeWriter, parameter, "this");
-                        w.AppendRaw(", ");
-                    }
-
-                    foreach (var pair in transientCallSite.OptionalParameter)
-                    {
-                        w.Append($"{pair.Key.Name}: ");
-                        WriteResolutionCall(codeWriter, pair.Value, "this");
-                        w.AppendRaw(", ");
-                    }
-                    w.RemoveTrailingComma();
+                    AppendParameters(w, transientCallSite.Parameters, transientCallSite.OptionalParameters);
                     w.Append($")");
                 });
                 break;
             case MemberCallSite memberCallSite:
                 valueCallback(codeWriter, w =>
                 {
-                    if (!memberCallSite.Member.IsStatic)
-                    {
-                        if (memberCallSite.IsScopeMember)
-                        {
-                            w.Append($"{rootReference}.");
-                        }
-                        else
-                        {
-                            w.Append($"this.");
-                        }
-                    }
+                    AppendMemberReference(w, memberCallSite.Member, GetCallerName(memberCallSite.IsScopeMember, rootReference));
+                    AppendMemberGenericParameters(w, memberCallSite.Member);
+                });
+                break;
+            case MethodCallSite methodCallSite:
+                valueCallback(codeWriter, w =>
+                {
+                    AppendMemberReference(w, methodCallSite.Member, GetCallerName(methodCallSite.IsScopeMember, rootReference));
+                    AppendMemberGenericParameters(w, methodCallSite.Member);
 
-                    w.Append($"{memberCallSite.Member.Name}");
-                    if (memberCallSite.Member is IMethodSymbol method)
-                    {
-                        if (method.TypeArguments.Length > 0)
-                        {
-                            w.AppendRaw("<");
-                            foreach (var typeArgument in method.TypeArguments)
-                            {
-                                w.Append($"{typeArgument}, ");
-                            }
-                            w.RemoveTrailingComma();
-                            w.AppendRaw(">");
-                        }
-                        w.AppendRaw("()");
-                    }
+                    w.AppendRaw("(");
+                    AppendParameters(w, methodCallSite.Parameters, methodCallSite.OptionalParameters);
+                    w.Append($")");
                 });
                 break;
             case ArrayServiceCallSite arrayServiceCallSite:

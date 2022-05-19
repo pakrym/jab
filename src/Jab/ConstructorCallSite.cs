@@ -2,13 +2,13 @@
 
 internal record ConstructorCallSite : ServiceCallSite
 {
-    public ConstructorCallSite(INamedTypeSymbol serviceType, INamedTypeSymbol implementationType, ServiceCallSite[] parameters, KeyValuePair<IParameterSymbol, ServiceCallSite>[] optionalParameter, ServiceLifetime lifetime, int reverseIndex, bool? isDisposable)
+    public ConstructorCallSite(INamedTypeSymbol serviceType, INamedTypeSymbol implementationType, ServiceCallSite[] parameters, KeyValuePair<IParameterSymbol, ServiceCallSite>[] optionalParameters, ServiceLifetime lifetime, int reverseIndex, bool? isDisposable)
         : base(serviceType, implementationType, lifetime, reverseIndex, isDisposable)
     {
         Parameters = parameters;
-        OptionalParameter = optionalParameter;
+        OptionalParameters = optionalParameters;
     }
 
     public ServiceCallSite[] Parameters { get; }
-    public KeyValuePair<IParameterSymbol, ServiceCallSite>[] OptionalParameter { get; }
+    public KeyValuePair<IParameterSymbol, ServiceCallSite>[] OptionalParameters { get; }
 }
