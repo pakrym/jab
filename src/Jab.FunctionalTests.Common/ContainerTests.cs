@@ -1054,7 +1054,7 @@ namespace JabTests
         internal partial class CanUseScopedStaticFactoryWithParametersContainer
         {
             public static int FactoryInvocationCount;
-            public IAnotherService CreateMyIServiceInstance(IService2 service)
+            public static IAnotherService CreateMyIServiceInstance(IService2 service)
             {
                 if (service == null)
                 {
