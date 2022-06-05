@@ -43,7 +43,9 @@ internal class KnownTypes
     private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
     private const string IServiceProviderMetadataName = "System.IServiceProvider";
     private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";
-    private const string IServiceScopeFactoryMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
+
+    private const string IServiceScopeFactoryMetadataName =
+        "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
 
     public INamedTypeSymbol IEnumerableType { get; }
     public INamedTypeSymbol IServiceProviderType { get; }
@@ -68,11 +70,13 @@ internal class KnownTypes
 
     public KnownTypes(Compilation compilation, IAssemblySymbol assemblySymbol)
     {
-        static INamedTypeSymbol GetTypeByMetadataNameOrThrow(IAssemblySymbol assemblySymbol, string fullyQualifiedMetadataName) =>
+        static INamedTypeSymbol GetTypeByMetadataNameOrThrow(IAssemblySymbol assemblySymbol,
+            string fullyQualifiedMetadataName) =>
             assemblySymbol.GetTypeByMetadataName(fullyQualifiedMetadataName)
             ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
 
-        static INamedTypeSymbol GetTypeFromCompilationByMetadataNameOrThrow(Compilation compilation, string fullyQualifiedMetadataName) =>
+        static INamedTypeSymbol GetTypeFromCompilationByMetadataNameOrThrow(Compilation compilation,
+            string fullyQualifiedMetadataName) =>
             compilation.GetTypeByMetadataName(fullyQualifiedMetadataName)
             ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
 
@@ -81,7 +85,8 @@ internal class KnownTypes
         IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
         IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
 
-        CompositionRootAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, CompositionRootAttributeMetadataName);
+        CompositionRootAttributeType =
+            GetTypeByMetadataNameOrThrow(assemblySymbol, CompositionRootAttributeMetadataName);
 
         TransientAttributeType = GetTypeByMetadataNameOrThrow(assemblySymbol, TransientAttributeMetadataName);
         GenericTransientAttributeType = assemblySymbol.GetTypeByMetadataName(GenericTransientAttributeMetadataName);
@@ -100,8 +105,8 @@ internal class KnownTypes
 
         ModuleAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceProviderModuleAttributeMetadataName);
     }
-
 }
+
 internal class ServiceProviderBuilder
 {
     private readonly GeneratorContext _context;
@@ -136,9 +141,10 @@ internal class ServiceProviderBuilder
                     if (containerTypeInfo.Type != null &&
                         serviceInfo.Symbol is ITypeSymbol serviceType &&
                         serviceType.TypeKind != TypeKind.TypeParameter
-                        )
+                       )
                     {
-                        getServiceCallCandidates.Add(new GetServiceCallCandidate(containerTypeInfo.Type, serviceType, candidateGetServiceCall.GetLocation()));
+                        getServiceCallCandidates.Add(new GetServiceCallCandidate(containerTypeInfo.Type, serviceType,
+                            candidateGetServiceCall.GetLocation()));
                     }
                 }
             }
@@ -164,7 +170,9 @@ internal class ServiceProviderBuilder
         return compositionRoots.ToArray();
     }
 
-    private bool TryCreateCompositionRoot(ITypeSymbol typeSymbol, List<GetServiceCallCandidate> getServiceCallCandidates, [NotNullWhen(true)] out ServiceProvider? compositionRoot)
+    private bool TryCreateCompositionRoot(ITypeSymbol typeSymbol,
+        List<GetServiceCallCandidate> getServiceCallCandidates,
+        [NotNullWhen(true)] out ServiceProvider? compositionRoot)
     {
         compositionRoot = null;
 
@@ -183,13 +191,16 @@ internal class ServiceProviderBuilder
             {
                 continue;
             }
-            GetCallSite(registration.ServiceType, new ServiceResolutionContext(description, callSites, registration.ServiceType, registration.Location));
+
+            GetCallSite(registration.ServiceType,
+                new ServiceResolutionContext(description, callSites, registration.ServiceType, registration.Location));
         }
 
         foreach (var rootService in description.RootServices)
         {
             var serviceType = rootService.Service;
-            var callSite = GetCallSite(serviceType, new ServiceResolutionContext(description, callSites, serviceType, description.Location));
+            var callSite = GetCallSite(serviceType,
+                new ServiceResolutionContext(description, callSites, serviceType, description.Location));
             if (callSite == null)
             {
                 _context.ReportDiagnostic(Diagnostic.Create(
@@ -205,7 +216,9 @@ internal class ServiceProviderBuilder
             if (SymbolEqualityComparer.Default.Equals(getServiceCallCandidate.ProviderType, typeSymbol))
             {
                 var serviceType = getServiceCallCandidate.ServiceType;
-                var callSite = GetCallSite(serviceType, new ServiceResolutionContext(description, callSites, serviceType, getServiceCallCandidate.Location));
+                var callSite = GetCallSite(serviceType,
+                    new ServiceResolutionContext(description, callSites, serviceType,
+                        getServiceCallCandidate.Location));
                 if (callSite == null)
                 {
                     _context.ReportDiagnostic(Diagnostic.Create(
@@ -320,20 +333,25 @@ internal class ServiceProviderBuilder
         int reverseIndex,
         ServiceResolutionContext context)
     {
-        if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
+        if (serviceType is INamedTypeSymbol { IsGenericType: true } genericType &&
             registration.ServiceType.IsUnboundGenericType &&
-            SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, genericType.ConstructedFrom))
+            SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom,
+                genericType.ConstructedFrom))
         {
             // TODO: This can use better error reporting
             if (registration.FactoryMember is IMethodSymbol factoryMethod)
             {
-                var constructedFactoryMethod = factoryMethod.ConstructedFrom.Construct(genericType.TypeArguments, genericType.TypeArgumentNullableAnnotations);
-                var callSite = CreateMethodCallSite(
+                var constructedFactoryMethod = factoryMethod.ConstructedFrom.Construct(genericType.TypeArguments,
+                    genericType.TypeArgumentNullableAnnotations);
+                var callSite = CreateFactoryCallSite(
                     genericType,
                     null,
                     registration.Lifetime,
                     registration.Location,
-                    isScopeMember: registration.IsScopeMember, instanceMember: constructedFactoryMethod, reverseIndex: reverseIndex, context: context);
+                    isScopeMember: registration.IsScopeMember,
+                    factoryMember: constructedFactoryMethod,
+                    reverseIndex: reverseIndex,
+                    context: context);
 
                 context.CallSiteCache[new CallSiteCacheKey(reverseIndex, serviceType)] = callSite;
 
@@ -341,7 +359,9 @@ internal class ServiceProviderBuilder
             }
             else if (registration.ImplementationType != null)
             {
-                var implementationType = registration.ImplementationType.ConstructedFrom.Construct(genericType.TypeArguments, genericType.TypeArgumentNullableAnnotations);
+                var implementationType =
+                    registration.ImplementationType.ConstructedFrom.Construct(genericType.TypeArguments,
+                        genericType.TypeArgumentNullableAnnotations);
                 return CreateConstructorCallSite(registration, genericType, implementationType, reverseIndex, context);
             }
             else
@@ -370,7 +390,7 @@ internal class ServiceProviderBuilder
             return commonLifetime;
         }
 
-        if (serviceType is INamedTypeSymbol {IsGenericType: true} genericType &&
+        if (serviceType is INamedTypeSymbol { IsGenericType: true } genericType &&
             SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _knownTypes.IEnumerableType))
         {
             var enumerableService = genericType.TypeArguments[0];
@@ -417,7 +437,8 @@ internal class ServiceProviderBuilder
         return null;
     }
 
-    private ServiceCallSite? TryCreateExact(ServiceRegistration registration, ITypeSymbol serviceType, int reverseIndex, ServiceResolutionContext context)
+    private ServiceCallSite? TryCreateExact(ServiceRegistration registration, ITypeSymbol serviceType, int reverseIndex,
+        ServiceResolutionContext context)
     {
         if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, serviceType))
         {
@@ -439,30 +460,33 @@ internal class ServiceProviderBuilder
             return callSite;
         }
 
-        var member = registration.InstanceMember ?? registration.FactoryMember;
-        switch (member)
+        if (registration.InstanceMember is { } instanceMember)
         {
-            case IMethodSymbol instanceMethod:
-                callSite = CreateMethodCallSite(
-                    registration.ServiceType,
-                    registration.ImplementationType,
-                    registration.Lifetime,
-                    registration.Location,
-                    registration.IsScopeMember, instanceMethod, reverseIndex, context);
-                break;
-            case {} factoryMember:
-                callSite = CreateMemberCallSite(
-                    registration,
-                    factoryMember,
-                    registration.IsScopeMember,
-                    reverseIndex);
-                break;
-            default:
-                var implementationType = registration.ImplementationType ??
-                                         registration.ServiceType;
+            callSite = CreateMemberCallSite(
+                registration,
+                instanceMember,
+                registration.IsScopeMember,
+                reverseIndex);
+        }
+        else if (registration.FactoryMember is { } factoryMember)
+        {
+            callSite = CreateFactoryCallSite(
+                registration.ServiceType,
+                registration.ImplementationType,
+                registration.Lifetime,
+                registration.Location,
+                registration.IsScopeMember,
+                factoryMember,
+                reverseIndex,
+                context);
+        }
+        else
+        {
+            var implementationType = registration.ImplementationType ??
+                                     registration.ServiceType;
 
-                callSite = CreateConstructorCallSite(registration, registration.ServiceType, implementationType, reverseIndex, context);
-                break;
+            callSite = CreateConstructorCallSite(registration, registration.ServiceType, implementationType,
+                reverseIndex, context);
         }
 
         context.CallSiteCache[cacheKey] = callSite;
@@ -477,22 +501,35 @@ internal class ServiceProviderBuilder
         int reverseIndex)
     {
         return new MemberCallSite(registration.ServiceType,
-                    instanceMember,
-                    isScopeMember: isScopeMember,
-                    registration.Lifetime,
-                    reverseIndex,
-                    false);
+            instanceMember,
+            isScopeMember: isScopeMember,
+            registration.Lifetime,
+            reverseIndex,
+            false);
     }
 
-    private ServiceCallSite CreateMethodCallSite(INamedTypeSymbol serviceType,
+    private ServiceCallSite CreateFactoryCallSite(INamedTypeSymbol serviceType,
         INamedTypeSymbol? implementationType,
         ServiceLifetime lifetime,
         Location? registrationLocation,
         bool isScopeMember,
-        IMethodSymbol instanceMember,
+        ISymbol factoryMember,
         int reverseIndex,
         ServiceResolutionContext context)
     {
+        ImmutableArray<IParameterSymbol> GetDelegateParameters(ITypeSymbol type)
+        {
+            foreach (var member in type.GetMembers("Invoke"))
+            {
+                if (member is IMethodSymbol method)
+                {
+                    return method.Parameters;
+                }
+            }
+
+            throw new InvalidOperationException($"Unable to determine parameters for {type.ToDisplayString()}");
+        }
+
         var cacheKey = new CallSiteCacheKey(reverseIndex, serviceType);
 
         if (context.CallSiteCache.TryGetValue(cacheKey, out ServiceCallSite callSite))
@@ -502,22 +539,44 @@ internal class ServiceProviderBuilder
 
         implementationType ??= serviceType;
 
+        ImmutableArray<IParameterSymbol> factoryParameters;
+        switch (factoryMember)
+        {
+            case IMethodSymbol method:
+                factoryParameters = method.Parameters;
+                break;
+            case IFieldSymbol { Type: { TypeKind: TypeKind.Delegate } type }:
+                factoryParameters = GetDelegateParameters(type);
+                break;
+            case IPropertySymbol { Type: { TypeKind: TypeKind.Delegate } type }:
+                factoryParameters = GetDelegateParameters(type);
+                break;
+            default:
+                var diagnostic = Diagnostic.Create(
+                    DiagnosticDescriptors.FactoryMemberMustBeAMethodOrHaveDelegateType,
+                    ExtractMemberTypeLocation(factoryMember),
+                    factoryMember.Name,
+                    serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+                _context.ReportDiagnostic(diagnostic);
+                return new ErrorCallSite(serviceType, diagnostic);
+        }
+
         var (parameters, namedParameters, diagnostics) =
-            GetParameters(instanceMember, registrationLocation, implementationType, context);
+            GetParameters(factoryParameters, registrationLocation, implementationType, context);
 
         if (diagnostics.Count > 0)
         {
             return new ErrorCallSite(serviceType, diagnostics.ToArray());
         }
 
-        return new MethodCallSite(serviceType,
-                    instanceMember,
-                    isScopeMember: isScopeMember,
-                    parameters.ToArray(),
-                    namedParameters.ToArray(),
-                    lifetime,
-                    reverseIndex,
-                    false);
+        return new FactoryCallSite(serviceType,
+            factoryMember,
+            isScopeMember: isScopeMember,
+            parameters.ToArray(),
+            namedParameters.ToArray(),
+            lifetime,
+            reverseIndex,
+            false);
     }
 
     private ServiceCallSite CreateConstructorCallSite(
@@ -551,7 +610,7 @@ internal class ServiceProviderBuilder
             }
 
             var (parameters, namedParameters, diagnostics) =
-                GetParameters(ctor, registration.Location, implementationType, context);
+                GetParameters(ctor.Parameters, registration.Location, implementationType, context);
 
             if (diagnostics.Count > 0)
             {
@@ -584,23 +643,23 @@ internal class ServiceProviderBuilder
         List<ServiceCallSite> Parameters,
         List<KeyValuePair<IParameterSymbol, ServiceCallSite>> NamedParameters,
         List<Diagnostic> Diagnostics) GetParameters(
-        IMethodSymbol methodSymbol,
-        Location? registrationLocation,
-        INamedTypeSymbol implementationType,
-        ServiceResolutionContext context)
+            ImmutableArray<IParameterSymbol> parameters,
+            Location? registrationLocation,
+            INamedTypeSymbol implementationType,
+            ServiceResolutionContext context)
     {
-
-        var parameters = new List<ServiceCallSite>();
+        var callSites = new List<ServiceCallSite>();
         var namedParameters = new List<KeyValuePair<IParameterSymbol, ServiceCallSite>>();
         var diagnostics = new List<Diagnostic>();
-        foreach (var parameterSymbol in methodSymbol.Parameters)
+        foreach (var parameterSymbol in parameters)
         {
             var parameterCallSite = GetCallSite(parameterSymbol.Type, context);
             if (parameterSymbol.IsOptional)
             {
                 if (parameterCallSite != null)
                 {
-                    namedParameters.Add(new KeyValuePair<IParameterSymbol, ServiceCallSite>(parameterSymbol, parameterCallSite));
+                    namedParameters.Add(
+                        new KeyValuePair<IParameterSymbol, ServiceCallSite>(parameterSymbol, parameterCallSite));
                 }
             }
             else
@@ -617,18 +676,19 @@ internal class ServiceProviderBuilder
                 }
                 else
                 {
-                    parameters.Add(parameterCallSite);
+                    callSites.Add(parameterCallSite);
                 }
             }
         }
-        return (parameters, namedParameters, diagnostics);
+
+        return (callSites, namedParameters, diagnostics);
     }
 
     private bool CanSatisfy(ITypeSymbol serviceType, ServiceProviderDescription description)
     {
         INamedTypeSymbol? genericType = null;
 
-        if (serviceType is INamedTypeSymbol {IsGenericType: true} genericServiceType)
+        if (serviceType is INamedTypeSymbol { IsGenericType: true } genericServiceType)
         {
             genericType = genericServiceType;
         }
@@ -649,7 +709,8 @@ internal class ServiceProviderBuilder
 
             if (genericType != null &&
                 registration.ServiceType.IsUnboundGenericType &&
-                SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom, genericType.ConstructedFrom))
+                SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom,
+                    genericType.ConstructedFrom))
             {
                 return true;
             }
@@ -658,7 +719,8 @@ internal class ServiceProviderBuilder
         return false;
     }
 
-    private IMethodSymbol? SelectConstructor(INamedTypeSymbol implementationType, ServiceProviderDescription description)
+    private IMethodSymbol? SelectConstructor(INamedTypeSymbol implementationType,
+        ServiceProviderDescription description)
     {
         IMethodSymbol? selectedCtor = null;
         IMethodSymbol? candidate = null;
@@ -693,7 +755,6 @@ internal class ServiceProviderBuilder
                     }
                 }
             }
-
         }
 
         // Return a candidate so we can produce diagnostics for required services in a simple case
@@ -709,7 +770,8 @@ internal class ServiceProviderBuilder
         List<RootService> rootServices = new();
         foreach (var attributeData in serviceProviderType.GetAttributes())
         {
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, _knownTypes.CompositionRootAttributeType))
+            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass,
+                    _knownTypes.CompositionRootAttributeType))
             {
                 location = attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation();
                 isCompositionRoot = true;
@@ -719,7 +781,8 @@ internal class ServiceProviderBuilder
                     {
                         foreach (var typedConstant in namedArgument.Value.Values)
                         {
-                            rootServices.Add(new(ExtractType(typedConstant), attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation()));
+                            rootServices.Add(new(ExtractType(typedConstant),
+                                attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation()));
                         }
                     }
                 }
@@ -754,15 +817,16 @@ internal class ServiceProviderBuilder
         return null;
     }
 
-    private void ProcessModule(ITypeSymbol serviceProviderType, List<ServiceRegistration> registrations, INamedTypeSymbol moduleType, AttributeData importAttributeData)
+    private void ProcessModule(ITypeSymbol serviceProviderType, List<ServiceRegistration> registrations,
+        INamedTypeSymbol moduleType, AttributeData importAttributeData)
     {
         // TODO: idempotency
         bool isModule = false;
         // If module it in another assembly use KnownTypes native to that assembly
         var knownTypes =
-            SymbolEqualityComparer.Default.Equals(moduleType.ContainingAssembly, _context.Compilation.Assembly) ?
-                _knownTypes :
-                new KnownTypes(_context.Compilation, moduleType.ContainingAssembly);
+            SymbolEqualityComparer.Default.Equals(moduleType.ContainingAssembly, _context.Compilation.Assembly)
+                ? _knownTypes
+                : new KnownTypes(_context.Compilation, moduleType.ContainingAssembly);
 
         foreach (var attributeData in moduleType.GetAttributes())
         {
@@ -791,10 +855,12 @@ internal class ServiceProviderBuilder
         }
     }
 
-    private bool TryGetModuleImport(AttributeData attributeData, KnownTypes knownTypes, [NotNullWhen(true)] out INamedTypeSymbol? moduleType)
+    private bool TryGetModuleImport(AttributeData attributeData, KnownTypes knownTypes,
+        [NotNullWhen(true)] out INamedTypeSymbol? moduleType)
     {
         if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ImportAttribute) ||
-            SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass?.ConstructedFrom, knownTypes.GenericImportAttribute))
+            SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass?.ConstructedFrom,
+                knownTypes.GenericImportAttribute))
         {
             if (attributeData.AttributeClass is { IsGenericType: true })
             {
@@ -812,7 +878,8 @@ internal class ServiceProviderBuilder
         return false;
     }
 
-    private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, KnownTypes knownTypes, [NotNullWhen(true)] out ServiceRegistration? registration)
+    private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData,
+        KnownTypes knownTypes, [NotNullWhen(true)] out ServiceRegistration? registration)
     {
         registration = null;
 
@@ -822,24 +889,30 @@ internal class ServiceProviderBuilder
         }
 
         if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.TransientAttributeType) ||
-             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericTransientAttributeType) ||
-             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2TransientAttributeType)) &&
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom,
+                 knownTypes.GenericTransientAttributeType) ||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom,
+                 knownTypes.Generic2TransientAttributeType)) &&
             TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Transient, out registration))
         {
             return true;
         }
 
-        if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.SingletonAttribute)||
-             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericSingletonAttribute) ||
-             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2SingletonAttribute)) &&
+        if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.SingletonAttribute) ||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom,
+                 knownTypes.GenericSingletonAttribute) ||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom,
+                 knownTypes.Generic2SingletonAttribute)) &&
             TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Singleton, out registration))
         {
             return true;
         }
 
-        if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ScopedAttribute)||
-             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.GenericScopedAttribute) ||
-             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom, knownTypes.Generic2ScopedAttribute))  &&
+        if ((SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, knownTypes.ScopedAttribute) ||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom,
+                 knownTypes.GenericScopedAttribute) ||
+             SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom,
+                 knownTypes.Generic2ScopedAttribute)) &&
             TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Scoped, out registration))
         {
             return true;
@@ -848,7 +921,8 @@ internal class ServiceProviderBuilder
         return false;
     }
 
-    private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData, ServiceLifetime serviceLifetime, [NotNullWhen(true)] out ServiceRegistration? registration)
+    private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData,
+        ServiceLifetime serviceLifetime, [NotNullWhen(true)] out ServiceRegistration? registration)
     {
         registration = null;
 
@@ -872,12 +946,16 @@ internal class ServiceProviderBuilder
         if (attributeData.AttributeClass is { IsGenericType: true } attributeClass)
         {
             serviceType = (INamedTypeSymbol)attributeClass.TypeArguments[0];
-            implementationType = attributeClass.TypeArguments.Length == 2 ? (INamedTypeSymbol)attributeClass.TypeArguments[1] : null;
+            implementationType = attributeClass.TypeArguments.Length == 2
+                ? (INamedTypeSymbol)attributeClass.TypeArguments[1]
+                : null;
         }
         else
         {
             serviceType = ExtractType(attributeData.ConstructorArguments[0]);
-            implementationType = attributeData.ConstructorArguments.Length == 2 ? ExtractType(attributeData.ConstructorArguments[1]) : null;
+            implementationType = attributeData.ConstructorArguments.Length == 2
+                ? ExtractType(attributeData.ConstructorArguments[1])
+                : null;
         }
 
         if (implementationType != null &&
@@ -988,10 +1066,27 @@ internal class ServiceProviderBuilder
             throw new InvalidOperationException($"Unexpected null value for type constant.");
         }
 
-        return (INamedTypeSymbol) typedConstant.Value;
+        return (INamedTypeSymbol)typedConstant.Value;
     }
 
-    private Location? ExtractSymbolNameLocation(ITypeSymbol symbol)
+    private Location? ExtractMemberTypeLocation(ISymbol symbol)
+    {
+        foreach (var declaringSyntaxReference in symbol.DeclaringSyntaxReferences)
+        {
+            var syntax = declaringSyntaxReference.GetSyntax();
+            return syntax switch
+            {
+                PropertyDeclarationSyntax declarationSyntax => declarationSyntax.Type.GetLocation(),
+                FieldDeclarationSyntax fieldDeclarationSyntax => fieldDeclarationSyntax.Declaration.Type.GetLocation(),
+                VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Type: {} type }} => type.GetLocation(),
+                _ => syntax.GetLocation()
+            };
+        }
+
+        return null;
+    }
+
+    private Location? ExtractSymbolNameLocation(ISymbol symbol)
     {
         foreach (var declaringSyntaxReference in symbol.DeclaringSyntaxReferences)
         {
@@ -1087,9 +1182,11 @@ internal class ServiceProviderBuilder
             StringBuilder builder = new();
             foreach (var serviceChainItem in _chain.OrderBy(c => c.Index))
             {
-                builder.Append(serviceChainItem.TypeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+                builder.Append(
+                    serviceChainItem.TypeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
                 builder.Append(" -> ");
             }
+
             builder.Append(typeSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
             return builder.ToString();
         }
