@@ -45,4 +45,9 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor ImplementationTypeAndFactoryNotAllowed = new("JAB0011",
         "Can't specify both the implementation type and factory/instance.",
         "Can't specify both the implementation type and factory/instance, for service '{0}'", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor FactoryMemberMustBeAMethodOrHaveDelegateType = new("JAB0012",
+        "The factory member has to be a method or have a delegate type.",
+        "The factory member '{0}' has to be a method of have a delegate type, for service '{1}'", "Usage", DiagnosticSeverity.Error, true);
+
 }

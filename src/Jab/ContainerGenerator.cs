@@ -10,8 +10,8 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         if (serviceCallSite is ErrorCallSite errorCallSite)
         {
             codeWriter.Line($"// There was an error while building the container, please refer to the compiler diagnostics");
-            codeWriter.Line($"// {errorCallSite.Diagnostic}");
-            codeWriter.Line($"return default;");
+            codeWriter.Line($"// {string.Join(Environment.NewLine, errorCallSite.Diagnostic.Select(d => d.ToString()))}");
+            codeWriter.Line($"return default!;");
             return;
         }
 
@@ -60,7 +60,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             codeWriter.Append($"{reference}.{GetResolutionServiceName(other)}()");
         }
     }
-    
+
     private static string GetCallerName(bool isScopeMember, string rootReference)
     {
         return isScopeMember ? rootReference : "this";
@@ -129,7 +129,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     AppendMemberGenericParameters(w, memberCallSite.Member);
                 });
                 break;
-            case MethodCallSite methodCallSite:
+            case FactoryCallSite methodCallSite:
                 valueCallback(codeWriter, w =>
                 {
                     AppendMemberReference(w, methodCallSite.Member, GetCallerName(methodCallSite.IsScopeMember, rootReference));
@@ -532,6 +532,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         DiagnosticDescriptors.MissingServiceProviderAttribute,
         DiagnosticDescriptors.NoServiceTypeRegistered,
         DiagnosticDescriptors.ImplementationTypeAndFactoryNotAllowed,
+        DiagnosticDescriptors.FactoryMemberMustBeAMethodOrHaveDelegateType,
     }.ToImmutableArray();
 
     private static string ReadAttributesFile()

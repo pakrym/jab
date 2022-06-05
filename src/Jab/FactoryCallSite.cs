@@ -1,6 +1,6 @@
 ﻿namespace Jab;
 
-internal record MethodCallSite : ServiceCallSite
+internal record FactoryCallSite : ServiceCallSite
 {
     public ISymbol Member { get; }
     public bool IsScopeMember { get; set; }
@@ -8,7 +8,7 @@ internal record MethodCallSite : ServiceCallSite
     public ServiceCallSite[] Parameters { get; }
     public KeyValuePair<IParameterSymbol, ServiceCallSite>[] OptionalParameters { get; }
 
-    public MethodCallSite(INamedTypeSymbol serviceType, ISymbol member, bool isScopeMember, ServiceCallSite[] parameters, KeyValuePair<IParameterSymbol, ServiceCallSite>[] optionalParameters, ServiceLifetime lifetime, int reverseIndex, bool? isDisposable) : base(serviceType, serviceType, lifetime, reverseIndex, isDisposable)
+    public FactoryCallSite(INamedTypeSymbol serviceType, ISymbol member, bool isScopeMember, ServiceCallSite[] parameters, KeyValuePair<IParameterSymbol, ServiceCallSite>[] optionalParameters, ServiceLifetime lifetime, int reverseIndex, bool? isDisposable) : base(serviceType, serviceType, lifetime, reverseIndex, isDisposable)
     {
         Member = member;
         IsScopeMember = isScopeMember;

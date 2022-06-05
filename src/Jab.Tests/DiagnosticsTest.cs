@@ -170,6 +170,32 @@ public partial class Container {{
                     .WithArguments("Service"));
         }
 
+
+        [Fact]
+        public async Task ProducesJAB0012WhenFactoryIsNotCallable()
+        {
+            string testCode = $@"
+public class Service {{ private Service() {{}} }}
+public class Service2 {{ private Service2() {{}} }}
+[ServiceProvider]
+[Transient(typeof(Service), Factory=nameof(F))]
+[Transient(typeof(Service2), Factory=nameof(F1))]
+public partial class Container {{
+    public {{|#1:object|}} F = null;
+    public {{|#2:object|}} F1 {{get;}} = null;
+}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0012")
+                    .WithLocation(1)
+                    .WithArguments("F", "Service"),
+                DiagnosticResult
+                    .CompilerError("JAB0012")
+                    .WithLocation(2)
+                    .WithArguments("F1", "Service2"));
+        }
+
         [Fact]
         public async Task ProducesJAB0008WhenCircularChainDetected()
         {
