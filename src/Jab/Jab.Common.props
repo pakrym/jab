@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <AssemblyName>Jab</AssemblyName>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <Version>0.8.0</Version>
