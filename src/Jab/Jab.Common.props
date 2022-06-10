@@ -8,6 +8,7 @@
         <Version Condition="'$(ReleaseVersion)' != ''">$(ReleaseVersion)</Version>
         <EnableDefaultItems>false</EnableDefaultItems>
         <RootNamespace>Jab</RootNamespace>
+        <PackageDescription>Jab is a fast compile-time dependency injection container without runtime dependencies.</PackageDescription>
     </PropertyGroup>
 
     <ItemGroup>
