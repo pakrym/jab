@@ -5,7 +5,7 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <GITHUB_RUN_NUMBER Condition="'$(GITHUB_RUN_NUMBER)' == ''">1</GITHUB_RUN_NUMBER>
-        <Version>0.5.3-beta.$(GITHUB_RUN_NUMBER)</Version>
+        <Version>0.8.0-beta.$(GITHUB_RUN_NUMBER)</Version>
         <Version Condition="'$(ReleaseVersion)' != ''">$(ReleaseVersion)</Version>
         <EnableDefaultItems>false</EnableDefaultItems>
         <RootNamespace>Jab</RootNamespace>
