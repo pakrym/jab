@@ -4,11 +4,11 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <GITHUB_RUN_NUMBER Condition="'$(GITHUB_RUN_NUMBER)' == ''">1</GITHUB_RUN_NUMBER>
-        <Version>0.8.1-beta.$(GITHUB_RUN_NUMBER)</Version>
+        <Version>0.8.1</Version>
         <Version Condition="'$(ReleaseVersion)' != ''">$(ReleaseVersion)</Version>
         <EnableDefaultItems>false</EnableDefaultItems>
         <RootNamespace>Jab</RootNamespace>
+        <PackageDescription>Jab is a fast compile-time dependency injection container without runtime dependencies.</PackageDescription>
     </PropertyGroup>
 
     <ItemGroup>
