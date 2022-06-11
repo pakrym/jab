@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <Version>0.8.0</Version>
+        <Version>0.8.1</Version>
         <Version Condition="'$(ReleaseVersion)' != ''">$(ReleaseVersion)</Version>
         <EnableDefaultItems>false</EnableDefaultItems>
         <RootNamespace>Jab</RootNamespace>
