@@ -28,7 +28,7 @@ jobs:
     - name: Test
       run: dotnet test src --no-build --verbosity normal
     - name: Pack
-      run: dotnet pack src --output nuget /p:ReleaseVersion=${{ github.event.inputs.ReleaseVersion }} /bl:"nuget/pack.binlog"
+      run: dotnet pack src --no-build --output nuget /p:ReleaseVersion=${{ github.event.inputs.ReleaseVersion }} /bl:"nuget/pack.binlog"
     - name: Get package version
       shell: pwsh
       id: vars
