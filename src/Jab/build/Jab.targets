@@ -8,7 +8,7 @@
             BeforeTargets="CoreCompile">
         <ItemGroup>
             <Analyzer Remove="@(Analyzer)"
-                           Condition="$([System.String]::Copy('%(Analyzer.Identity)').IndexOf('Jab.dll')) &gt;= 0"/>
+                      Condition="$([System.String]::Copy('%(Analyzer.Identity)').IndexOf('roslyn4')) &gt;= 0"/>
         </ItemGroup>
     </Target>
 </Project>
