@@ -9,6 +9,8 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <!-- Make sure that ResolveProjectReferences target runs before pack to include Jab for roslyn3. -->
+        <BeforePack>$(BeforePack);ResolveProjectReferences</BeforePack>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
