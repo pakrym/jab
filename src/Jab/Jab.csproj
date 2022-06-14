@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -9,11 +9,19 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <!-- Make sure that ResolveProjectReferences target runs before pack to include Jab for roslyn3. -->
+        <BeforePack>$(BeforePack);ResolveProjectReferences</BeforePack>
+        <BuildProjectReferences Condition="'$(NoBuild)' == 'true'">false</BuildProjectReferences>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../Jab.Roslyn3/Jab.Roslyn3.csproj" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="../Jab.Roslyn3/Jab.Roslyn3.csproj"
+                          OutputItemType="None"
+                          ReferenceOutputAssembly="false"
+                          Pack="true"
+                          PackagePath="analyzers/dotnet/roslyn3.11"
+                          Condition="'$(OmitRoslyn3AnalyzerFromPackage)' != 'true'" />
     </ItemGroup>
 
     <ItemGroup>
@@ -30,16 +38,6 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     </ItemGroup>
-    
-    <Target Name="ReferenceCrossTargeting" BeforeTargets="_GetPackageFiles">
-        <MSBuild Projects="../Jab.Roslyn3/Jab.Roslyn3.csproj" Targets="GetTargetPath">
-            <Output ItemName="Roslyn3Assembly" TaskParameter="TargetOutputs" />
-        </MSBuild>
-
-        <ItemGroup>
-            <None Include="%(Roslyn3Assembly.Identity)" Pack="true" PackagePath="analyzers/dotnet/roslyn3.11" Visible="false" />
-        </ItemGroup>
-    </Target>
     
     <Import Project="Jab.Common.props" />
 
