@@ -1,12 +1,5 @@
 ﻿namespace Jab;
 
-internal enum MemberLocation
-{
-    Root,
-    Scope,
-    Module
-}
-
 internal record FactoryCallSite : ServiceCallSite
 {
     public ISymbol Member { get; }
