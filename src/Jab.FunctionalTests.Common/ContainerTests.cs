@@ -1171,6 +1171,23 @@ namespace JabTests
             static IService Instance => new ServiceImplementation();
             static IService<T> Factory<T>(T param) => new ServiceImplementation<T>(param);
         }
+        
+        [Fact]
+        public void PrefersModuleMembers()
+        {
+            PrefersModuleMembersContainer c = new();
+
+            var service = c.GetService<IService<IService>>();
+            Assert.IsType<ServiceImplementation>(service.InnerService);
+        }
+
+        [ServiceProvider]
+        [Import(typeof(IModuleWithStaticFactory))]
+        internal partial class PrefersModuleMembersContainer
+        {
+            static IService Instance => throw new Exception();
+            static IService<T> Factory<T>(T param) => throw new Exception();
+        }
     }
 }
 

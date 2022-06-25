@@ -1026,20 +1026,24 @@ internal class ServiceProviderBuilder
         member = null;
         memberLocation = MemberLocation.Root;
 
-        List<ISymbol> members = new(typeSymbol.GetMembers(memberName));
+        List<ISymbol> members = new();
 
-        if (includeScope)
-        {
-            foreach (var scopeType in typeSymbol.GetTypeMembers("Scope"))
-            {
-                members.AddRange(scopeType.GetMembers(memberName));
-            }
-        }
-
-        // If the property is not found on the type look for it in the moduke
-        if (members.Count == 0 && moduleType != null)
+        // Prefer module members
+        if (moduleType != null)
         {
             members.AddRange(moduleType.GetMembers(memberName));
+        }
+        
+        if (members.Count == 0)
+        {
+            members.AddRange(typeSymbol.GetMembers(memberName));
+            if (includeScope)
+            {
+                foreach (var scopeType in typeSymbol.GetTypeMembers("Scope"))
+                {
+                    members.AddRange(scopeType.GetMembers(memberName));
+                }
+            }
         }
 
         if (members.Count == 0)
