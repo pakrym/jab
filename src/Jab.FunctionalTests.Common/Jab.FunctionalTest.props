@@ -8,6 +8,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>preview</LangVersion>
     <RootNamespace>JabTests</RootNamespace>
+    <DefineConstants>$(DefineConstants);JAB_PREVIEW</DefineConstants>
   </PropertyGroup>
 
   <Target Name="_SetProperties">

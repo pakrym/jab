@@ -6,6 +6,7 @@ using JabTests;
 using Xunit;
 
 using Jab;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace JabTests
 {
@@ -81,6 +82,26 @@ namespace JabTests
         internal partial class CanUseSingletonInstanceContainer
         {
             public IAnotherService MyIServiceInstance { get; set; }
+        }
+        
+        [Fact]
+        public void CanUseStaticSingletonInstance()
+        {
+            CanUseStaticSingletonInstanceContainer c = new();
+            var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetService<IService>());
+            var anotherImplementation = c.GetService<IAnotherService>();
+
+            Assert.IsType<AnotherServiceImplementation>(implementationWithParameter.AnotherService);
+            Assert.Same(anotherImplementation, implementationWithParameter.AnotherService);
+            Assert.Same(CanUseStaticSingletonInstanceContainer.MyIServiceInstance, anotherImplementation);
+        }
+
+        [ServiceProvider]
+        [Singleton(typeof(IService), typeof(ServiceImplementationWithParameter))]
+        [Singleton(typeof(IAnotherService), Instance = "MyIServiceInstance")]
+        internal partial class CanUseStaticSingletonInstanceContainer
+        {
+            public static IAnotherService MyIServiceInstance { get; } = new AnotherServiceImplementation();
         }
 
         [Fact]
@@ -1126,6 +1147,30 @@ namespace JabTests
         [Transient<IService3, ServiceImplementation>]
         internal partial class CanUseGenericAttributesContainer { }
 #endif
+        
+        
+        
+        [Fact]
+        public void CanUseModuleWithStaticFactory()
+        {
+            CanUseModuleWithStaticFactoryContainer c = new();
+
+            var service = c.GetService<IService<IService>>();
+            Assert.IsType<ServiceImplementation>(service.InnerService);
+        }
+        
+        [ServiceProvider]
+        [Import(typeof(IModuleWithStaticFactory))]
+        internal partial class CanUseModuleWithStaticFactoryContainer { }
+        
+        [ServiceProviderModule]
+        [Singleton(typeof(IService<>), Factory = nameof(Factory))]
+        [Singleton(typeof(IService), Instance = nameof(Instance))]
+        internal interface IModuleWithStaticFactory
+        {
+            static IService Instance => new ServiceImplementation();
+            static IService<T> Factory<T>(T param) => new ServiceImplementation<T>(param);
+        }
     }
 }
 

@@ -348,7 +348,7 @@ internal class ServiceProviderBuilder
                     null,
                     registration.Lifetime,
                     registration.Location,
-                    isScopeMember: registration.IsScopeMember,
+                    memberLocation: registration.MemberLocation,
                     factoryMember: constructedFactoryMethod,
                     reverseIndex: reverseIndex,
                     context: context);
@@ -465,7 +465,7 @@ internal class ServiceProviderBuilder
             callSite = CreateMemberCallSite(
                 registration,
                 instanceMember,
-                registration.IsScopeMember,
+                registration.MemberLocation,
                 reverseIndex);
         }
         else if (registration.FactoryMember is { } factoryMember)
@@ -475,7 +475,7 @@ internal class ServiceProviderBuilder
                 registration.ImplementationType,
                 registration.Lifetime,
                 registration.Location,
-                registration.IsScopeMember,
+                registration.MemberLocation,
                 factoryMember,
                 reverseIndex,
                 context);
@@ -497,12 +497,12 @@ internal class ServiceProviderBuilder
     private ServiceCallSite CreateMemberCallSite(
         ServiceRegistration registration,
         ISymbol instanceMember,
-        bool isScopeMember,
+        MemberLocation memberLocation,
         int reverseIndex)
     {
         return new MemberCallSite(registration.ServiceType,
             instanceMember,
-            isScopeMember: isScopeMember,
+            memberLocation: memberLocation,
             registration.Lifetime,
             reverseIndex,
             false);
@@ -512,7 +512,7 @@ internal class ServiceProviderBuilder
         INamedTypeSymbol? implementationType,
         ServiceLifetime lifetime,
         Location? registrationLocation,
-        bool isScopeMember,
+        MemberLocation memberLocation,
         ISymbol factoryMember,
         int reverseIndex,
         ServiceResolutionContext context)
@@ -571,7 +571,7 @@ internal class ServiceProviderBuilder
 
         return new FactoryCallSite(serviceType,
             factoryMember,
-            isScopeMember: isScopeMember,
+            memberLocation: memberLocation,
             parameters.ToArray(),
             namedParameters.ToArray(),
             lifetime,
@@ -791,7 +791,7 @@ internal class ServiceProviderBuilder
             {
                 ProcessModule(serviceProviderType, registrations, innerModuleType, attributeData);
             }
-            else if (TryCreateRegistration(serviceProviderType, attributeData, _knownTypes, out var registration))
+            else if (TryCreateRegistration(serviceProviderType, null, attributeData, _knownTypes, out var registration))
             {
                 registrations.Add(registration);
             }
@@ -838,7 +838,7 @@ internal class ServiceProviderBuilder
             {
                 ProcessModule(serviceProviderType, registrations, innerModuleType, importAttributeData);
             }
-            else if (TryCreateRegistration(serviceProviderType, attributeData, knownTypes, out var registration))
+            else if (TryCreateRegistration(serviceProviderType, moduleType, attributeData, knownTypes, out var registration))
             {
                 registrations.Add(registration);
             }
@@ -878,7 +878,9 @@ internal class ServiceProviderBuilder
         return false;
     }
 
-    private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData,
+    private bool TryCreateRegistration(ITypeSymbol serviceProviderType,
+        ITypeSymbol? moduleType,
+        AttributeData attributeData,
         KnownTypes knownTypes, [NotNullWhen(true)] out ServiceRegistration? registration)
     {
         registration = null;
@@ -893,7 +895,7 @@ internal class ServiceProviderBuilder
                  knownTypes.GenericTransientAttributeType) ||
              SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom,
                  knownTypes.Generic2TransientAttributeType)) &&
-            TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Transient, out registration))
+            TryCreateRegistration(serviceProviderType, moduleType, attributeData, ServiceLifetime.Transient, out registration))
         {
             return true;
         }
@@ -903,7 +905,7 @@ internal class ServiceProviderBuilder
                  knownTypes.GenericSingletonAttribute) ||
              SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom,
                  knownTypes.Generic2SingletonAttribute)) &&
-            TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Singleton, out registration))
+            TryCreateRegistration(serviceProviderType, moduleType, attributeData, ServiceLifetime.Singleton, out registration))
         {
             return true;
         }
@@ -913,7 +915,7 @@ internal class ServiceProviderBuilder
                  knownTypes.GenericScopedAttribute) ||
              SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass.ConstructedFrom,
                  knownTypes.Generic2ScopedAttribute)) &&
-            TryCreateRegistration(serviceProviderType, attributeData, ServiceLifetime.Scoped, out registration))
+            TryCreateRegistration(serviceProviderType, moduleType, attributeData, ServiceLifetime.Scoped, out registration))
         {
             return true;
         }
@@ -921,8 +923,12 @@ internal class ServiceProviderBuilder
         return false;
     }
 
-    private bool TryCreateRegistration(ITypeSymbol serviceProviderType, AttributeData attributeData,
-        ServiceLifetime serviceLifetime, [NotNullWhen(true)] out ServiceRegistration? registration)
+    private bool TryCreateRegistration(
+        ITypeSymbol serviceProviderType,
+        ITypeSymbol? moduleType,
+        AttributeData attributeData,
+        ServiceLifetime serviceLifetime,
+        [NotNullWhen(true)] out ServiceRegistration? registration)
     {
         registration = null;
 
@@ -968,28 +974,30 @@ internal class ServiceProviderBuilder
         }
 
         ISymbol? instanceMember = null;
+        MemberLocation memberLocation = default;
         if (instanceMemberName != null &&
             !TryFindMember(serviceProviderType,
+                moduleType,
                 attributeData,
                 instanceMemberName,
                 KnownTypes.InstanceAttributePropertyName,
                 includeScope: false,
                 out instanceMember,
-                out var _))
+                out memberLocation))
         {
             return false;
         }
 
         ISymbol? factoryMember = null;
-        bool isScopeMember = false;
         if (factoryMemberName != null &&
             !TryFindMember(serviceProviderType,
+                moduleType,
                 attributeData,
                 factoryMemberName,
                 KnownTypes.FactoryAttributePropertyName,
                 includeScope: serviceLifetime == ServiceLifetime.Scoped,
                 out factoryMember,
-                out isScopeMember))
+                out memberLocation))
         {
             return false;
         }
@@ -1001,21 +1009,22 @@ internal class ServiceProviderBuilder
             instanceMember,
             factoryMember,
             attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
-            isScopeMember);
+            memberLocation);
 
         return true;
     }
 
     private bool TryFindMember(ITypeSymbol typeSymbol,
+        ITypeSymbol? moduleType,
         AttributeData attributeData,
         string memberName,
         string parameterName,
         bool includeScope,
-        [NotNullWhen(true)] out ISymbol? instanceMember,
-        out bool isScopeMember)
+        [NotNullWhen(true)] out ISymbol? member,
+        out MemberLocation memberLocation)
     {
-        instanceMember = null;
-        isScopeMember = false;
+        member = null;
+        memberLocation = MemberLocation.Root;
 
         List<ISymbol> members = new(typeSymbol.GetMembers(memberName));
 
@@ -1025,6 +1034,12 @@ internal class ServiceProviderBuilder
             {
                 members.AddRange(scopeType.GetMembers(memberName));
             }
+        }
+
+        // If the property is not found on the type look for it in the moduke
+        if (members.Count == 0 && moduleType != null)
+        {
+            members.AddRange(moduleType.GetMembers(memberName));
         }
 
         if (members.Count == 0)
@@ -1049,8 +1064,15 @@ internal class ServiceProviderBuilder
             return false;
         }
 
-        instanceMember = members[0];
-        isScopeMember = SymbolEqualityComparer.Default.Equals(instanceMember.ContainingType, typeSymbol);
+        member = members[0];
+        if (SymbolEqualityComparer.Default.Equals(member.ContainingType, typeSymbol))
+        {
+            memberLocation = MemberLocation.Scope;
+        }
+        else if (SymbolEqualityComparer.Default.Equals(member.ContainingType, moduleType))
+        {
+            memberLocation = MemberLocation.Module;
+        }
         return true;
     }
 
