@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
-using JabTests;
 using Xunit;
 
 using Jab;
-using Microsoft.CodeAnalysis.Operations;
 
 namespace JabTests
 {
