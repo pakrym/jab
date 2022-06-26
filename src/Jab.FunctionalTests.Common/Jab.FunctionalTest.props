@@ -8,7 +8,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>preview</LangVersion>
     <RootNamespace>JabTests</RootNamespace>
-    <DefineConstants>$(DefineConstants);JAB_PREVIEW</DefineConstants>
   </PropertyGroup>
 
   <Target Name="_SetProperties">
@@ -32,5 +31,11 @@
   <ItemGroup Condition="'$(FunctionalTestPackageVersion)' == ''" >
     <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
+
+  <Target Name="DefineJabPreview" BeforeTargets="CoreCompile" Condition="'$(FunctionalTestPackageVersion)' == ''">
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);JAB_PREVIEW</DefineConstants>
+    </PropertyGroup>
+  </Target>
 
 </Project>

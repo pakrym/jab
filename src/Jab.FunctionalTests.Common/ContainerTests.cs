@@ -1108,7 +1108,7 @@ namespace JabTests
         }
         #endregion
 
-#if JAB_PREVIEW
+#if NET6_0_OR_GREATER
         [Fact]
         public void CanUseGenericAttributes()
         {
@@ -1144,8 +1144,6 @@ namespace JabTests
         [Transient<IService3, ServiceImplementation>]
         internal partial class CanUseGenericAttributesContainer { }
 #endif
-        
-        
         
         [Fact]
         public void CanUseModuleWithStaticFactory()
