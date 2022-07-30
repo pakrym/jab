@@ -8,6 +8,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>preview</LangVersion>
     <RootNamespace>JabTests</RootNamespace>
+	<IsTestProject Condition="'$(TargetFramework)' == 'netstandard2.0'">false</IsTestProject>
   </PropertyGroup>
 
   <Target Name="_SetProperties">
