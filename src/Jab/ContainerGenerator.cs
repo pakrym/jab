@@ -320,7 +320,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         }
         catch (Exception e)
         {
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.UnexpectedErrorDescriptor, Location.None, e.ToString()));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.UnexpectedErrorDescriptor, Location.None, e.ToString().Replace(Environment.NewLine, " ")));
         }
     }
 
@@ -388,43 +388,47 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
 
         codeWriter.Line();
 
-        using (codeWriter.Scope($"public async {typeof(ValueTask)} DisposeAsync()"))
+        if (root.KnownTypes.IAsyncDisposableType != null)
         {
-            using (codeWriter.Scope($"{typeof(ValueTask)} TryDispose(object? value)"))
+            using (codeWriter.Scope($"public async {typeof(ValueTask)} DisposeAsync()"))
             {
-                using (codeWriter.Scope($"if (value is System.IAsyncDisposable asyncDisposable)"))
+                using (codeWriter.Scope($"{typeof(ValueTask)} TryDispose(object? value)"))
                 {
-                    codeWriter.Line($"return asyncDisposable.DisposeAsync();");
+                    using (codeWriter.Scope($"if (value is System.IAsyncDisposable asyncDisposable)"))
+                    {
+                        codeWriter.Line($"return asyncDisposable.DisposeAsync();");
+                    }
+                    using (codeWriter.Scope($"else if (value is {typeof(IDisposable)} disposable)"))
+                    {
+                        codeWriter.Line($"disposable.Dispose();");
+                    }
+                    codeWriter.Line($"return default;");
                 }
-                using (codeWriter.Scope($"else if (value is {typeof(IDisposable)} disposable)"))
+                codeWriter.Line();
+
+                foreach (var rootService in root.RootCallSites)
                 {
-                    codeWriter.Line($"disposable.Dispose();");
+                    if (rootService.IsDisposable == false ||
+                        (rootService.Lifetime == ServiceLifetime.Singleton && isScoped) ||
+                        (rootService.Lifetime == ServiceLifetime.Scoped && !isScoped) ||
+                        rootService.Lifetime == ServiceLifetime.Transient) continue;
+
+                    codeWriter.Line($"await TryDispose({GetCacheLocation(rootService)});");
                 }
-                codeWriter.Line($"return default;");
-            }
-            codeWriter.Line();
 
-            foreach (var rootService in root.RootCallSites)
-            {
-                if (rootService.IsDisposable == false ||
-                    (rootService.Lifetime == ServiceLifetime.Singleton && isScoped) ||
-                    (rootService.Lifetime == ServiceLifetime.Scoped && !isScoped) ||
-                    rootService.Lifetime == ServiceLifetime.Transient) continue;
+                if (!isScoped)
+                {
+                    codeWriter.Line($"await TryDispose(_rootScope);");
+                }
 
-                codeWriter.Line($"await TryDispose({GetCacheLocation(rootService)});");
-            }
-
-            if (!isScoped)
-            {
-                codeWriter.Line($"await TryDispose(_rootScope);");
-            }
-
-            using (codeWriter.Scope($"if (_disposables != null)"))
-            using (codeWriter.Scope($"foreach (var service in _disposables)"))
-            {
-                codeWriter.Line($"await TryDispose(service);");
+                using (codeWriter.Scope($"if (_disposables != null)"))
+                using (codeWriter.Scope($"foreach (var service in _disposables)"))
+                {
+                    codeWriter.Line($"await TryDispose(service);");
+                }
             }
         }
+
 
         codeWriter.Line();
     }
@@ -432,7 +436,12 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
     private static void WriteInterfaces(CodeWriter codeWriter, ServiceProvider root, bool isScope)
     {
         codeWriter.Line($" : {typeof(IDisposable)},");
-        codeWriter.Line($"   IAsyncDisposable,");
+
+        if (root.KnownTypes.IAsyncDisposableType != null)
+        {
+            codeWriter.Line($"   {root.KnownTypes.IAsyncDisposableType},");
+        }
+
         codeWriter.Line($"   {typeof(IServiceProvider)},");
 
         if (!isScope && root.KnownTypes.IServiceScopeFactoryType != null)

@@ -2,12 +2,13 @@
 
   <PropertyGroup>
     <FunctionalTestTargetFrameworks Condition="'$(FunctionalTestTargetFrameworks)' != ''">$(FunctionalTestTargetFrameworks)</FunctionalTestTargetFrameworks>
-    <FunctionalTestTargetFrameworks>netcoreapp3.1;net5.0;net6.0</FunctionalTestTargetFrameworks>
+    <FunctionalTestTargetFrameworks>netcoreapp3.1;net5.0;net6.0;netstandard2.0</FunctionalTestTargetFrameworks>
     <IsPackable>false</IsPackable>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>preview</LangVersion>
     <RootNamespace>JabTests</RootNamespace>
+    <IsTestProject Condition="'$(TargetFramework)' == 'netstandard2.0'">false</IsTestProject>
   </PropertyGroup>
 
   <Target Name="_SetProperties">

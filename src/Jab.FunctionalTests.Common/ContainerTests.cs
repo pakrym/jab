@@ -540,6 +540,7 @@ namespace JabTests
         [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
         internal partial class DisposingScopeDisposesServicesContainer { }
 
+#if NETCOREAPP
         [Fact]
         public async Task DisposingScopeDisposesAsyncServices()
         {
@@ -564,6 +565,7 @@ namespace JabTests
         [ServiceProvider]
         [Scoped(typeof(IService), typeof(AsyncDisposableServiceImplementation))]
         internal partial class DisposingScopeDisposesAsyncServicesContainer { }
+#endif
 
         [Fact]
         public void DisposingProviderDisposesRootScopedServices()
@@ -595,6 +597,7 @@ namespace JabTests
         [Singleton(typeof(IService), typeof(DisposableServiceImplementation))]
         internal partial class DisposingProviderDisposesRootSingletonServicesContainer { }
 
+#if NETCOREAPP
         [Fact]
         public async Task DisposingProviderDisposesRootSingAsyncServices()
         {
@@ -610,7 +613,9 @@ namespace JabTests
         [ServiceProvider]
         [Scoped(typeof(IService), typeof(AsyncDisposableServiceImplementation))]
         internal partial class DisposingProviderDisposesRootSingAsyncServicesContainer { }
+#endif
 
+#if NETCOREAPP
         [Fact]
         public async Task DisposingProviderDisposesAllSingletonEnumerableServices()
         {
@@ -631,6 +636,7 @@ namespace JabTests
         [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
         [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
         internal partial class DisposingProviderDisposesAllSingletonEnumerableServicesContainer { }
+#endif
 
         [Fact]
         public void DisposingProviderDisposesTransients()
@@ -894,7 +900,7 @@ namespace JabTests
         {
         }
 
-        #region Non-generic member factory with parameters
+#region Non-generic member factory with parameters
         [Fact]
         public void CanUseSingletonFactoryWithParameters()
         {
@@ -999,9 +1005,9 @@ namespace JabTests
                 return new AnotherServiceImplementation();
             }
         }
-        #endregion
+#endregion
 
-        #region Non-generic static factory with parameters
+#region Non-generic static factory with parameters
         [Fact]
         public void CanUseSingletonStaticFactoryWithParameters()
         {
@@ -1144,7 +1150,8 @@ namespace JabTests
         [Transient<IService3, ServiceImplementation>]
         internal partial class CanUseGenericAttributesContainer { }
 #endif
-        
+
+#if NETCOREAPP
         [Fact]
         public void CanUseModuleWithStaticFactory()
         {
@@ -1166,7 +1173,9 @@ namespace JabTests
             static IService Instance => new ServiceImplementation();
             static IService<T> Factory<T>(T param) => new ServiceImplementation<T>(param);
         }
-        
+#endif
+
+#if NETCOREAPP
         [Fact]
         public void PrefersModuleMembers()
         {
@@ -1183,6 +1192,7 @@ namespace JabTests
             static IService Instance => throw new Exception();
             static IService<T> Factory<T>(T param) => throw new Exception();
         }
+#endif
     }
 }
 
