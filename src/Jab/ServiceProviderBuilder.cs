@@ -40,7 +40,7 @@ internal class KnownTypes
     public const string FactoryAttributePropertyName = "Factory";
     public const string RootServicesAttributePropertyName = "RootServices";
 
-    private const string IAsyncDisposableMetadataName = "System.Generic.IAsyncDisposable`1";
+    private const string IAsyncDisposableMetadataName = "System.IAsyncDisposable";
     private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
     private const string IServiceProviderMetadataName = "System.IServiceProvider";
     private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";

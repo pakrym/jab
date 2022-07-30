@@ -1112,7 +1112,7 @@ namespace JabTests
                 return new AnotherServiceImplementation();
             }
         }
-#endregion
+        #endregion
 
 #if NET6_0_OR_GREATER
         [Fact]
@@ -1150,7 +1150,8 @@ namespace JabTests
         [Transient<IService3, ServiceImplementation>]
         internal partial class CanUseGenericAttributesContainer { }
 #endif
-        
+
+#if NETCOREAPP
         [Fact]
         public void CanUseModuleWithStaticFactory()
         {
@@ -1172,7 +1173,9 @@ namespace JabTests
             static IService Instance => new ServiceImplementation();
             static IService<T> Factory<T>(T param) => new ServiceImplementation<T>(param);
         }
-        
+#endif
+
+#if NETCOREAPP
         [Fact]
         public void PrefersModuleMembers()
         {
@@ -1189,6 +1192,7 @@ namespace JabTests
             static IService Instance => throw new Exception();
             static IService<T> Factory<T>(T param) => throw new Exception();
         }
+#endif
     }
 }
 
