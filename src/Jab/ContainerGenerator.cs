@@ -74,14 +74,13 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         {
             switch (memberLocation)
             {
+                case MemberLocation.Module:
                 case MemberLocation.Root:
                     codeWriter.Append($"this.");
                     break;
                 case MemberLocation.Scope:
                     codeWriter.Append($"{rootReference}.");
                     break;
-                case MemberLocation.Module:
-                    throw new InvalidOperationException("Instance module properties are not supported");
             }
         }
 

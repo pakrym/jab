@@ -1193,6 +1193,29 @@ namespace JabTests
             static IService<T> Factory<T>(T param) => throw new Exception();
         }
 #endif
+
+        [Fact]
+        public void SupportsInstancePropertyFactoriesOnModules()
+        {
+            SupportsInstancePropertyFactoriesOnModulesContainer c = new();
+
+            var service = c.GetService<IService>();
+            Assert.IsType<ServiceImplementation>(service);
+        }
+
+        [ServiceProviderModule]
+        [Singleton(typeof(IService), Factory = nameof(Instance))]
+        interface IModuleWithInstanceFactory
+        {
+            Func<IService> Instance { get; }
+        }
+
+        [ServiceProvider]
+        [Import(typeof(IModuleWithInstanceFactory))]
+        internal partial class SupportsInstancePropertyFactoriesOnModulesContainer
+        {
+            Func<IService> Instance = () => new ServiceImplementation();
+        }
     }
 }
 
