@@ -1,8 +1,8 @@
 ﻿<Project>
 
   <PropertyGroup>
-    <FunctionalTestTargetFrameworks Condition="'$(FunctionalTestTargetFrameworks)' != ''">$(FunctionalTestTargetFrameworks)</FunctionalTestTargetFrameworks>
-    <FunctionalTestTargetFrameworks>netcoreapp3.1;net6.0;net7.0;netstandard2.0;net472</FunctionalTestTargetFrameworks>
+    <FunctionalTestTargetFrameworks>netcoreapp3.1;net6.0;net7.0;netstandard2.0</FunctionalTestTargetFrameworks>
+    <FunctionalTestTargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))" >$(FunctionalTestTargetFrameworks);net472</FunctionalTestTargetFrameworks>
     <IsPackable>false</IsPackable>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
