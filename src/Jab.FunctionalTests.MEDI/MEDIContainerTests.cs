@@ -1,3 +1,4 @@
+using System;
 using Jab;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -19,6 +20,14 @@ namespace JabTests
             Assert.Same(factory, c);
             Assert.Same(scopeProvider, c);
             Assert.Same(scope, scope.ServiceProvider);
+        }
+
+        [Fact]
+        public void CanCreateScopeUsingExtensionMethod()
+        {
+            CanResolveIServiceScopeFactoryContainer c = new();
+            var scope = ((IServiceProvider)c).CreateScope();
+            Assert.IsType<CanResolveIServiceScopeFactoryContainer.Scope>(scope);
         }
 
         [ServiceProvider]
