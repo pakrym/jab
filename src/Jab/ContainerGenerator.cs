@@ -10,7 +10,10 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         if (serviceCallSite is ErrorCallSite errorCallSite)
         {
             codeWriter.Line($"// There was an error while building the container, please refer to the compiler diagnostics");
-            codeWriter.Line($"// {string.Join(Environment.NewLine, errorCallSite.Diagnostic.Select(d => d.ToString()))}");
+            foreach (var diagnostic in errorCallSite.Diagnostic)
+            {
+                codeWriter.Line($"// {diagnostic.ToString()}");
+            }
             codeWriter.Line($"return default!;");
             return;
         }
