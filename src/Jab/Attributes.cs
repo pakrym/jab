@@ -94,7 +94,7 @@ namespace Jab
         }
     }
 
-#if JAB_PREVIEW
+#if GENERIC_ATTRIBUTES
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
     internal class ImportAttribute<TModule> : ImportAttribute
     {
@@ -112,7 +112,7 @@ namespace Jab
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
-    internal class TransientAttribute<TService, TImpl> : TransientAttribute
+    internal class TransientAttribute<TService, TImpl> : TransientAttribute where TImpl: TService
     {
         public TransientAttribute() : base(typeof(TService), typeof(TImpl))
         {
@@ -128,7 +128,7 @@ namespace Jab
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
-    internal class ScopedAttribute<TService, TImpl> : ScopedAttribute
+    internal class ScopedAttribute<TService, TImpl> : ScopedAttribute where TImpl: TService
     {
         public ScopedAttribute() : base(typeof(TService), typeof(TImpl))
         {
@@ -145,7 +145,7 @@ namespace Jab
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
-    internal class SingletonAttribute<TService, TImpl> : SingletonAttribute
+    internal class SingletonAttribute<TService, TImpl> : SingletonAttribute where TImpl: TService
     {
         public SingletonAttribute() : base(typeof(TService), typeof(TImpl))
         {

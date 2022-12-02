@@ -35,7 +35,7 @@
 
   <Target Name="DefineJabPreview" BeforeTargets="CoreCompile" Condition="'$(FunctionalTestPackageVersion)' == ''">
     <PropertyGroup>
-      <DefineConstants>$(DefineConstants);JAB_PREVIEW</DefineConstants>
+      <DefineConstants>$(DefineConstants);GENERIC_ATTRIBUTES</DefineConstants>
     </PropertyGroup>
   </Target>
 
