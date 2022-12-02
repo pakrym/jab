@@ -110,17 +110,26 @@ IService service = c.GetService<IService>();
 ### Factories
 
 Sometimes it's useful to provide a custom way to create a service instance without using the automatic construction selection.
-To do this define a method in the container declaration and use the `Factory` property of the `SingletonAttribute` or `TransientAttribute` to register the service:
+To do this define a method or a `Func<>` member in the container declaration and use the `Factory` property of the `SingletonAttribute`,  `ScopedAttribute`, or `TransientAttribute` to register the service:
 
 ```C#
+
+[ServiceProviderModule]
+[Transient(typeof(IAnotherService), Factory = nameof(AnotherServiceCreator))]
+public interface IMyModuleProvider {
+    static Func<IAnotherService> AnotherServiceCreator = () => new AnotherService();
+}
+
 [ServiceProvider]
 [Transient(typeof(IService), Factory = nameof(MyServiceFactory))]
+[Import(typeof(IMyModuleProvider))]
 internal partial class MyServiceProvider {
     public IService MyServiceFactory() => new ServiceImplementation();
 }
 
 MyServiceProvider c = new MyServiceProvider();
 IService service = c.GetService<IService>();
+IAnotherService anotherService = c.GetService<IAnotherService>();
 ```
 
 When using with `TransientAttribute` the factory method would be invoked for every service resolution.
