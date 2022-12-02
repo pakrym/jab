@@ -1,8 +1,9 @@
 ﻿<Project>
 
   <PropertyGroup>
-    <FunctionalTestTargetFrameworks Condition="'$(FunctionalTestTargetFrameworks)' != ''">$(FunctionalTestTargetFrameworks)</FunctionalTestTargetFrameworks>
-    <FunctionalTestTargetFrameworks>netcoreapp3.1;net5.0;net6.0;netstandard2.0</FunctionalTestTargetFrameworks>
+    <DefaultFunctionalTestTargetFrameworks>netcoreapp3.1;net6.0;net7.0;netstandard2.0</DefaultFunctionalTestTargetFrameworks>
+    <DefaultFunctionalTestTargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))" >$(DefaultFunctionalTestTargetFrameworks);net472</DefaultFunctionalTestTargetFrameworks>
+    <FunctionalTestTargetFrameworks Condition="'$(FunctionalTestTargetFrameworks)' == ''">$(DefaultFunctionalTestTargetFrameworks)</FunctionalTestTargetFrameworks>
     <IsPackable>false</IsPackable>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -35,7 +36,7 @@
 
   <Target Name="DefineJabPreview" BeforeTargets="CoreCompile" Condition="'$(FunctionalTestPackageVersion)' == ''">
     <PropertyGroup>
-      <DefineConstants>$(DefineConstants);JAB_PREVIEW</DefineConstants>
+      <DefineConstants>$(DefineConstants);GENERIC_ATTRIBUTES</DefineConstants>
     </PropertyGroup>
   </Target>
 

@@ -145,14 +145,13 @@ When the scope is disposed all `IDisposable` and `IAsyncDisposable` services tha
 
 ### Generic registration attributes 
 
-You can use generic attributes to register services if your project targets `net6.0` and has `LangVersion` set to preview.
+You can use generic attributes to register services if your project targets `net7.0` or `net6.0` and has `LangVersion` set to preview.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0</TargetFrameworks>
-    <LangVersion>preview</TargetFrameworks>
+    <TargetFrameworks>net7.0</TargetFrameworks>
   </PropertyGroup>
 
 </Project>
