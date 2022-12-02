@@ -1,12 +1,8 @@
 <Project>
     <PropertyGroup>
-<<<<<<< HEAD
-        <DefineConstants Condition="'$(TargetFramework)' == 'net6.0' AND '$(LangVersion)'=='preview'" >$(DefineConstants);GENERIC_ATTRIBUTES</DefineConstants>
-=======
         <DefineConstants Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND
 		                            ($([MSBuild]::VersionGreaterThanOrEquals($(_TargetFrameworkVersionWithoutV), '7.0')) OR
-									($([MSBuild]::VersionGreaterThanOrEquals($(_TargetFrameworkVersionWithoutV), '6.0')) AND '$(LangVersion)'=='preview'))">$(DefineConstants);JAB_PREVIEW</DefineConstants>
->>>>>>> origin/main
+									($([MSBuild]::VersionGreaterThanOrEquals($(_TargetFrameworkVersionWithoutV), '6.0')) AND '$(LangVersion)'=='preview'))">$(DefineConstants);GENERIC_ATTRIBUTES</DefineConstants>
     </PropertyGroup>
     <Target Name="_JabMultiTargetRoslyn3"
             Condition="'$(SupportsRoslynComponentVersioning)' != 'true'"

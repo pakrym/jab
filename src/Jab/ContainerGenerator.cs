@@ -359,11 +359,6 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                 codeWriter.Append($" || value is {root.KnownTypes.IAsyncDisposableType}");
             }
             codeWriter.Line($")");
-<<<<<<< HEAD
-            codeWriter.Line($"if (value is {typeof(IDisposable)} || value is IAsyncDisposable)");
-
-=======
->>>>>>> origin/main
             using (codeWriter.Scope($"lock (this)"))
             {
                 codeWriter.Line($"(_disposables ??= new {typeof(List<object>)}()).Add(value);");
