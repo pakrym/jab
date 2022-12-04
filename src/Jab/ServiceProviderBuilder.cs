@@ -210,6 +210,10 @@ internal class ServiceProviderBuilder
         {
             rootServices.Add(new(_knownTypes.IServiceScopeFactoryType, null));
         }
+        if (_knownTypes.IServiceProviderIsServiceType != null)
+        {
+            rootServices.Add(new(_knownTypes.IServiceProviderIsServiceType, null));
+        }
 
         foreach (var rootService in rootServices)
         {
@@ -314,6 +318,13 @@ internal class ServiceProviderBuilder
         if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceScopeFactoryType))
         {
             var callSite = new ScopeFactoryCallSite(serviceType);
+            context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
+            return callSite;
+        }
+
+        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceProviderIsServiceType))
+        {
+            var callSite = new ServiceProviderIsServiceCallSite(serviceType);
             context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
             return callSite;
         }

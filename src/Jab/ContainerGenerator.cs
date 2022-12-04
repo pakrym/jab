@@ -169,6 +169,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             case ServiceProviderCallSite:
                 valueCallback(codeWriter, w => w.AppendRaw("this"));
                 break;
+            case ServiceProviderIsServiceCallSite:
             case ScopeFactoryCallSite:
                 valueCallback(codeWriter, w => w.AppendRaw(rootReference));
                 break;
