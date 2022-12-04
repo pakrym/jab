@@ -169,6 +169,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             case ServiceProviderCallSite:
                 valueCallback(codeWriter, w => w.AppendRaw("this"));
                 break;
+            case ServiceProviderIsServiceCallSite:
             case ScopeFactoryCallSite:
                 valueCallback(codeWriter, w => w.AppendRaw(rootReference));
                 break;
@@ -250,6 +251,29 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                         {
                             codeWriter.Line($"{root.KnownTypes.IServiceScopeType} {root.KnownTypes.IServiceScopeFactoryType}.CreateScope() => this.CreateScope();");
                             codeWriter.Line();
+                        }
+
+                        if (root.KnownTypes.IServiceProviderIsServiceType != null)
+                        {
+                            using var _ = codeWriter.Scope($"bool {root.KnownTypes.IServiceProviderIsServiceType}.IsService(Type service) => ", "", "");
+                            bool first = true;
+                            foreach (var rootService in root.RootCallSites)
+                            {
+                                if (first)
+                                {
+                                    first = false;
+                                }
+                                else
+                                {
+                                    codeWriter.Line($" ||");
+                                }
+                                codeWriter.Append($"typeof({rootService.ServiceType}) == service");
+                            }
+                            if (first)
+                            {
+                                codeWriter.Append($"false");
+                            }
+                            codeWriter.Line($";");
                         }
 
                         codeWriter.Append($"public partial class Scope");
@@ -454,6 +478,11 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         if (!isScope && root.KnownTypes.IServiceScopeFactoryType != null)
         {
             codeWriter.Line($"   {root.KnownTypes.IServiceScopeFactoryType},");
+        }
+
+        if (!isScope && root.KnownTypes.IServiceProviderIsServiceType != null)
+        {
+            codeWriter.Line($"   {root.KnownTypes.IServiceProviderIsServiceType},");
         }
 
         if (isScope && root.KnownTypes.IServiceScopeType != null)

@@ -48,6 +48,9 @@ internal class KnownTypes
     private const string IServiceScopeFactoryMetadataName =
         "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
 
+    private const string IServiceProviderIsServiceMetadataName =
+        "Microsoft.Extensions.DependencyInjection.IServiceProviderIsService";
+
     public INamedTypeSymbol IEnumerableType { get; }
     public INamedTypeSymbol IServiceProviderType { get; }
     public INamedTypeSymbol CompositionRootAttributeType { get; }
@@ -69,6 +72,7 @@ internal class KnownTypes
     public INamedTypeSymbol? IAsyncDisposableType { get; }
     public INamedTypeSymbol? IServiceScopeType { get; }
     public INamedTypeSymbol? IServiceScopeFactoryType { get; }
+    public INamedTypeSymbol? IServiceProviderIsServiceType { get; }
 
     public KnownTypes(Compilation compilation, IAssemblySymbol assemblySymbol)
     {
@@ -87,6 +91,7 @@ internal class KnownTypes
         IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
         IAsyncDisposableType = compilation.GetTypeByMetadataName(IAsyncDisposableMetadataName);
         IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
+        IServiceProviderIsServiceType = compilation.GetTypeByMetadataName(IServiceProviderIsServiceMetadataName);
 
         CompositionRootAttributeType =
             GetTypeByMetadataNameOrThrow(assemblySymbol, CompositionRootAttributeMetadataName);
@@ -205,6 +210,10 @@ internal class ServiceProviderBuilder
         {
             rootServices.Add(new(_knownTypes.IServiceScopeFactoryType, null));
         }
+        if (_knownTypes.IServiceProviderIsServiceType != null)
+        {
+            rootServices.Add(new(_knownTypes.IServiceProviderIsServiceType, null));
+        }
 
         foreach (var rootService in rootServices)
         {
@@ -309,6 +318,13 @@ internal class ServiceProviderBuilder
         if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceScopeFactoryType))
         {
             var callSite = new ScopeFactoryCallSite(serviceType);
+            context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
+            return callSite;
+        }
+
+        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceProviderIsServiceType))
+        {
+            var callSite = new ServiceProviderIsServiceCallSite(serviceType);
             context.CallSiteCache[new CallSiteCacheKey(serviceType)] = callSite;
             return callSite;
         }
