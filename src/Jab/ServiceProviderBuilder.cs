@@ -48,6 +48,9 @@ internal class KnownTypes
     private const string IServiceScopeFactoryMetadataName =
         "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
 
+    private const string IServiceProviderIsServiceMetadataName =
+        "Microsoft.Extensions.DependencyInjection.IServiceProviderIsService";
+
     public INamedTypeSymbol IEnumerableType { get; }
     public INamedTypeSymbol IServiceProviderType { get; }
     public INamedTypeSymbol CompositionRootAttributeType { get; }
@@ -69,6 +72,7 @@ internal class KnownTypes
     public INamedTypeSymbol? IAsyncDisposableType { get; }
     public INamedTypeSymbol? IServiceScopeType { get; }
     public INamedTypeSymbol? IServiceScopeFactoryType { get; }
+    public INamedTypeSymbol? IServiceProviderIsServiceType { get; }
 
     public KnownTypes(Compilation compilation, IAssemblySymbol assemblySymbol)
     {
@@ -87,6 +91,7 @@ internal class KnownTypes
         IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
         IAsyncDisposableType = compilation.GetTypeByMetadataName(IAsyncDisposableMetadataName);
         IServiceScopeFactoryType = compilation.GetTypeByMetadataName(IServiceScopeFactoryMetadataName);
+        IServiceProviderIsServiceType = compilation.GetTypeByMetadataName(IServiceProviderIsServiceMetadataName);
 
         CompositionRootAttributeType =
             GetTypeByMetadataNameOrThrow(assemblySymbol, CompositionRootAttributeMetadataName);
