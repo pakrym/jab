@@ -199,7 +199,14 @@ internal class ServiceProviderBuilder
                 new ServiceResolutionContext(description, callSites, registration.ServiceType, registration.Location));
         }
 
-        foreach (var rootService in description.RootServices)
+        List<RootService> rootServices = new(description.RootServices);
+        rootServices.Add(new(_knownTypes.IServiceProviderType, null));
+        if (_knownTypes.IServiceScopeFactoryType != null)
+        {
+            rootServices.Add(new(_knownTypes.IServiceScopeFactoryType, null));
+        }
+
+        foreach (var rootService in rootServices)
         {
             var serviceType = rootService.Service;
             var callSite = GetCallSite(serviceType,
