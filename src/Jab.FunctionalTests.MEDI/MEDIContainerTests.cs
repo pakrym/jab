@@ -25,13 +25,18 @@ namespace JabTests
         [Fact]
         public void CanCreateScopeUsingExtensionMethod()
         {
-            CanResolveIServiceScopeFactoryContainer c = new();
+            CanCreateScopeContainer c = new();
             var scope = ((IServiceProvider)c).CreateScope();
-            Assert.IsType<CanResolveIServiceScopeFactoryContainer.Scope>(scope);
+            Assert.IsType<CanCreateScopeContainer.Scope>(scope);
         }
 
         [ServiceProvider]
         internal partial class CanResolveIServiceScopeFactoryContainer
+        {
+        }
+
+        [ServiceProvider]
+        internal partial class CanCreateScopeContainer
         {
         }
     }
