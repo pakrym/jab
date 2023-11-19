@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -63,8 +64,10 @@ namespace JabTests
         [Fact]
         public void CanUseSingletonInstance()
         {
-            CanUseSingletonInstanceContainer c = new();
-            c.MyIServiceInstance = new AnotherServiceImplementation();
+            CanUseSingletonInstanceContainer c = new()
+            {
+                MyIServiceInstance = new AnotherServiceImplementation()
+            };
             var implementationWithParameter = Assert.IsType<ServiceImplementationWithParameter>(c.GetService<IService>());
             var anotherImplementation = c.GetService<IAnotherService>();
 
@@ -78,9 +81,9 @@ namespace JabTests
         [Singleton(typeof(IAnotherService), Instance = "MyIServiceInstance")]
         internal partial class CanUseSingletonInstanceContainer
         {
-            public IAnotherService MyIServiceInstance { get; set; }
+            public required IAnotherService MyIServiceInstance { get; set; }
         }
-        
+
         [Fact]
         public void CanUseStaticSingletonInstance()
         {
@@ -218,12 +221,14 @@ namespace JabTests
         [Fact]
         public void CanUseFuncFactory()
         {
-            CanUseFuncFactoryContainer c = new();
             int invocationCount = 0;
-            c.Factory = (IAnotherService s) =>
+            CanUseFuncFactoryContainer c = new()
             {
-                invocationCount++;
-                return new ServiceImplementation<IAnotherService>(s);
+                Factory = (IAnotherService s) =>
+                {
+                    invocationCount++;
+                    return new ServiceImplementation<IAnotherService>(s);
+                }
             };
             var service = c.GetService<IService<IAnotherService>>();
             Assert.NotNull(service.InnerService);
@@ -236,7 +241,7 @@ namespace JabTests
         internal partial class CanUseFuncFactoryContainer
         {
             public delegate IService<IAnotherService> FactoryDelegate(IAnotherService s);
-            public FactoryDelegate Factory;
+            public required FactoryDelegate Factory;
         }
 
         [Fact]
@@ -343,8 +348,10 @@ namespace JabTests
         [Fact]
         public void CanResolveEnumerableOfMixedOpenGenericService()
         {
-            CanResolveEnumerableOfMixedOpenGenericServiceContainer c = new();
-            c.Instance = new ServiceImplementation<IAnotherService>(new AnotherServiceImplementation());
+            CanResolveEnumerableOfMixedOpenGenericServiceContainer c = new()
+            {
+                Instance = new ServiceImplementation<IAnotherService>(new AnotherServiceImplementation())
+            };
 
             var services = c.GetService<IEnumerable<IService<IAnotherService>>>();
             var array = Assert.IsType<IService<IAnotherService>[]>(services);
@@ -358,7 +365,7 @@ namespace JabTests
         [Transient(typeof(IAnotherService), typeof(AnotherServiceImplementation))]
         internal partial class CanResolveEnumerableOfMixedOpenGenericServiceContainer
         {
-            public IService<IAnotherService> Instance { get; set; }
+            public required IService<IAnotherService> Instance { get; set; }
         }
 
         [Fact]
@@ -1158,13 +1165,14 @@ namespace JabTests
             CanUseModuleWithStaticFactoryContainer c = new();
 
             var service = c.GetService<IService<IService>>();
+            var provider = c.GetService<IService<IServiceProvider>>();
             Assert.IsType<ServiceImplementation>(service.InnerService);
         }
-        
+
         [ServiceProvider]
         [Import(typeof(IModuleWithStaticFactory))]
         internal partial class CanUseModuleWithStaticFactoryContainer { }
-        
+
         [ServiceProviderModule]
         [Singleton(typeof(IService<>), Factory = nameof(Factory))]
         [Singleton(typeof(IService), Instance = nameof(Instance))]
@@ -1183,6 +1191,7 @@ namespace JabTests
 
             var service = c.GetService<IService<IService>>();
             Assert.IsType<ServiceImplementation>(service.InnerService);
+            Assert.IsType<CanUseModuleWithStaticFactoryContainer>(provider.InnerService.GetService((typeof(IService))));
         }
 
         [ServiceProvider]
