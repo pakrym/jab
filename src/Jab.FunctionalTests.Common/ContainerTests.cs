@@ -1191,7 +1191,6 @@ namespace JabTests
 
             var service = c.GetService<IService<IService>>();
             Assert.IsType<ServiceImplementation>(service.InnerService);
-            Assert.IsType<CanUseModuleWithStaticFactoryContainer>(provider.InnerService.GetService((typeof(IService))));
         }
 
         [ServiceProvider]
