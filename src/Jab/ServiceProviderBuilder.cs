@@ -690,9 +690,11 @@ internal class ServiceProviderBuilder
             }
             else
             {
+                bool isNullable = parameterSymbol.Type.NullableAnnotation == NullableAnnotation.Annotated;
                 if (parameterCallSite == null)
                 {
-                    var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
+                    var diagnostic = Diagnostic.Create(
+                        isNullable ? DiagnosticDescriptors.NullableServiceNotRegistered : DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
                         registrationLocation,
                         parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
                         implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
@@ -702,6 +704,17 @@ internal class ServiceProviderBuilder
                 }
                 else
                 {
+                    if (isNullable)
+                    {
+                        var diagnostic = Diagnostic.Create(
+                                DiagnosticDescriptors.NullableServiceRegistered,
+                                registrationLocation,
+                                parameterSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                                implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+
+                        _context.ReportDiagnostic(diagnostic);
+                    }
+
                     callSites.Add(parameterCallSite);
                 }
             }

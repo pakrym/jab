@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 using Verify = JabTests.GeneratorAnalyzerVerifier<Jab.ContainerGenerator>;
@@ -278,6 +279,46 @@ public partial class Container {{}}
                     .CompilerError("JAB0010")
                     .WithLocation(1)
                     .WithArguments("IService"));
+        }
+
+        [Fact]
+        public async Task ProducesJAB0013WhenNullableNonOptionalDependencyNotFound()
+        {
+            string testCode = $@"
+#nullable enable
+interface IDependency {{ }}
+class Service {{ public Service(IDependency? dep) {{}} }}
+[ServiceProvider]
+[{{|#1:Transient(typeof(Service))|}}]
+public partial class Container {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0013")
+                    .WithSeverity(DiagnosticSeverity.Error)
+                    .WithLocation(1)
+                    .WithArguments("IDependency?", "Service"));
+        }
+
+        [Fact]
+        public async Task ProducesJAB0014WhenNullableNonOptionalDependencyFound()
+        {
+            string testCode = $@"
+#nullable enable
+interface IDependency {{ }}
+class Dependency : IDependency {{ }}
+class Service {{ public Service(IDependency? dep) {{}} }}
+[ServiceProvider]
+[{{|#1:Transient(typeof(Service))|}}]
+[{{|#2:Transient(typeof(IDependency), typeof(Dependency))|}}]
+public partial class Container {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0014")
+                    .WithSeverity(DiagnosticSeverity.Warning)
+                    .WithLocation(1)
+                    .WithArguments("IDependency?", "Service"));
         }
     }
 }

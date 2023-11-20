@@ -170,7 +170,7 @@ internal class CodeWriter
     {
         if (!_typeNameCache.TryGetValue(namedTypeSymbol, out var name))
         {
-            name = _typeNameCache[namedTypeSymbol] = namedTypeSymbol.ToDisplayString();
+            name = _typeNameCache[namedTypeSymbol] = namedTypeSymbol.ToDisplayString(NullableFlowState.NotNull);
         }
 
         AppendRaw(name);
