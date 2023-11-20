@@ -23,12 +23,13 @@ jobs:
           3.1.x
           6.0.x
           7.0.x
+          8.0.x
     - name: Build
       run: dotnet build src
     - name: Test
       run: dotnet test src --no-build --verbosity normal
     - name: Pack
-      run: dotnet pack src --no-build --output nuget /p:ReleaseVersion=${{ github.event.inputs.ReleaseVersion }}
+      run: dotnet pack src --output nuget /p:ReleaseVersion=${{ github.event.inputs.ReleaseVersion }}
     - name: Get package version
       shell: pwsh
       id: vars
