@@ -49,7 +49,10 @@ jobs:
     needs: build
     strategy:
       matrix:
-        sdk: [6.0.x, 7.x, 8.x]
+        sdk: 
+          - 6.0.x
+          - 7.x
+          - 8.x
         # https://github.com/microsoft/MSBuildSdks/issues/412
         # sdk: [6.0.x, 7.0.x]
         include:
