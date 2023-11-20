@@ -49,14 +49,16 @@ jobs:
     needs: build
     strategy:
       matrix:
-        sdk: [6.0.x]
+        sdk: [6.0.x, 7.x, 8.x]
         # https://github.com/microsoft/MSBuildSdks/issues/412
         # sdk: [6.0.x, 7.0.x]
         include:
           - sdk: 6.0.x
             tfm: net6.0
-          #- sdk: 7.0.x
-          #  tfm: net7.0
+          - sdk: 7.x
+            tfm: net7.0
+          - sdk: 8.x
+            tfm: net8.0
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
