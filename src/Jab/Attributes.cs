@@ -98,6 +98,18 @@ namespace Jab
         }
     }
 
+
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+    internal class ServiceNameAttribute : Attribute
+    {
+        public string? Name { get; set; }
+
+        public ServiceNameAttribute(string name)
+        {
+            Name = name;
+        }
+    }
+
 #if GENERIC_ATTRIBUTES
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
     internal class ImportAttribute<TModule> : ImportAttribute

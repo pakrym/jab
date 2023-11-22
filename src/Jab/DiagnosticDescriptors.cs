@@ -50,4 +50,11 @@ internal static class DiagnosticDescriptors
         "The factory member has to be a method or have a delegate type",
         "The factory member '{0}' has to be a method of have a delegate type, for service '{1}'", "Usage", DiagnosticSeverity.Error, true);
 
+    public static readonly DiagnosticDescriptor BuiltInServicesAreNotNamed = new("JAB0015",
+        "Built-in provider services are not named",
+        "Built-in service '{0}' is not named bla bla", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor ImplicitIEnumerableNotNamed = new("JAB0015",
+        "Implicit IEnumerable services are not named",
+        "Implicit IEnumerable service '{0}' can not be named", "Usage", DiagnosticSeverity.Error, true);
 }
