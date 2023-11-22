@@ -50,4 +50,12 @@ internal static class DiagnosticDescriptors
         "The factory member has to be a method or have a delegate type",
         "The factory member '{0}' has to be a method of have a delegate type, for service '{1}'", "Usage", DiagnosticSeverity.Error, true);
 
+    public static readonly DiagnosticDescriptor NullableServiceNotRegistered = new("JAB0013",
+        "Not registered nullable dependency without a default value",
+        "The nullable service '{0}' requested to construct '{1}' is not registered. Add a default value to make the service reference optional", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor NullableServiceRegistered = new("JAB0014",
+        "Nullable dependency without a default value",
+        "'{0}' parameter to construct '{1}' will never be null when constructing using a service provider. Add a default value to make the service reference optional", "Usage", DiagnosticSeverity.Warning, true);
+
 }

@@ -589,6 +589,8 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         DiagnosticDescriptors.NoServiceTypeRegistered,
         DiagnosticDescriptors.ImplementationTypeAndFactoryNotAllowed,
         DiagnosticDescriptors.FactoryMemberMustBeAMethodOrHaveDelegateType,
+        DiagnosticDescriptors.NullableServiceNotRegistered,
+        DiagnosticDescriptors.NullableServiceRegistered,
     }.ToImmutableArray();
 
     private static string ReadAttributesFile()

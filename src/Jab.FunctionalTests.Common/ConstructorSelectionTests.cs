@@ -59,6 +59,7 @@ namespace JabTests
             Assert.NotNull(service.Parameter1);
             Assert.Null(service.Parameter2);
             Assert.NotNull(service.Parameter3);
+            Assert.False(typeof(IServiceProvider<IService2>).IsAssignableFrom(typeof(PassesOptionalParametersWhenAvailableContainer)));
         }
 
         [ServiceProvider]
@@ -83,5 +84,21 @@ namespace JabTests
         [Transient(typeof(IService3), typeof(ServiceImplementation))]
         [Transient(typeof(IService), typeof(ServiceImplementationWithParameter<IService1, int, IService3>))]
         internal partial class IgnoresNonReferenceTypedParametersContainer { }
+
+        [Fact]
+        public void IgnoresNullableOptionalParametersWhenNotAvailable()
+        {
+            IgnoresNullableOptionalParametersWhenNotAvailableContainer c = new();
+            var service = Assert.IsType<ServiceImplementationWithNullableOptional>(c.GetService<IService>());
+            Assert.NotNull(service.Parameter1);
+            Assert.Null(service.Parameter2);
+            Assert.Empty(service.Parameter3!);
+            Assert.False(typeof(IServiceProvider<IService2>).IsAssignableFrom(typeof(IgnoresNullableOptionalParametersWhenNotAvailableContainer)));
+        }
+
+        [ServiceProvider]
+        [Transient(typeof(IService1), typeof(ServiceImplementation))]
+        [Transient(typeof(IService), typeof(ServiceImplementationWithNullableOptional))]
+        internal partial class IgnoresNullableOptionalParametersWhenNotAvailableContainer { }
     }
 }
