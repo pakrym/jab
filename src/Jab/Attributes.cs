@@ -34,6 +34,8 @@ namespace Jab
     {
         public Type ServiceType { get; }
 
+        public string? Name { get; set; }
+
         public Type? ImplementationType { get; }
 
         public string? Instance { get; set; }
@@ -56,6 +58,7 @@ namespace Jab
     internal class TransientAttribute : Attribute
     {
         public Type ServiceType { get; }
+        public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
 
@@ -77,6 +80,7 @@ namespace Jab
     internal class ScopedAttribute : Attribute
     {
         public Type ServiceType { get; }
+        public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
 
