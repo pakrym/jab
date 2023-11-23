@@ -8,7 +8,7 @@ internal record FactoryCallSite : ServiceCallSite
     public ServiceCallSite[] Parameters { get; }
     public KeyValuePair<IParameterSymbol, ServiceCallSite>[] OptionalParameters { get; }
 
-    public FactoryCallSite(INamedTypeSymbol serviceType, ISymbol member, MemberLocation memberLocation, ServiceCallSite[] parameters, KeyValuePair<IParameterSymbol, ServiceCallSite>[] optionalParameters, ServiceLifetime lifetime, int reverseIndex, bool? isDisposable) : base(serviceType, serviceType, lifetime, reverseIndex, isDisposable)
+    public FactoryCallSite(ITypeSymbol serviceType, ISymbol member, MemberLocation memberLocation, ServiceCallSite[] parameters, KeyValuePair<IParameterSymbol, ServiceCallSite>[] optionalParameters, ServiceLifetime lifetime, int? reverseIndex, bool? isDisposable) : base(serviceType, serviceType, lifetime, reverseIndex, isDisposable)
     {
         Member = member;
         MemberLocation = memberLocation;

@@ -7,15 +7,16 @@ internal record ServiceProviderDescription
         Location = location;
         RootServices = rootServices;
         ServiceRegistrations = serviceRegistrations;
-        ServiceRegistrationsLookup = new Dictionary<ITypeSymbol, ServiceRegistration>(SymbolEqualityComparer.Default);
+        ServiceRegistrationsLookup = new(SymbolEqualityComparer.Default);
 
         foreach (var registration in serviceRegistrations)
         {
-            ServiceRegistrationsLookup[registration.ServiceType] = registration;
+            var registrations = ServiceRegistrationsLookup[registration.ServiceType] ??= new();
+            registrations.Add(registration);
         }
     }
 
-    public Dictionary<ITypeSymbol,ServiceRegistration> ServiceRegistrationsLookup { get; }
+    public Dictionary<ITypeSymbol, List<ServiceRegistration>> ServiceRegistrationsLookup { get; }
 
     public Location? Location { get; }
     public RootService[] RootServices { get; }

@@ -85,14 +85,16 @@ internal class ServiceProviderBuilder
                 continue;
             }
 
-            GetCallSite(registration.ServiceType, registration.Name,
+            GetCallSite(
+                new ServiceRequest(registration.ServiceType, registration.Name),
                 new ServiceResolutionContext(description, callSites, registration.ServiceType, registration.Location));
         }
 
         foreach (var rootService in description.RootServices)
         {
             var serviceType = rootService.Service;
-            var callSite = GetCallSite(serviceType, null,
+            var callSite = GetCallSite(
+                new ServiceRequest(serviceType),
                 new ServiceResolutionContext(description, callSites, serviceType, description.Location));
             if (callSite == null)
             {
@@ -109,7 +111,8 @@ internal class ServiceProviderBuilder
             if (SymbolEqualityComparer.Default.Equals(getServiceCallCandidate.ProviderType, typeSymbol))
             {
                 var serviceType = getServiceCallCandidate.ServiceType;
-                var callSite = GetCallSite(serviceType, null,
+                var callSite = GetCallSite(
+                    new ServiceRequest(serviceType),
                     new ServiceResolutionContext(description, callSites, serviceType,
                         getServiceCallCandidate.Location));
                 if (callSite == null)
@@ -144,53 +147,51 @@ internal class ServiceProviderBuilder
     }
 
     private ServiceCallSite? GetCallSite(
-        ITypeSymbol serviceType,
-        string? name,
+        ServiceRequest request,
         ServiceResolutionContext context)
     {
-        if (context.CallSiteCache.TryGet(serviceType, name, out var cachedCallSite))
+        if (context.CallSiteCache.TryGet(request, out var cachedCallSite))
         {
             return cachedCallSite;
         }
 
-        if (!context.TryAdd(serviceType))
+        if (!context.TryAdd(request.Type))
         {
             var diagnostic = Diagnostic.Create(DiagnosticDescriptors.CyclicDependencyDetected,
                 context.RequestLocation,
                 context.RequestService.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                context.ToString(serviceType));
+                request.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                context.ToString(request.Type));
 
             _context.ReportDiagnostic(
                 diagnostic);
 
-            return new ErrorCallSite(serviceType, diagnostic);
+            return new ErrorCallSite(request.Type, diagnostic);
         }
 
         try
         {
-            return TryCreateSpecial(serviceType, name, context) ??
-                   TryCreateExact(serviceType, name, context) ??
-                   TryCreateEnumerable(serviceType, name, context) ??
-                   TryCreateGeneric(serviceType, name, context);
+            return TryCreateSpecial(request, context) ??
+                   TryCreateExact(request, context) ??
+                   TryCreateEnumerable(request, context) ??
+                   TryCreateGeneric(request, context);
         }
         catch
         {
-            context.Remove(serviceType);
+            context.Remove(request.Type);
             throw;
         }
     }
 
-    private ServiceCallSite? TryCreateSpecial(ITypeSymbol serviceType, string? name, ServiceResolutionContext context)
+    private ServiceCallSite? TryCreateSpecial(ServiceRequest request, ServiceResolutionContext context)
     {
         bool CheckNotNamed()
         {
-            if (name == null) return true;
+            if (request.Name == null) return true;
 
             var diagnostic = Diagnostic.Create(DiagnosticDescriptors.BuiltInServicesAreNotNamed,
                 context.RequestLocation,
-                serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                context.ToString(serviceType));
+                request.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
             _context.ReportDiagnostic(
                 diagnostic);
@@ -198,19 +199,21 @@ internal class ServiceProviderBuilder
 
         }
 
-        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceProviderType)
+        Debug.Assert(request.ReverseIndex == null);
+
+        if (SymbolEqualityComparer.Default.Equals(request.Type, _knownTypes.IServiceProviderType)
             && CheckNotNamed())
         {
-            var callSite = new ServiceProviderCallSite(serviceType);
-            context.CallSiteCache.Add(serviceType, null, 0, callSite);
+            var callSite = new ServiceProviderCallSite(request.Type);
+            context.CallSiteCache.Add(request, callSite);
             return callSite;
         }
 
-        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceScopeFactoryType)
+        if (SymbolEqualityComparer.Default.Equals(request.Type, _knownTypes.IServiceScopeFactoryType)
             && CheckNotNamed())
         {
-            var callSite = new ScopeFactoryCallSite(serviceType);
-            context.CallSiteCache.Add(serviceType, null, 0, callSite);
+            var callSite = new ScopeFactoryCallSite(request.Type);
+            context.CallSiteCache.Add(request, callSite);
             return callSite;
         }
 
@@ -218,17 +221,16 @@ internal class ServiceProviderBuilder
     }
 
     private ServiceCallSite? TryCreateGeneric(
-        ITypeSymbol serviceType,
-        string? name,
+        ServiceRequest request,
         ServiceResolutionContext context)
     {
-        if (serviceType is INamedTypeSymbol { IsGenericType: true })
+        if (request.Type is INamedTypeSymbol { IsGenericType: true })
         {
             for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
             {
                 var registration = context.ProviderDescription.ServiceRegistrations[i];
 
-                var callSite = TryCreateGeneric(serviceType, name, registration, 0, context);
+                var callSite = TryCreateGeneric(request, registration, context);
                 if (callSite != null)
                 {
                     return callSite;
@@ -240,14 +242,12 @@ internal class ServiceProviderBuilder
     }
 
     private ServiceCallSite? TryCreateGeneric(
-        ITypeSymbol serviceType,
-        string? name,
+        ServiceRequest request,
         ServiceRegistration registration,
-        int reverseIndex,
         ServiceResolutionContext context)
     {
-        if (registration.Name == name &&
-            serviceType is INamedTypeSymbol { IsGenericType: true } genericType &&
+        if (registration.Name == request.Name &&
+            request.Type is INamedTypeSymbol { IsGenericType: true } genericType &&
             registration.ServiceType.IsUnboundGenericType &&
             SymbolEqualityComparer.Default.Equals(registration.ServiceType.ConstructedFrom,
                 genericType.ConstructedFrom))
@@ -257,47 +257,41 @@ internal class ServiceProviderBuilder
             {
                 var constructedFactoryMethod = factoryMethod.ConstructedFrom.Construct(genericType.TypeArguments,
                     genericType.TypeArgumentNullableAnnotations);
-                var callSite = CreateFactoryCallSite(
+               return CreateFactoryCallSite(
+                    request,
                     genericType,
-                    null,
                     registration.Lifetime,
-                    registration.Name,
                     registration.Location,
                     memberLocation: registration.MemberLocation,
                     factoryMember: constructedFactoryMethod,
-                    reverseIndex: reverseIndex,
                     context: context);
-
-                context.CallSiteCache.Add(serviceType, registration.Name, reverseIndex, callSite);
-
-                return callSite;
             }
             else if (registration.ImplementationType != null)
             {
                 var implementationType =
                     registration.ImplementationType.ConstructedFrom.Construct(genericType.TypeArguments,
                         genericType.TypeArgumentNullableAnnotations);
-                return CreateConstructorCallSite(registration, genericType, implementationType, reverseIndex, context);
+
+                return CreateConstructorCallSite(request, registration, implementationType, context);
             }
             else
             {
-                throw new InvalidOperationException($"Can't construct generic callsite for {serviceType}");
+                throw new InvalidOperationException($"Can't construct generic callsite for {request.Type}");
             }
         }
 
         return null;
     }
 
-    private ServiceCallSite? TryCreateEnumerable(ITypeSymbol serviceType, string? name, ServiceResolutionContext context)
+    private ServiceCallSite? TryCreateEnumerable(ServiceRequest request, ServiceResolutionContext context)
     {
         bool CheckNotNamed()
         {
-            if (name == null) return true;
+            if (request.Name == null) return true;
 
             var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ImplicitIEnumerableNotNamed,
                 context.RequestLocation,
-                serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                context.ToString(serviceType));
+                request.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
             _context.ReportDiagnostic(
                 diagnostic);
@@ -320,19 +314,20 @@ internal class ServiceProviderBuilder
             return commonLifetime;
         }
 
-        if (serviceType is INamedTypeSymbol { IsGenericType: true } genericType &&
+        if (request.Type is INamedTypeSymbol { IsGenericType: true } genericType &&
             SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _knownTypes.IEnumerableType) &&
             CheckNotNamed())
         {
             var enumerableService = genericType.TypeArguments[0];
             var items = new List<ServiceCallSite>();
             int reverseIndex = 0;
+            var itemRequest = new ServiceRequest(enumerableService, reverseIndex);
             for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
             {
                 var registration = context.ProviderDescription.ServiceRegistrations[i];
 
-                var itemCallSite = TryCreateGeneric(enumerableService, null, registration, reverseIndex, context) ??
-                                   TryCreateExact(registration, enumerableService, reverseIndex, context);
+                var itemCallSite = TryCreateGeneric(itemRequest, registration, context) ??
+                                   TryCreateExact(itemRequest, registration, context);
                 if (itemCallSite != null)
                 {
                     reverseIndex++;
@@ -349,9 +344,7 @@ internal class ServiceProviderBuilder
                 serviceCallSites,
                 // Pick a most common lifetime
                 GetCommonLifetime(items));
-
-            // TODO: we are loosing the name of the last service here
-            context.CallSiteCache.Add(serviceType, null, reverseIndex, callSite);
+            context.CallSiteCache.Add(request, callSite);
 
             return callSite;
         }
@@ -359,33 +352,46 @@ internal class ServiceProviderBuilder
         return null;
     }
 
-    private ServiceCallSite? TryCreateExact(ITypeSymbol serviceType, string? name, ServiceResolutionContext context)
+    private ServiceCallSite? TryCreateExact(ServiceRequest request, ServiceResolutionContext context)
     {
-        if (context.ProviderDescription.ServiceRegistrationsLookup.TryGetValue(serviceType, out var registration))
+        if (!context.ProviderDescription.ServiceRegistrationsLookup.TryGetValue(request.Type, out var registrations))
         {
-            return CreateCallSite(registration, reverseIndex: 0, context: context);
+            return null;
+        }
+        foreach (var registration in registrations)
+        {
+            var callSite = TryCreateExact(request, registration, context: context);
+            if (callSite != null)
+            {
+                return callSite;
+            }
         }
 
         return null;
     }
 
-    private ServiceCallSite? TryCreateExact(ServiceRegistration registration, ITypeSymbol serviceType, int reverseIndex,
+    private ServiceCallSite? TryCreateExact(
+        ServiceRequest request,
+        ServiceRegistration registration,
         ServiceResolutionContext context)
     {
-        if (SymbolEqualityComparer.Default.Equals(registration.ServiceType, serviceType))
+        if (
+            registration.Name == request.Name &&
+            SymbolEqualityComparer.Default.Equals(registration.ServiceType, request.Type))
         {
-            return CreateCallSite(registration, reverseIndex: reverseIndex, context: context);
+            return CreateCallSite(request, registration, context: context);
         }
 
         return null;
     }
 
     private ServiceCallSite CreateCallSite(
+        ServiceRequest request,
         ServiceRegistration registration,
-        int reverseIndex,
         ServiceResolutionContext context)
     {
-        if (context.CallSiteCache.TryGet(registration.ServiceType, registration.Name, reverseIndex, out ServiceCallSite callSite))
+        Debug.Assert(request.Name == registration.Name);
+        if (context.CallSiteCache.TryGet(request, out ServiceCallSite callSite))
         {
             return callSite;
         }
@@ -393,22 +399,20 @@ internal class ServiceProviderBuilder
         if (registration.InstanceMember is { } instanceMember)
         {
             callSite = CreateMemberCallSite(
+                request,
                 registration,
                 instanceMember,
-                registration.MemberLocation,
-                reverseIndex);
+                registration.MemberLocation);
         }
         else if (registration.FactoryMember is { } factoryMember)
         {
             callSite = CreateFactoryCallSite(
-                registration.ServiceType,
+                request,
                 registration.ImplementationType,
                 registration.Lifetime,
-                registration.Name,
                 registration.Location,
                 registration.MemberLocation,
                 factoryMember,
-                reverseIndex,
                 context);
         }
         else
@@ -416,37 +420,33 @@ internal class ServiceProviderBuilder
             var implementationType = registration.ImplementationType ??
                                      registration.ServiceType;
 
-            callSite = CreateConstructorCallSite(registration, registration.ServiceType, implementationType,
-                reverseIndex, context);
+            callSite = CreateConstructorCallSite(request, registration, implementationType, context);
         }
-
-        context.CallSiteCache.Add(registration.ServiceType, registration.Name, reverseIndex, callSite);
 
         return callSite;
     }
 
     private ServiceCallSite CreateMemberCallSite(
+        ServiceRequest request,
         ServiceRegistration registration,
         ISymbol instanceMember,
-        MemberLocation memberLocation,
-        int reverseIndex)
+        MemberLocation memberLocation)
     {
         return new MemberCallSite(registration.ServiceType,
             instanceMember,
             memberLocation: memberLocation,
             registration.Lifetime,
-            reverseIndex,
+            request.ReverseIndex,
             false);
     }
 
-    private ServiceCallSite CreateFactoryCallSite(INamedTypeSymbol serviceType,
-        INamedTypeSymbol? implementationType,
+    private ServiceCallSite CreateFactoryCallSite(
+        ServiceRequest request,
+        ITypeSymbol? implementationType,
         ServiceLifetime lifetime,
-        string? registrationName,
         Location? registrationLocation,
         MemberLocation memberLocation,
         ISymbol factoryMember,
-        int reverseIndex,
         ServiceResolutionContext context)
     {
         ImmutableArray<IParameterSymbol> GetDelegateParameters(ITypeSymbol type)
@@ -462,12 +462,12 @@ internal class ServiceProviderBuilder
             throw new InvalidOperationException($"Unable to determine parameters for {type.ToDisplayString()}");
         }
 
-        if (context.CallSiteCache.TryGet(serviceType, registrationName, reverseIndex, out ServiceCallSite callSite))
+        if (context.CallSiteCache.TryGet(request, out ServiceCallSite callSite))
         {
             return callSite;
         }
 
-        implementationType ??= serviceType;
+        implementationType ??= request.Type;
 
         ImmutableArray<IParameterSymbol> factoryParameters;
         switch (factoryMember)
@@ -486,9 +486,9 @@ internal class ServiceProviderBuilder
                     DiagnosticDescriptors.FactoryMemberMustBeAMethodOrHaveDelegateType,
                     ExtractMemberTypeLocation(factoryMember),
                     factoryMember.Name,
-                    serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+                    request.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
                 _context.ReportDiagnostic(diagnostic);
-                return new ErrorCallSite(serviceType, diagnostic);
+                return new ErrorCallSite(request.Type, diagnostic);
         }
 
         var (parameters, namedParameters, diagnostics) =
@@ -496,27 +496,29 @@ internal class ServiceProviderBuilder
 
         if (diagnostics.Count > 0)
         {
-            return new ErrorCallSite(serviceType, diagnostics.ToArray());
+            return new ErrorCallSite(request.Type, diagnostics.ToArray());
         }
 
-        return new FactoryCallSite(serviceType,
+        var factoryCallSite = new FactoryCallSite(request.Type,
             factoryMember,
             memberLocation: memberLocation,
             parameters.ToArray(),
             namedParameters.ToArray(),
             lifetime,
-            reverseIndex,
+            request.ReverseIndex,
             false);
+
+        context.CallSiteCache.Add(request, factoryCallSite);
+        return factoryCallSite;
     }
 
     private ServiceCallSite CreateConstructorCallSite(
+        ServiceRequest request,
         ServiceRegistration registration,
-        INamedTypeSymbol serviceType,
         INamedTypeSymbol implementationType,
-        int reverseIndex,
         ServiceResolutionContext context)
     {
-        if (context.CallSiteCache.TryGet(serviceType, registration.Name, reverseIndex, out ServiceCallSite callSite))
+        if (context.CallSiteCache.TryGet(request, out ServiceCallSite callSite))
         {
             return callSite;
         }
@@ -534,7 +536,7 @@ internal class ServiceProviderBuilder
                 _context.ReportDiagnostic(
                     diagnostic);
 
-                return new ErrorCallSite(serviceType, diagnostic);
+                return new ErrorCallSite(request.Type, diagnostic);
             }
 
             var (parameters, namedParameters, diagnostics) =
@@ -542,21 +544,21 @@ internal class ServiceProviderBuilder
 
             if (diagnostics.Count > 0)
             {
-                return new ErrorCallSite(serviceType, diagnostics.ToArray());
+                return new ErrorCallSite(request.Type, diagnostics.ToArray());
             }
 
             callSite = new ConstructorCallSite(
-                serviceType,
+                request.Type,
                 implementationType,
                 parameters.ToArray(),
                 namedParameters.ToArray(),
                 registration.Lifetime,
-                reverseIndex,
+                request.ReverseIndex,
                 // TODO: this can be optimized to avoid check for all the types
                 isDisposable: null
             );
 
-            context.CallSiteCache.Add(serviceType, registration.Name, reverseIndex, callSite);
+            context.CallSiteCache.Add(request, callSite);
 
             return callSite;
         }
@@ -573,7 +575,7 @@ internal class ServiceProviderBuilder
         List<Diagnostic> Diagnostics) GetParameters(
             ImmutableArray<IParameterSymbol> parameters,
             Location? registrationLocation,
-            INamedTypeSymbol implementationType,
+            ITypeSymbol implementationType,
             ServiceResolutionContext context)
     {
         var callSites = new List<ServiceCallSite>();
@@ -591,7 +593,8 @@ internal class ServiceProviderBuilder
                 }
             }
 
-            var parameterCallSite = GetCallSite(parameterSymbol.Type, registrationName, context);
+            var request = new ServiceRequest(parameterSymbol.Type, registrationName);
+            var parameterCallSite = GetCallSite(request, context);
             if (parameterSymbol.IsOptional)
             {
                 if (parameterCallSite != null)
@@ -1072,20 +1075,32 @@ internal class ServiceProviderBuilder
         return null;
     }
 
-    private readonly record struct CallSiteCacheKey(int ReverseIndex, string? Name, ITypeSymbol Type)
+    private readonly record struct ServiceRequest
     {
-        public CallSiteCacheKey(ITypeSymbol type) : this(0, null, type) {}
+        public ITypeSymbol Type { get; }
+        public string? Name { get; }
+        public int? ReverseIndex { get; }
+
+        private ServiceRequest(ITypeSymbol type, string? name, int? reverseIndex)
+        {
+            Type = type;
+            Name = name;
+            ReverseIndex = reverseIndex == 0 ? null : reverseIndex;
+        }
+        public ServiceRequest(ITypeSymbol type) : this(type, null, null) {}
+        public ServiceRequest(ITypeSymbol type, string? name) : this(type, name, null) {}
+        public ServiceRequest(ITypeSymbol type, int? reverseIndex) : this(type, null, reverseIndex) {}
     }
 
     private class CallSiteCache
     {
-        public bool TryGet(ITypeSymbol type, string? name, out ServiceCallSite callSite)
+        public bool TryGet(ServiceRequest request, out ServiceCallSite callSite)
         {
             callSite = default!;
             return false;
         }
 
-        public void Add(ITypeSymbol type, string? name, int reverseIndex, ServiceCallSite callSite)
+        public void Add(ServiceRequest request, ServiceCallSite callSite)
         {
         }
 
