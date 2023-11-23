@@ -321,10 +321,13 @@ internal class ServiceProviderBuilder
             var enumerableService = genericType.TypeArguments[0];
             var items = new List<ServiceCallSite>();
             int reverseIndex = 0;
-            var itemRequest = new ServiceRequest(enumerableService, reverseIndex);
             for (int i = context.ProviderDescription.ServiceRegistrations.Count - 1; i >= 0; i--)
             {
                 var registration = context.ProviderDescription.ServiceRegistrations[i];
+
+                var itemRequest = registration.Name != null ?
+                    new ServiceRequest(enumerableService, registration.Name) :
+                    new ServiceRequest(enumerableService, reverseIndex);
 
                 var itemCallSite = TryCreateGeneric(itemRequest, registration, context) ??
                                    TryCreateExact(itemRequest, registration, context);

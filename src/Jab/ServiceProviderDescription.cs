@@ -11,7 +11,12 @@ internal record ServiceProviderDescription
 
         foreach (var registration in serviceRegistrations)
         {
-            var registrations = ServiceRegistrationsLookup[registration.ServiceType] ??= new();
+            ServiceRegistrationsLookup.TryGetValue(registration.ServiceType, out var registrations);
+
+            if (registrations == null)
+            {
+                registrations = ServiceRegistrationsLookup[registration.ServiceType] = new();
+            }
             registrations.Add(registration);
         }
     }

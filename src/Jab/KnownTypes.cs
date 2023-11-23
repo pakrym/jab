@@ -47,7 +47,7 @@ internal class KnownTypes
     private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
     private const string IServiceProviderMetadataName = "System.IServiceProvider";
     private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";
-    private const string ServiceNameAttributeMetadataName = $"Jab.{ServiceNameAttributeName}`1";
+    private const string ServiceNameAttributeMetadataName = $"Jab.{ServiceNameAttributeName}";
 
     private const string IServiceScopeFactoryMetadataName =
         "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
