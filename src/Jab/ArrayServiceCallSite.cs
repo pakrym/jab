@@ -2,8 +2,8 @@
 
 internal record ArrayServiceCallSite: ServiceCallSite
 {
-    public ArrayServiceCallSite(INamedTypeSymbol serviceType, INamedTypeSymbol implementationType, ITypeSymbol itemType, ServiceCallSite[] items, ServiceLifetime lifetime)
-        : base(serviceType, implementationType, lifetime, 0, false)
+    public ArrayServiceCallSite(ServiceIdentity identity, INamedTypeSymbol implementationType, ITypeSymbol itemType, ServiceCallSite[] items, ServiceLifetime lifetime)
+        : base(identity, implementationType, lifetime, false)
     {
         ItemType = itemType;
         Items = items;

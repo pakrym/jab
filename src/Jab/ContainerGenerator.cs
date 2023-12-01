@@ -56,7 +56,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
     {
         if (other.IsMainImplementation)
         {
-            codeWriter.Append($"{reference}.GetService<{other.ServiceType}>()");
+            codeWriter.Append($"{reference}.GetService<{other.Identity.Type}>()");
         }
         else
         {
@@ -207,7 +207,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
 
                         foreach (var rootService in root.RootCallSites)
                         {
-                            var rootServiceType = rootService.ServiceType;
+                            var rootServiceType = rootService.Identity.Type;
                             if (rootService.IsMainImplementation)
                             {
                                 codeWriter.Append($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()");
@@ -272,7 +272,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
 
                             foreach (var rootService in root.RootCallSites)
                             {
-                                var rootServiceType = rootService.ServiceType;
+                                var rootServiceType = rootService.Identity.Type;
 
                                 using (rootService.IsMainImplementation ?
                                            codeWriter.Scope($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()") :
@@ -334,7 +334,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             {
                 if (rootRootCallSite.IsMainImplementation)
                 {
-                    codeWriter.Append($"if (type == typeof({rootRootCallSite.ServiceType})) return ");
+                    codeWriter.Append($"if (type == typeof({rootRootCallSite.Identity.Type})) return ");
                     WriteResolutionCall(codeWriter, rootRootCallSite, "this");
                     codeWriter.Line($";");
                 }
@@ -465,7 +465,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         {
             if (serviceCallSite.IsMainImplementation)
             {
-                codeWriter.Line($"   IServiceProvider<{serviceCallSite.ServiceType}>,");
+                codeWriter.Line($"   IServiceProvider<{serviceCallSite.Identity.Type}>,");
             }
         }
 
@@ -490,7 +490,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
     {
         if (!serviceCallSite.IsMainImplementation)
         {
-            return $"Get{GetServiceExpandedName(serviceCallSite.ServiceType)}_{serviceCallSite.ReverseIndex}";
+            return $"Get{GetServiceExpandedName(serviceCallSite.Identity.Type)}_{serviceCallSite.Identity.ReverseIndex}";
         }
 
         throw new InvalidOperationException("Main implementation should be resolved via GetService<T> call");
@@ -500,10 +500,10 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
     {
         if (!serviceCallSite.IsMainImplementation)
         {
-            return $"_{GetServiceExpandedName(serviceCallSite.ServiceType)}_{serviceCallSite.ReverseIndex}";
+            return $"_{GetServiceExpandedName(serviceCallSite.Identity.Type)}_{serviceCallSite.Identity.ReverseIndex}";
         }
 
-        return $"_{GetServiceExpandedName(serviceCallSite.ServiceType)}";
+        return $"_{GetServiceExpandedName(serviceCallSite.Identity.Type)}";
     }
 
     private string GetServiceExpandedName(ITypeSymbol serviceType)
