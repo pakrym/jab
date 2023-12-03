@@ -70,4 +70,8 @@ internal static class DiagnosticDescriptors
         "The named service registration not found",
         "The service '{0}' with name '{1}' required to construct '{2}' is not registered", "Usage", DiagnosticSeverity.Error, true);
 
+    public static readonly DiagnosticDescriptor OnlyStringKeysAreSupported = new("JAB0020",
+        "Only string service keys are supported",
+        "Service key '{0}' is not supported, only string keys are supported", "Usage", DiagnosticSeverity.Error, true);
+
 }

@@ -42,19 +42,34 @@ namespace JabTests
 
             Assert.IsAssignableFrom<IKeyedServiceProvider>(c);
 
-            Assert.IsType<ServiceImplementation>(c.GetKeyedService<ServiceImplementation>("Key"));
-            Assert.IsType<ServiceImplementation>(c.GetRequiredKeyedService<ServiceImplementation>("Key"));
+            Assert.NotNull(c.GetKeyedService<ServiceImplementation>("Key"));
+            Assert.NotNull(c.GetRequiredKeyedService<ServiceImplementation>("Key"));
 
             Assert.Null(c.GetKeyedService<ServiceImplementation>("Bla"));
             Assert.Null(c.GetKeyedService<IService>("Bla"));
             Assert.Throws<InvalidOperationException>(() => c.GetRequiredKeyedService<ServiceImplementation>("Bla"));
             Assert.Throws<InvalidOperationException>(() => c.GetRequiredKeyedService<IService>("Bla"));
+
+            var serviceWithKeyedParameter = c.GetService<ServiceWithKeyedParameter<ServiceImplementation>>();
+            Assert.NotNull(serviceWithKeyedParameter);
+            Assert.NotNull(serviceWithKeyedParameter.InnerService);
         }
 
         [ServiceProvider]
         [Singleton(typeof(ServiceImplementation), Name="Key")]
+        [Singleton(typeof(ServiceWithKeyedParameter<ServiceImplementation>))]
         internal partial class SupportsKeyedServicesContainer
         {
+        }
+
+        internal class ServiceWithKeyedParameter<T>
+        {
+            public T InnerService { get; }
+
+            public ServiceWithKeyedParameter([FromKeyedServices(typeof(string))] T innerService)
+            {
+                InnerService = innerService;
+            }
         }
     }
 }

@@ -623,6 +623,22 @@ internal class ServiceProviderBuilder
                     registrationName = (string?)attributeData.ConstructorArguments[0].Value;
                     ValidateServiceName(registrationName, attributeData);
                 }
+
+                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass,
+                        _knownTypes.FromKeyedServicesAttribute))
+                {
+                    var key = attributeData.ConstructorArguments[0].Value;
+                    if (key is not string)
+                    {
+                        var diagnostic = Diagnostic.Create(
+                            DiagnosticDescriptors.OnlyStringKeysAreSupported,
+                            attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
+                            key);
+                        _context.ReportDiagnostic(diagnostic);
+                    }
+                    registrationName = Convert.ToString(key);
+                    ValidateServiceName(registrationName, attributeData);
+                }
             }
 
             var parameterCallSite = GetCallSite(
