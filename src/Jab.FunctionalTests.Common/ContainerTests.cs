@@ -1231,16 +1231,22 @@ namespace JabTests
         {
             SupportsNamedServicesContainer c = new();
 
-            var service = c.GetService<IService<IAnotherService>>();
-            Assert.IsType<ServiceImplementation<IAnotherService>>(service);
-            var impl = (ServiceImplementation<IAnotherService>)service;
-            Assert.IsType<AnotherServiceImplementation>(impl.InnerService);
+            var service = c.GetService<ServiceImplementationWithNamed<IService>>();
+            Assert.IsType<ServiceImplementation2>(service.InnerService);
+
+            var notNamed = c.GetService<IService>();
+            Assert.IsType<ServiceImplementation>(notNamed);
+
+            var services = c.GetService<IEnumerable<IService>>();
+            var single = Assert.Single(services);
+            Assert.Same(notNamed, single);
         }
 
         [ServiceProvider]
-        [Singleton(typeof(IAnotherService), typeof(ServiceImplementation))]
-        [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation), Name="Named")]
-        [Singleton(typeof(IService<IAnotherService>), typeof(ServiceImplementationWithNamed<IAnotherService>))]
+        [Singleton(typeof(IService), typeof(ServiceImplementation))]
+        [Singleton(typeof(IService), typeof(ServiceImplementation), Name="Named")]
+        [Singleton(typeof(IService), typeof(ServiceImplementation2), Name="Named")]
+        [Singleton(typeof(ServiceImplementationWithNamed<IService>))]
         internal partial class SupportsNamedServicesContainer
         {
         }
