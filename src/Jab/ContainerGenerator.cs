@@ -378,37 +378,39 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
     private void WriteKeyedServiceProvider(CodeWriter codeWriter, ServiceProvider root)
     {
         var iface = root.KnownTypes.IKeyedServiceProviderType;
-        if (iface != null)
+        if (iface == null)
         {
-            using (codeWriter.Scope($"{typeof(object)}? {iface}.GetKeyedService({typeof(Type)} type, object? key)"))
+            return;
+        }
+
+        using (codeWriter.Scope($"{typeof(object)}? {iface}.GetKeyedService({typeof(Type)} type, object? key)"))
+        {
+            foreach (var serviceGroup in GroupNamedServices(root))
             {
-                foreach (var serviceGroup in GroupNamedServices(root))
+                var serviceType = serviceGroup.Key;
+                using (codeWriter.Scope($"if (type == typeof({serviceType}))"))
                 {
-                    var serviceType = serviceGroup.Key;
-                    using (codeWriter.Scope($"if (type == typeof({serviceType}))"))
+                    using (codeWriter.Scope($"switch (key)"))
                     {
-                        using (codeWriter.Scope($"switch (key)"))
+                        foreach (var callSite in serviceGroup)
                         {
-                            foreach (var callSite in serviceGroup)
-                            {
-                                codeWriter.Append($"case \"{callSite.Identity.Name}\": return ");
-                                WriteResolutionCall(codeWriter, callSite.Identity, "this");
-                                codeWriter.Line($";");
-                            }
+                            codeWriter.Append($"case \"{callSite.Identity.Name}\": return ");
+                            WriteResolutionCall(codeWriter, callSite.Identity, "this");
+                            codeWriter.Line($";");
                         }
                     }
                 }
-
-                codeWriter.Line($"return null;");
             }
 
-            codeWriter.Line();
-
-            codeWriter.Line(
-                $"{typeof(object)} {iface}.GetRequiredKeyedService({typeof(Type)} type, object? key) => (({iface})this).GetKeyedService(type, key) ?? throw CreateServiceNotFoundException(type, key?.ToString());");
-
-            codeWriter.Line();
+            codeWriter.Line($"return null;");
         }
+
+        codeWriter.Line();
+
+        codeWriter.Line(
+            $"{typeof(object)} {iface}.GetRequiredKeyedService({typeof(Type)} type, object? key) => (({iface})this).GetKeyedService(type, key) ?? throw CreateServiceNotFoundException(type, key?.ToString());");
+
+        codeWriter.Line();
     }
 
     private void WritePublicGetServiceMethods(CodeWriter codeWriter)
@@ -420,7 +422,6 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         codeWriter.Line($"[DebuggerHidden]");
         codeWriter.Line($"public T GetService<T>(string name) => this is INamedServiceProvider<T> provider ? provider.GetService(name) : throw CreateServiceNotFoundException<T>(name);");
         codeWriter.Line();
-
     }
 
     private void WriteDispose(CodeWriter codeWriter, ServiceProvider root, bool isScoped)

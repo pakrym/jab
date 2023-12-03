@@ -49,7 +49,6 @@ namespace JabTests
             Assert.Null(c.GetKeyedService<IService>("Bla"));
             Assert.Throws<InvalidOperationException>(() => c.GetRequiredKeyedService<ServiceImplementation>("Bla"));
             Assert.Throws<InvalidOperationException>(() => c.GetRequiredKeyedService<IService>("Bla"));
-
         }
 
         [ServiceProvider]
