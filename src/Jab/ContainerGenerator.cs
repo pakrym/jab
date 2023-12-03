@@ -616,7 +616,8 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         DiagnosticDescriptors.ServiceNameMustBeAlphanumeric,
         DiagnosticDescriptors.ImplicitIEnumerableNotNamed,
         DiagnosticDescriptors.BuiltInServicesAreNotNamed,
-        DiagnosticDescriptors.NoServiceTypeAndNameRegistered
+        DiagnosticDescriptors.NoServiceTypeAndNameRegistered,
+        DiagnosticDescriptors.NamedServiceRequiredToConstructNotRegistered
     }.ToImmutableArray();
 
     private static string ReadAttributesFile()

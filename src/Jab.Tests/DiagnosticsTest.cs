@@ -109,6 +109,25 @@ public partial class Container {{}}
                     .WithArguments("IDependency", "Service"));
         }
 
+
+        [Fact]
+        public async Task ProducesJAB0019WhenRequiredNamedDependencyNotFound()
+        {
+            string testCode = $@"
+class Dependency {{ }}
+class Service {{ public Service([FromNamedServices(""Named"")] Dependency dep) {{}} }}
+[ServiceProvider]
+[{{|#1:Transient(typeof(Service))|}}]
+[Transient(typeof(Dependency))]
+public partial class Container {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0019")
+                    .WithLocation(1)
+                    .WithArguments("Dependency", "Named", "Service"));
+        }
+
         [Fact]
         public async Task ProducesJAB0002WhenRequiredDependenciesNotFound()
         {
@@ -362,7 +381,7 @@ public partial class Container {}
                 DiagnosticResult
                     .CompilerError("JAB0017")
                     .WithLocation(1)
-                    .WithArguments("System.IEnumerable<Service1>"));
+                    .WithArguments("System.Collections.Generic.IEnumerable<Service1>"));
         }
     }
 }

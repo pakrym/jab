@@ -641,10 +641,22 @@ internal class ServiceProviderBuilder
             {
                 if (parameterCallSite == null)
                 {
-                    var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
-                        registrationLocation,
-                        parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
-                        implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+                    Diagnostic diagnostic;
+                    if (registrationName == null)
+                    {
+                        diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
+                            registrationLocation,
+                            parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                            implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+                    }
+                    else
+                    {
+                        diagnostic = Diagnostic.Create(DiagnosticDescriptors.NamedServiceRequiredToConstructNotRegistered,
+                            registrationLocation,
+                            parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                            registrationName,
+                            implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+                    }
 
                     diagnostics.Add(diagnostic);
                     _context.ReportDiagnostic(diagnostic);

@@ -65,4 +65,9 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor NoServiceTypeAndNameRegistered = new("JAB0018",
         "The service registration not found",
         "The service type '{0}' and name '{1}' is not registered", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor NamedServiceRequiredToConstructNotRegistered = new("JAB0019",
+        "The named service registration not found",
+        "The service '{0}' with name '{1}' required to construct '{2}' is not registered", "Usage", DiagnosticSeverity.Error, true);
+
 }
