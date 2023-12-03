@@ -323,11 +323,15 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         }
     }
 
+    private IEnumerable<IGrouping<ITypeSymbol, ServiceCallSite>> GroupNamedServices(ServiceProvider root)
+    {
+        return root.RootCallSites
+            .Where(static s => s.Identity.IsMainNamedImplementation)
+            .GroupBy<ServiceCallSite, ITypeSymbol>(static s => s.Identity.Type, SymbolEqualityComparer.Default);
+    }
     private void WriteNamedServiceProvider(CodeWriter codeWriter, ServiceProvider root)
     {
-        foreach (var serviceGroup in root.RootCallSites
-                     .Where(static s => s.Identity.IsMainNamedImplementation)
-                     .GroupBy(static s => s.Identity.Type, SymbolEqualityComparer.Default))
+        foreach (var serviceGroup in GroupNamedServices(root))
         {
             var groupType = serviceGroup.Key;
             using (codeWriter.Scope($"{groupType} INamedServiceProvider<{groupType}>.GetService(string name)"))
@@ -366,6 +370,45 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         }
 
         codeWriter.Line();
+
+        WriteKeyedServiceProvider(codeWriter, root);
+    }
+
+
+    private void WriteKeyedServiceProvider(CodeWriter codeWriter, ServiceProvider root)
+    {
+        var iface = root.KnownTypes.IKeyedServiceProviderType;
+        if (iface != null)
+        {
+            using (codeWriter.Scope($"{typeof(object)}? {iface}.GetKeyedService({typeof(Type)} type, object? key)"))
+            {
+                foreach (var serviceGroup in GroupNamedServices(root))
+                {
+                    var serviceType = serviceGroup.Key;
+                    using (codeWriter.Scope($"if (type == typeof({serviceType}))"))
+                    {
+                        using (codeWriter.Scope($"switch (key)"))
+                        {
+                            foreach (var callSite in serviceGroup)
+                            {
+                                codeWriter.Append($"case \"{callSite.Identity.Name}\": return ");
+                                WriteResolutionCall(codeWriter, callSite.Identity, "this");
+                                codeWriter.Line($";");
+                            }
+                        }
+                    }
+                }
+
+                codeWriter.Line($"return null;");
+            }
+
+            codeWriter.Line();
+
+            codeWriter.Line(
+                $"{typeof(object)} {iface}.GetRequiredKeyedService({typeof(Type)} type, object? key) => (({iface})this).GetKeyedService(type, key) ?? throw CreateServiceNotFoundException(type, key?.ToString());");
+
+            codeWriter.Line();
+        }
     }
 
     private void WritePublicGetServiceMethods(CodeWriter codeWriter)
@@ -484,6 +527,11 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         }
 
         codeWriter.Line($"   {typeof(IServiceProvider)},");
+
+        if (root.KnownTypes.IKeyedServiceProviderType != null)
+        {
+            codeWriter.Line($"   {root.KnownTypes.IKeyedServiceProviderType},");
+        }
 
         if (!isScope && root.KnownTypes.IServiceScopeFactoryType != null)
         {

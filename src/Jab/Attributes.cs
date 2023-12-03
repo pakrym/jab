@@ -182,12 +182,12 @@ namespace Jab
 
     internal static class JabHelpers
     {
-        public static InvalidOperationException CreateServiceNotFoundException<T>(string? name = null)
-        {
-            return new InvalidOperationException(
+        public static InvalidOperationException CreateServiceNotFoundException<T>(string? name = null) =>
+            CreateServiceNotFoundException(typeof(T), name);
+        public static InvalidOperationException CreateServiceNotFoundException(Type type, string? name = null) =>
+            new InvalidOperationException(
                 name != null ?
-                    $"Service with type {typeof(T)} and name {name} not registered" :
-                    $"Service with type {typeof(T)} not registered");
-        }
+                    $"Service with type {type} and name {name} not registered" :
+                    $"Service with type {type} not registered");
     }
 }

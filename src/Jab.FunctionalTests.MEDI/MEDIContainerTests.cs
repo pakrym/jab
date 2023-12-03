@@ -34,5 +34,28 @@ namespace JabTests
         internal partial class CanResolveIServiceScopeFactoryContainer
         {
         }
+
+        [Fact]
+        public void SupportsKeyedServices()
+        {
+            SupportsKeyedServicesContainer c = new();
+
+            Assert.IsAssignableFrom<IKeyedServiceProvider>(c);
+
+            Assert.IsType<ServiceImplementation>(c.GetKeyedService<ServiceImplementation>("Key"));
+            Assert.IsType<ServiceImplementation>(c.GetRequiredKeyedService<ServiceImplementation>("Key"));
+
+            Assert.Null(c.GetKeyedService<ServiceImplementation>("Bla"));
+            Assert.Null(c.GetKeyedService<IService>("Bla"));
+            Assert.Throws<InvalidOperationException>(() => c.GetRequiredKeyedService<ServiceImplementation>("Bla"));
+            Assert.Throws<InvalidOperationException>(() => c.GetRequiredKeyedService<IService>("Bla"));
+
+        }
+
+        [ServiceProvider]
+        [Singleton(typeof(ServiceImplementation), Name="Key")]
+        internal partial class SupportsKeyedServicesContainer
+        {
+        }
     }
 }
