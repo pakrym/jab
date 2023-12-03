@@ -32,7 +32,7 @@ internal static class DiagnosticDescriptors
 
     public static readonly DiagnosticDescriptor CyclicDependencyDetected = new("JAB0008",
         "A cyclic dependency detected when resolving a service",
-        "A cyclic dependency detected when resolving a service '{0}', cycle starts at service '{1}', dependency chain: '{2}'", "Usage", DiagnosticSeverity.Error, true);
+        "A cyclic dependency detected when resolving a service '{0}', dependency chain: '{1}'", "Usage", DiagnosticSeverity.Error, true);
 
     public static readonly DiagnosticDescriptor MissingServiceProviderAttribute = new("JAB0009",
         "A type contains service registrations but no ServiceProvider or ServiceProviderModule attribute",
@@ -50,11 +50,15 @@ internal static class DiagnosticDescriptors
         "The factory member has to be a method or have a delegate type",
         "The factory member '{0}' has to be a method of have a delegate type, for service '{1}'", "Usage", DiagnosticSeverity.Error, true);
 
-    public static readonly DiagnosticDescriptor BuiltInServicesAreNotNamed = new("JAB0015",
-        "Built-in provider services are not named",
-        "Built-in service '{0}' is not named bla bla", "Usage", DiagnosticSeverity.Error, true);
+    public static readonly DiagnosticDescriptor ServiceNameMustBeAlphanumeric = new("JAB0015",
+        "Service name must be alphanumeric",
+        "Service name '{0}' must be non-empty, alphanumeric and start with a letter.", "Usage", DiagnosticSeverity.Error, true);
 
-    public static readonly DiagnosticDescriptor ImplicitIEnumerableNotNamed = new("JAB0015",
-        "Implicit IEnumerable services are not named",
+    public static readonly DiagnosticDescriptor BuiltInServicesAreNotNamed = new("JAB0016",
+        "Built-in provider services can not be named",
+        "Built-in service '{0}' can not be named", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor ImplicitIEnumerableNotNamed = new("JAB0017",
+        "Implicit IEnumerable<> services can not be named",
         "Implicit IEnumerable service '{0}' can not be named", "Usage", DiagnosticSeverity.Error, true);
 }

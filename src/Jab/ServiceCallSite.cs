@@ -6,5 +6,4 @@ internal abstract record ServiceCallSite(ServiceIdentity Identity, ITypeSymbol I
     public ITypeSymbol ImplementationType { get; } = ImplementationType;
     public ServiceLifetime Lifetime { get; } = Lifetime;
     public bool? IsDisposable { get; } = IsDisposable;
-    public bool IsMainImplementation => Identity.ReverseIndex == 0;
 }

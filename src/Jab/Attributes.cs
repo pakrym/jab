@@ -100,11 +100,11 @@ namespace Jab
 
 
     [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
-    internal class ServiceNameAttribute : Attribute
+    internal class FromNamedServicesAttribute : Attribute
     {
         public string? Name { get; set; }
 
-        public ServiceNameAttribute(string name)
+        public FromNamedServicesAttribute(string name)
         {
             Name = name;
         }

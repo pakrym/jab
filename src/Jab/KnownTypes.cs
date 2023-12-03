@@ -8,7 +8,7 @@ internal class KnownTypes
     public const string CompositionRootAttributeShortName = "ServiceProvider";
     public const string ServiceProviderModuleAttributeShortName = "ServiceProviderModule";
     public const string ImportAttributeShortName = "Import";
-    public const string ServiceNameAttributeShortName = "ServiceName";
+    public const string FromNamedServicesAttributeShortName = "FromNamedServices";
 
     public const string TransientAttributeTypeName = $"{TransientAttributeShortName}Attribute";
     public const string SingletonAttributeTypeName = $"{SingletonAttributeShortName}Attribute";
@@ -17,7 +17,7 @@ internal class KnownTypes
     public const string ServiceProviderModuleAttributeTypeName = $"{ServiceProviderModuleAttributeShortName}Attribute";
 
     public const string ImportAttributeTypeName = $"{ImportAttributeShortName}Attribute";
-    public const string ServiceNameAttributeName = $"{ServiceNameAttributeShortName}Attribute";
+    public const string FromNamedServicesAttributeName = $"{FromNamedServicesAttributeShortName}Attribute";
 
     public const string TransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}";
     public const string GenericTransientAttributeMetadataName = $"Jab.{TransientAttributeTypeName}`1";
@@ -47,7 +47,7 @@ internal class KnownTypes
     private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
     private const string IServiceProviderMetadataName = "System.IServiceProvider";
     private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";
-    private const string ServiceNameAttributeMetadataName = $"Jab.{ServiceNameAttributeName}";
+    private const string FromNamedServicesAttributeMetadataName = $"Jab.{FromNamedServicesAttributeName}";
 
     private const string IServiceScopeFactoryMetadataName =
         "Microsoft.Extensions.DependencyInjection.IServiceScopeFactory";
@@ -73,7 +73,7 @@ internal class KnownTypes
     public INamedTypeSymbol? IAsyncDisposableType { get; }
     public INamedTypeSymbol? IServiceScopeType { get; }
     public INamedTypeSymbol? IServiceScopeFactoryType { get; }
-    public INamedTypeSymbol? ServiceNameAttribute { get; }
+    public INamedTypeSymbol? FromNamedServicesAttribute { get; }
 
     public KnownTypes(Compilation compilation, IAssemblySymbol assemblySymbol)
     {
@@ -112,6 +112,6 @@ internal class KnownTypes
         GenericImportAttribute = assemblySymbol.GetTypeByMetadataName(GenericImportAttributeMetadataName);
 
         ModuleAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceProviderModuleAttributeMetadataName);
-        ServiceNameAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceNameAttributeMetadataName);
+        FromNamedServicesAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, FromNamedServicesAttributeMetadataName);
     }
 }

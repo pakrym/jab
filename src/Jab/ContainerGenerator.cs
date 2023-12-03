@@ -20,7 +20,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
 
         if (serviceCallSite.Lifetime != ServiceLifetime.Transient)
         {
-            var cacheLocation = GetCacheLocation(serviceCallSite);
+            var cacheLocation = GetCacheLocation(serviceCallSite.Identity);
             codeWriter.Line($"if ({cacheLocation} == default)");
             codeWriter.Line($"lock (this)");
             using (codeWriter.Scope($"if ({cacheLocation} == default)"))
@@ -52,11 +52,11 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         }
     }
 
-    private void WriteResolutionCall(CodeWriter codeWriter, ServiceCallSite other, string reference)
+    private void WriteResolutionCall(CodeWriter codeWriter, ServiceIdentity other, string reference)
     {
         if (other.IsMainImplementation)
         {
-            codeWriter.Append($"{reference}.GetService<{other.Identity.Type}>()");
+            codeWriter.Append($"{reference}.GetService<{other.Type}>()");
         }
         else
         {
@@ -111,14 +111,14 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
     {
         foreach (var parameter in parameters)
         {
-            WriteResolutionCall(codeWriter, parameter, "this");
+            WriteResolutionCall(codeWriter, parameter.Identity, "this");
             codeWriter.AppendRaw(", ");
         }
 
         foreach (var pair in optionalParameters)
         {
             codeWriter.Append($"{pair.Key.Name}: ");
-            WriteResolutionCall(codeWriter, pair.Value, "this");
+            WriteResolutionCall(codeWriter, pair.Value.Identity, "this");
             codeWriter.AppendRaw(", ");
         }
         codeWriter.RemoveTrailingComma();
@@ -160,7 +160,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     {
                         foreach (var item in arrayServiceCallSite.Items)
                         {
-                            WriteResolutionCall(codeWriter, item, "this");
+                            WriteResolutionCall(codeWriter, item.Identity, "this");
                             w.LineRaw(", ");
                         }
                     }
@@ -208,13 +208,13 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                         foreach (var rootService in root.RootCallSites)
                         {
                             var rootServiceType = rootService.Identity.Type;
-                            if (rootService.IsMainImplementation)
+                            if (rootService.Identity.IsMainImplementation)
                             {
                                 codeWriter.Append($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()");
                             }
                             else
                             {
-                                codeWriter.Append($"private {rootServiceType} {GetResolutionServiceName(rootService)}()");
+                                codeWriter.Append($"private {rootServiceType} {GetResolutionServiceName(rootService.Identity)}()");
                             }
 
                             if (rootService.Lifetime == ServiceLifetime.Scoped)
@@ -274,14 +274,14 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                             {
                                 var rootServiceType = rootService.Identity.Type;
 
-                                using (rootService.IsMainImplementation ?
+                                using (rootService.Identity.IsMainImplementation ?
                                            codeWriter.Scope($"{rootServiceType} IServiceProvider<{rootServiceType}>.GetService()") :
-                                           codeWriter.Scope($"private {rootServiceType} {GetResolutionServiceName(rootService)}()"))
+                                           codeWriter.Scope($"private {rootServiceType} {GetResolutionServiceName(rootService.Identity)}()"))
                                 {
                                     if (rootService.Lifetime == ServiceLifetime.Singleton)
                                     {
                                         codeWriter.Append($"return ");
-                                        WriteResolutionCall(codeWriter, rootService, "_root");
+                                        WriteResolutionCall(codeWriter, rootService.Identity, "_root");
                                         codeWriter.Line($";");
                                     }
                                     else
@@ -332,10 +332,10 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         {
             foreach (var rootRootCallSite in root.RootCallSites)
             {
-                if (rootRootCallSite.IsMainImplementation)
+                if (rootRootCallSite.Identity.IsMainImplementation)
                 {
                     codeWriter.Append($"if (type == typeof({rootRootCallSite.Identity.Type})) return ");
-                    WriteResolutionCall(codeWriter, rootRootCallSite, "this");
+                    WriteResolutionCall(codeWriter, rootRootCallSite.Identity, "this");
                     codeWriter.Line($";");
                 }
             }
@@ -378,7 +378,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     (rootService.Lifetime == ServiceLifetime.Scoped && !isScoped) ||
                     rootService.Lifetime == ServiceLifetime.Transient) continue;
 
-                codeWriter.Line($"TryDispose({GetCacheLocation(rootService)});");
+                codeWriter.Line($"TryDispose({GetCacheLocation(rootService.Identity)});");
             }
 
             if (!isScoped)
@@ -420,7 +420,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                         (rootService.Lifetime == ServiceLifetime.Scoped && !isScoped) ||
                         rootService.Lifetime == ServiceLifetime.Transient) continue;
 
-                    codeWriter.Line($"await TryDispose({GetCacheLocation(rootService)});");
+                    codeWriter.Line($"await TryDispose({GetCacheLocation(rootService.Identity)});");
                 }
 
                 if (!isScoped)
@@ -463,7 +463,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
 
         foreach (var serviceCallSite in root.RootCallSites)
         {
-            if (serviceCallSite.IsMainImplementation)
+            if (serviceCallSite.Identity.IsMainImplementation)
             {
                 codeWriter.Line($"   IServiceProvider<{serviceCallSite.Identity.Type}>,");
             }
@@ -481,32 +481,27 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                 (rootService.Lifetime == ServiceLifetime.Scoped && !isScope) ||
                 rootService.Lifetime == ServiceLifetime.Transient) continue;
 
-            codeWriter.Line($"private {rootService.ImplementationType}? {GetCacheLocation(rootService)};");
+            codeWriter.Line($"private {rootService.ImplementationType}? {GetCacheLocation(rootService.Identity)};");
         }
         codeWriter.Line();
     }
 
-    private string GetResolutionServiceName(ServiceCallSite serviceCallSite)
+    private string GetResolutionServiceName(ServiceIdentity identity)
     {
-        if (!serviceCallSite.IsMainImplementation)
+        if (!identity.IsMainImplementation)
         {
-            return $"Get{GetServiceExpandedName(serviceCallSite.Identity.Type)}_{serviceCallSite.Identity.ReverseIndex}";
+            return $"Get{GetServiceExpandedName(identity)}";
         }
 
         throw new InvalidOperationException("Main implementation should be resolved via GetService<T> call");
     }
 
-    private string GetCacheLocation(ServiceCallSite serviceCallSite)
+    private string GetCacheLocation(ServiceIdentity identity)
     {
-        if (!serviceCallSite.IsMainImplementation)
-        {
-            return $"_{GetServiceExpandedName(serviceCallSite.Identity.Type)}_{serviceCallSite.Identity.ReverseIndex}";
-        }
-
-        return $"_{GetServiceExpandedName(serviceCallSite.Identity.Type)}";
+        return $"_{GetServiceExpandedName(identity)}";
     }
 
-    private string GetServiceExpandedName(ITypeSymbol serviceType)
+    private string GetServiceExpandedName(ServiceIdentity identity)
     {
         StringBuilder builder = new();
 
@@ -523,7 +518,19 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             }
         }
 
-        Traverse(serviceType);
+        Traverse(identity.Type);
+
+        if (identity.Name != null)
+        {
+            builder.Append("_");
+            builder.Append(identity.Name);
+        }
+
+        if (identity.ReverseIndex != null)
+        {
+            builder.Append("_");
+            builder.Append(identity.ReverseIndex);
+        }
         return builder.ToString();
     }
 
@@ -560,6 +567,9 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         DiagnosticDescriptors.NoServiceTypeRegistered,
         DiagnosticDescriptors.ImplementationTypeAndFactoryNotAllowed,
         DiagnosticDescriptors.FactoryMemberMustBeAMethodOrHaveDelegateType,
+        DiagnosticDescriptors.ServiceNameMustBeAlphanumeric,
+        DiagnosticDescriptors.ImplicitIEnumerableNotNamed,
+        DiagnosticDescriptors.BuiltInServicesAreNotNamed,
     }.ToImmutableArray();
 
     private static string ReadAttributesFile()
