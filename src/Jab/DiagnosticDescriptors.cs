@@ -40,7 +40,7 @@ internal static class DiagnosticDescriptors
 
     public static readonly DiagnosticDescriptor NoServiceTypeRegistered = new("JAB0010",
         "The service registration not found",
-        "The service '{0}' is not registered", "Usage", DiagnosticSeverity.Error, true);
+        "The service type '{0}' is not registered", "Usage", DiagnosticSeverity.Error, true);
 
     public static readonly DiagnosticDescriptor ImplementationTypeAndFactoryNotAllowed = new("JAB0011",
         "Can't specify both the implementation type and factory/instance",
@@ -61,4 +61,8 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor ImplicitIEnumerableNotNamed = new("JAB0017",
         "Implicit IEnumerable<> services can not be named",
         "Implicit IEnumerable service '{0}' can not be named", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor NoServiceTypeAndNameRegistered = new("JAB0018",
+        "The service registration not found",
+        "The service type '{0}' and name '{1}' is not registered", "Usage", DiagnosticSeverity.Error, true);
 }

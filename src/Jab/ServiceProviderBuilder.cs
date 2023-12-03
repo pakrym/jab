@@ -27,14 +27,18 @@ internal class ServiceProviderBuilder
             var semanticModel = _context.Compilation.GetSemanticModel(candidateGetServiceCallGroup.Key);
             foreach (var candidateGetServiceCall in candidateGetServiceCallGroup)
             {
-                if (candidateGetServiceCall.Expression is MemberAccessExpressionSyntax
+                if (candidateGetServiceCall is
                     {
-                        Name: GenericNameSyntax
+                        Expression: MemberAccessExpressionSyntax
                         {
-                            IsUnboundGenericName: false,
-                            TypeArgumentList: { Arguments: { Count: 1 } arguments }
-                        }
-                    } memberAccessExpression)
+                            Name: GenericNameSyntax
+                            {
+                                IsUnboundGenericName: false,
+                                TypeArgumentList: { Arguments: { Count: 1 } arguments }
+                            }
+                        } memberAccessExpression
+                    }
+                  )
                 {
                     var containerTypeInfo = semanticModel.GetTypeInfo(memberAccessExpression.Expression);
                     var serviceInfo = semanticModel.GetSymbolInfo(arguments[0]);
@@ -43,7 +47,25 @@ internal class ServiceProviderBuilder
                         serviceType.TypeKind != TypeKind.TypeParameter
                        )
                     {
-                        getServiceCallCandidates.Add(new GetServiceCallCandidate(containerTypeInfo.Type, serviceType,
+                        string? serviceName = null;
+                        var invocationArguments = candidateGetServiceCall.ArgumentList.Arguments;
+                        if (invocationArguments.Count == 1)
+                        {
+                            if (invocationArguments[0].Expression is LiteralExpressionSyntax { } literal &&
+                                literal.Token.IsKind(SyntaxKind.StringLiteralToken))
+                            {
+                                serviceName = literal.Token.ValueText;
+                            }
+                            else
+                            {
+                                // Service name is dynamic, can't do anything
+                                continue;
+                            }
+                        }
+                        getServiceCallCandidates.Add(new GetServiceCallCandidate(
+                            containerTypeInfo.Type,
+                            serviceType,
+                            serviceName,
                             candidateGetServiceCall.GetLocation()));
                     }
                 }
@@ -122,15 +144,27 @@ internal class ServiceProviderBuilder
                 var serviceType = getServiceCallCandidate.ServiceType;
                 var callSite = GetCallSite(
                     serviceType,
-                    null,
+                    getServiceCallCandidate.ServiceName,
                     new ServiceResolutionContext(description, callSites, getServiceCallCandidate.Location));
                 if (callSite == null)
                 {
-                    _context.ReportDiagnostic(Diagnostic.Create(
-                        DiagnosticDescriptors.NoServiceTypeRegistered,
-                        getServiceCallCandidate.Location,
-                        serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
-                    ));
+                    if (getServiceCallCandidate.ServiceName == null)
+                    {
+                        _context.ReportDiagnostic(Diagnostic.Create(
+                            DiagnosticDescriptors.NoServiceTypeRegistered,
+                            getServiceCallCandidate.Location,
+                            serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
+                        ));
+                    }
+                    else
+                    {
+                        _context.ReportDiagnostic(Diagnostic.Create(
+                            DiagnosticDescriptors.NoServiceTypeAndNameRegistered,
+                            getServiceCallCandidate.Location,
+                            serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                            getServiceCallCandidate.ServiceName
+                        ));
+                    }
                 }
             }
         }

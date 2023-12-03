@@ -236,12 +236,10 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                             codeWriter.Line();
                         }
 
+                        WriteNamedServiceProvider(codeWriter, root);
                         WriteServiceProvider(codeWriter, root);
                         WriteDispose(codeWriter, root, isScoped: false);
-
-                        codeWriter.Line($"[DebuggerHidden]");
-                        codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : throw CreateServiceNotFoundException<T>();");
-                        codeWriter.Line();
+                        WritePublicGetServiceMethods(codeWriter);
 
                         codeWriter.Line($"public Scope CreateScope() => new Scope(this);");
                         codeWriter.Line();
@@ -266,9 +264,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                             }
                             codeWriter.Line();
 
-                            codeWriter.Line($"[DebuggerHidden]");
-                            codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : throw CreateServiceNotFoundException<T>();");
-                            codeWriter.Line();
+                            WritePublicGetServiceMethods(codeWriter);
 
                             foreach (var rootService in root.RootCallSites)
                             {
@@ -296,6 +292,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                             }
 
                             WriteServiceProvider(codeWriter, root);
+                            WriteNamedServiceProvider(codeWriter, root);
 
                             if (root.KnownTypes.IServiceScopeType != null)
                             {
@@ -326,6 +323,31 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         }
     }
 
+    private void WriteNamedServiceProvider(CodeWriter codeWriter, ServiceProvider root)
+    {
+        foreach (var serviceGroup in root.RootCallSites
+                     .Where(static s => s.Identity.IsMainNamedImplementation)
+                     .GroupBy(static s => s.Identity.Type, SymbolEqualityComparer.Default))
+        {
+            var groupType = serviceGroup.Key;
+            using (codeWriter.Scope($"{groupType} INamedServiceProvider<{groupType}>.GetService(string name)"))
+            {
+                using (codeWriter.Scope($"switch (name)"))
+                {
+                    foreach (var callSite in serviceGroup)
+                    {
+                        codeWriter.Append($"case \"{callSite.Identity.Name}\": return ");
+                        WriteResolutionCall(codeWriter, callSite.Identity, "this");
+                        codeWriter.Line($";");
+                    }
+
+                    codeWriter.Line($"default: throw CreateServiceNotFoundException<{groupType}>(name);");
+                }
+            }
+            codeWriter.Line();
+        }
+    }
+
     private void WriteServiceProvider(CodeWriter codeWriter, ServiceProvider root)
     {
         using (codeWriter.Scope($"{typeof(object)}? {typeof(IServiceProvider)}.GetService({typeof(Type)} type)"))
@@ -344,6 +366,18 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         }
 
         codeWriter.Line();
+    }
+
+    private void WritePublicGetServiceMethods(CodeWriter codeWriter)
+    {
+        codeWriter.Line($"[DebuggerHidden]");
+        codeWriter.Line($"public T GetService<T>() => this is IServiceProvider<T> provider ? provider.GetService() : throw CreateServiceNotFoundException<T>();");
+        codeWriter.Line();
+
+        codeWriter.Line($"[DebuggerHidden]");
+        codeWriter.Line($"public T GetService<T>(string name) => this is INamedServiceProvider<T> provider ? provider.GetService(name) : throw CreateServiceNotFoundException<T>(name);");
+        codeWriter.Line();
+
     }
 
     private void WriteDispose(CodeWriter codeWriter, ServiceProvider root, bool isScoped)
@@ -461,11 +495,23 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
             codeWriter.Line($"   {root.KnownTypes.IServiceScopeType},");
         }
 
+        HashSet<ITypeSymbol> seenServices = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+        HashSet<ITypeSymbol> seenNamedServices = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
         foreach (var serviceCallSite in root.RootCallSites)
         {
-            if (serviceCallSite.Identity.IsMainImplementation)
+            if (serviceCallSite.Identity.Name == null)
             {
-                codeWriter.Line($"   IServiceProvider<{serviceCallSite.Identity.Type}>,");
+                if (seenServices.Add(serviceCallSite.Identity.Type))
+                {
+                    codeWriter.Line($"   IServiceProvider<{serviceCallSite.Identity.Type}>,");
+                }
+            }
+            else
+            {
+                if (seenNamedServices.Add(serviceCallSite.Identity.Type))
+                {
+                    codeWriter.Line($"   INamedServiceProvider<{serviceCallSite.Identity.Type}>,");
+                }
             }
         }
 
@@ -570,6 +616,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         DiagnosticDescriptors.ServiceNameMustBeAlphanumeric,
         DiagnosticDescriptors.ImplicitIEnumerableNotNamed,
         DiagnosticDescriptors.BuiltInServicesAreNotNamed,
+        DiagnosticDescriptors.NoServiceTypeAndNameRegistered
     }.ToImmutableArray();
 
     private static string ReadAttributesFile()

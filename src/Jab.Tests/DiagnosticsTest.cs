@@ -248,21 +248,31 @@ interface {{|#1:Container|}} {{}}
         }
 
         [Fact]
-        public async Task ProducesJAB0010IfGetServiceCallTypeUnregistered()
+        public async Task ProducesJAB0010OrJAB0018IfGetServiceCallTypeUnregistered()
         {
             string testCode = $@"
 interface IService {{}}
 [ServiceProvider]
 public partial class Container {{
     public T GetService<T>() => default;
-    public static void Main() {{ var container = new Container(); {{|#1:container.GetService<IService>()|}}; }}
+    public T GetService<T>(string name) => default;
+    public static void Main() {{ 
+        var container = new Container(); 
+        {{|#1:container.GetService<IService>()|}}; 
+        {{|#2:container.GetService<IService>(""Named"")|}}; 
+    }}
 }}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
                     .CompilerError("JAB0010")
                     .WithLocation(1)
-                    .WithArguments("IService"));
+                    .WithArguments("IService"),
+
+                DiagnosticResult
+                    .CompilerError("JAB0018")
+                    .WithLocation(2)
+                    .WithArguments("IService", "Named"));
         }
 
         [Fact]

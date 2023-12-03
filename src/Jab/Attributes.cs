@@ -175,11 +175,19 @@ namespace Jab
         T GetService();
     }
 
+    internal interface INamedServiceProvider<T>
+    {
+        T GetService(string name);
+    }
+
     internal static class JabHelpers
     {
-        public static InvalidOperationException CreateServiceNotFoundException<T>()
+        public static InvalidOperationException CreateServiceNotFoundException<T>(string? name = null)
         {
-            return new InvalidOperationException($"Service Type {typeof(T)} not registered");
+            return new InvalidOperationException(
+                name != null ?
+                    $"Service with type {typeof(T)} and name {name} not registered" :
+                    $"Service with type {typeof(T)} not registered");
         }
     }
 }

@@ -14,4 +14,5 @@ public readonly record struct ServiceIdentity
     }
 
     public bool IsMainImplementation => Name == null && ReverseIndex == null;
+    public bool IsMainNamedImplementation => Name != null && ReverseIndex == null;
 }
