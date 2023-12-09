@@ -1,4 +1,4 @@
-﻿namespace Jab.Performance.Basic.Scoped; 
+﻿namespace Jab.Performance.Basic.Mixed; 
 
 using BenchmarkDotNet.Attributes;
 using Jab.Performance.Basic.Singleton;
@@ -10,7 +10,7 @@ using MEDI = Microsoft.Extensions.DependencyInjection;
 public class MixedBenchmark
 {
     private readonly MEDI.ServiceProvider _provider;
-    private readonly ContainerCombined _container = new();
+    private readonly ContainerMixed _container = new();
 
     public MixedBenchmark()
     {
@@ -41,11 +41,11 @@ public class MixedBenchmark
             using var scope = _container.CreateScope();
 
             if (NumbersOfClasses >= 1)
-                _container.GetService<IMix1>();
+                scope.GetService<IMix1>();
             if (NumbersOfClasses >= 2)
-                _container.GetService<IMix2>();
+                scope.GetService<IMix2>();
             if (NumbersOfClasses >= 3)
-                _container.GetService<IMix3>();
+                scope.GetService<IMix3>();
         }
     }
 
@@ -57,11 +57,11 @@ public class MixedBenchmark
             using var scope = _provider.CreateScope();
 
             if (NumbersOfClasses >= 1)
-                _provider.GetService<IMix1>();
+                scope.ServiceProvider.GetService<IMix1>();
             if(NumbersOfClasses >= 2)
-                _provider.GetService<IMix2>();
+                scope.ServiceProvider.GetService<IMix2>();
             if (NumbersOfClasses >= 3)
-                _provider.GetService<IMix3>();
+                scope.ServiceProvider.GetService<IMix3>();
         }
     }
 }
@@ -76,6 +76,6 @@ public class MixedBenchmark
 [Singleton(typeof(ISingleton1), typeof(Singleton1))]
 [Singleton(typeof(ISingleton2), typeof(Singleton2))]
 [Singleton(typeof(ISingleton3), typeof(Singleton3))]
-internal partial class ContainerCombined
+internal partial class ContainerMixed
 {
 }
