@@ -6,6 +6,8 @@
         <LangVersion>preview</LangVersion>
         <RootNamespace>Jab</RootNamespace>
         <DefineConstants>$(DefineConstants);JAB_ATTRIBUTES_PACKAGE;GENERIC_ATTRIBUTES</DefineConstants>
+        <Version>0.8.6</Version>
+        <Version Condition="'$(ReleaseVersion)' != ''">$(ReleaseVersion)</Version>
     </PropertyGroup>
 
     <ItemGroup>
