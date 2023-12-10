@@ -2,6 +2,7 @@
 
 internal class KnownTypes
 {
+    public const string JabAttributesAssemblyName = "Jab.Attributes";
     public const string TransientAttributeShortName = "Transient";
     public const string SingletonAttributeShortName = "Singleton";
     public const string ScopedAttributeShortName = "Scoped";
@@ -123,7 +124,12 @@ internal class ServiceProviderBuilder
     public ServiceProviderBuilder(GeneratorContext context)
     {
         _context = context;
-        _knownTypes = new KnownTypes(context.Compilation, context.Compilation.Assembly);
+
+        var assemblySymbol =
+            context.Compilation.SourceModule.ReferencedAssemblySymbols.FirstOrDefault(
+                s => s.Name == KnownTypes.JabAttributesAssemblyName)
+            ?? context.Compilation.Assembly;
+        _knownTypes = new KnownTypes(context.Compilation, assemblySymbol);
     }
 
     public ServiceProvider[] BuildRoots()
@@ -862,10 +868,18 @@ internal class ServiceProviderBuilder
         // TODO: idempotency
         bool isModule = false;
         // If module it in another assembly use KnownTypes native to that assembly
-        var knownTypes =
-            SymbolEqualityComparer.Default.Equals(moduleType.ContainingAssembly, _context.Compilation.Assembly)
-                ? _knownTypes
-                : new KnownTypes(_context.Compilation, moduleType.ContainingAssembly);
+        KnownTypes knownTypes;
+        if (SymbolEqualityComparer.Default.Equals(moduleType.ContainingAssembly, _context.Compilation.Assembly))
+        {
+            knownTypes = _knownTypes;
+        }
+        else
+        {
+            var assemblySymbol = moduleType.ContainingModule.ReferencedAssemblySymbols.FirstOrDefault(
+                s => s.Name == KnownTypes.JabAttributesAssemblyName)
+                ?? moduleType.ContainingAssembly;
+            knownTypes = new KnownTypes(_context.Compilation, assemblySymbol);
+        }
 
         foreach (var attributeData in moduleType.GetAttributes())
         {

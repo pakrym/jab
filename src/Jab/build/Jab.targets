@@ -1,5 +1,6 @@
 <Project>
     <PropertyGroup>
+        <PrepareForBuildDependsOn>$(PrepareForBuildDependsOn);_JabReferences</PrepareForBuildDependsOn>
         <DefineConstants Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND
 		                            ($([MSBuild]::VersionGreaterThanOrEquals($(_TargetFrameworkVersionWithoutV), '7.0')) OR
 									($([MSBuild]::VersionGreaterThanOrEquals($(_TargetFrameworkVersionWithoutV), '6.0')) AND '$(LangVersion)'=='preview'))">$(DefineConstants);GENERIC_ATTRIBUTES</DefineConstants>
@@ -12,5 +13,12 @@
             <Analyzer Remove="@(Analyzer)"
                            Condition="$([System.String]::Copy('%(Analyzer.Identity)').IndexOf('Jab.dll')) &gt;= 0"/>
         </ItemGroup>
+    </Target>
+    <Target Name="_JabReferences" DependsOnTargets="ResolvePackageAssets">
+        <PropertyGroup>
+            <_JabAttributesReferenced
+                Condition="@(PackageDependencies->WithMetadataValue('Identity', 'Jab.Attributes')->Count()) != 0">true</_JabAttributesReferenced>
+            <DefineConstants Condition="'$(_JabAttributesReferenced)' == 'true'">$(DefineConstants);JAB_ATTRIBUTES_REFERENCED</DefineConstants>
+        </PropertyGroup>
     </Target>
 </Project>
