@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Jab;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -22,19 +23,61 @@ namespace JabTests
             Assert.Same(scope, scope.ServiceProvider);
         }
 
-        [Fact]
-        public void CanCreateScopeUsingExtensionMethod()
-        {
-            CanResolveIServiceScopeFactoryContainer c = new();
-            var scope = ((IServiceProvider)c).CreateScope();
-            Assert.IsType<CanResolveIServiceScopeFactoryContainer.Scope>(scope);
-        }
-
         [ServiceProvider]
         internal partial class CanResolveIServiceScopeFactoryContainer
         {
         }
 
+        [Fact]
+        public void CanCreateScopeUsingExtensionMethod()
+        {
+            CanCreateScopeUsingExtensionMethodContainer c = new();
+            var scope = ((IServiceProvider)c).CreateScope();
+            Assert.IsType<CanCreateScopeUsingExtensionMethodContainer.Scope>(scope);
+        }
+
+        [ServiceProvider]
+        internal partial class CanCreateScopeUsingExtensionMethodContainer
+        {
+        }
+
+#if NET6_0_OR_GREATER
+        [Fact]
+        public void CanUseIsService()
+        {
+            CanUseIsServiceContainer c = new();
+            IServiceProviderIsService iss = c;
+
+            Assert.True(iss.IsService(typeof(IServiceProvider)));
+            Assert.True(iss.IsService(typeof(IServiceProviderIsService)));
+            Assert.True(iss.IsService(typeof(IServiceScopeFactory)));
+            Assert.True(iss.IsService(typeof(IService)));
+            Assert.False(iss.IsService(typeof(IAnotherService)));
+        }
+
+        [ServiceProvider(RootServices = new[] {typeof(IEnumerable<IService>)})]
+        [Transient(typeof(IService), typeof(ServiceImplementation))]
+        internal partial class CanUseIsServiceContainer
+        {
+        }
+
+        [Fact]
+        public void CanResolveIsService()
+        {
+            CanUseIsServiceContainer c = new();
+
+            Assert.True(c.GetService<IServiceProviderIsService>().IsService(typeof(IServiceProvider)));
+            Assert.Same(c, c.CreateScope().GetService<IServiceProviderIsService>());
+            Assert.True(c.CreateScope().GetService<IServiceProviderIsService>().IsService(typeof(IServiceProvider)));
+        }
+
+        [ServiceProvider()]
+        internal partial class CanResolveIsServiceContainer
+        {
+        }
+#endif
+
+#if NET8_OR_GREATER
         [Fact]
         public void SupportsKeyedServices()
         {
@@ -71,5 +114,6 @@ namespace JabTests
                 InnerService = innerService;
             }
         }
+#endif
     }
 }

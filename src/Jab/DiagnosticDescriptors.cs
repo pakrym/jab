@@ -74,4 +74,11 @@ internal static class DiagnosticDescriptors
         "Only string service keys are supported",
         "Service key '{0}' is not supported, only string keys are supported", "Usage", DiagnosticSeverity.Error, true);
 
+    public static readonly DiagnosticDescriptor NullableServiceNotRegistered = new("JAB0013",
+        "Not registered nullable dependency without a default value",
+        "The nullable service '{0}' requested to construct '{1}' is not registered. Add a default value to make the service reference optional", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor NullableServiceRegistered = new("JAB0014",
+        "Nullable dependency without a default value",
+        "'{0}' parameter to construct '{1}' will never be null when constructing using a service provider. Add a default value to make the service reference optional", "Usage", DiagnosticSeverity.Info, true);
 }

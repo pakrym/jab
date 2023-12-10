@@ -748,6 +748,23 @@ namespace JabTests
         [Transient(typeof(IService), typeof(ServiceImplementation))]
         internal partial class CanResolveServicesUsingIServiceProviderContainer { }
 
+
+        [Fact]
+        public void CanResolveIServiceProviderNonGeneric()
+        {
+            CanResolveServicesUsingIServiceProviderContainer c = new();
+            IServiceProvider serviceProvider = c;
+
+            var scope = c.CreateScope();
+            IServiceProvider scopeServiceProvider = scope;
+
+            Assert.Same(c, serviceProvider.GetService(typeof(IServiceProvider)));
+            Assert.Same(scope, scopeServiceProvider.GetService(typeof(IServiceProvider)));
+        }
+
+        [ServiceProvider]
+        internal partial class CanResolveIServiceProviderNonGenericContainer { }
+
         [Fact]
         public void CanResolveIServiceProvider()
         {

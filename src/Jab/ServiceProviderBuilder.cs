@@ -6,6 +6,8 @@ internal class ServiceProviderBuilder
     private readonly KnownTypes _knownTypes;
     private readonly ServiceProviderCallSite _serviceProviderCallsite;
     private readonly ScopeFactoryCallSite? _scopeFactoryCallSite;
+    private readonly ServiceProviderIsServiceCallSite? _serviceProviderIsServiceCallSite;
+
 
     public ServiceProviderBuilder(GeneratorContext context)
     {
@@ -15,6 +17,10 @@ internal class ServiceProviderBuilder
         if (_knownTypes.IServiceScopeFactoryType != null)
         {
             _scopeFactoryCallSite = new ScopeFactoryCallSite(_knownTypes.IServiceScopeFactoryType);
+        }
+        if (_knownTypes.IServiceProviderIsServiceType != null)
+        {
+            _serviceProviderIsServiceCallSite = new ServiceProviderIsServiceCallSite(_knownTypes.IServiceProviderIsServiceType);
         }
     }
 
@@ -120,7 +126,18 @@ internal class ServiceProviderBuilder
                 new ServiceResolutionContext(description, callSites, registration.Location));
         }
 
-        foreach (var rootService in description.RootServices)
+        List<RootService> rootServices = new(description.RootServices);
+        rootServices.Add(new(_knownTypes.IServiceProviderType, null));
+        if (_knownTypes.IServiceScopeFactoryType != null)
+        {
+            rootServices.Add(new(_knownTypes.IServiceScopeFactoryType, null));
+        }
+        if (_knownTypes.IServiceProviderIsServiceType != null)
+        {
+            rootServices.Add(new(_knownTypes.IServiceProviderIsServiceType, null));
+        }
+
+        foreach (var rootService in rootServices)
         {
             var serviceType = rootService.Service;
             var callSite = GetCallSite(
@@ -236,25 +253,32 @@ internal class ServiceProviderBuilder
             return new ErrorCallSite(identity);
         }
 
-        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceProviderType))
+        ServiceCallSite BuiltInCallSite(ServiceCallSite callSite)
         {
-            if (CheckNotNamed(_serviceProviderCallsite.Identity) is { } error)
-            {
-                return error;
-            }
-            context.CallSiteCache.Add(_serviceProviderCallsite);
-            return _serviceProviderCallsite;
-        }
-
-        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceScopeFactoryType))
-        {
-            var callSite = _scopeFactoryCallSite!;
             if (CheckNotNamed(callSite.Identity) is { } error)
             {
                 return error;
             }
-            context.CallSiteCache.Add(callSite);
+            if (!context.CallSiteCache.TryGet(callSite.Identity, out _))
+            {
+                context.CallSiteCache.Add(callSite);
+            }
             return callSite;
+        }
+
+        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceProviderType))
+        {
+            return BuiltInCallSite(_serviceProviderCallsite);
+        }
+
+        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceScopeFactoryType))
+        {
+            return BuiltInCallSite(_scopeFactoryCallSite!);
+        }
+
+        if (SymbolEqualityComparer.Default.Equals(serviceType, _knownTypes.IServiceProviderIsServiceType))
+        {
+            return BuiltInCallSite(_serviceProviderIsServiceCallSite!);
         }
 
         return null;
@@ -655,6 +679,7 @@ internal class ServiceProviderBuilder
             }
             else
             {
+                bool isNullable = parameterSymbol.Type.NullableAnnotation == NullableAnnotation.Annotated;
                 if (parameterCallSite == null)
                 {
                     Diagnostic diagnostic;
@@ -679,6 +704,17 @@ internal class ServiceProviderBuilder
                 }
                 else
                 {
+                    if (isNullable)
+                    {
+                        var diagnostic = Diagnostic.Create(
+                                DiagnosticDescriptors.NullableServiceRegistered,
+                                registrationLocation,
+                                parameterSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
+                                implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+
+                        _context.ReportDiagnostic(diagnostic);
+                    }
+
                     callSites.Add(parameterCallSite);
                 }
             }

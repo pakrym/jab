@@ -1,7 +1,7 @@
 ﻿<Project>
 
   <PropertyGroup>
-    <DefaultFunctionalTestTargetFrameworks>netcoreapp3.1;net6.0;net7.0;netstandard2.0</DefaultFunctionalTestTargetFrameworks>
+    <DefaultFunctionalTestTargetFrameworks>netcoreapp3.1;net6.0;net7.0;net8.0;netstandard2.0</DefaultFunctionalTestTargetFrameworks>
     <DefaultFunctionalTestTargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))" >$(DefaultFunctionalTestTargetFrameworks);net472</DefaultFunctionalTestTargetFrameworks>
     <FunctionalTestTargetFrameworks Condition="'$(FunctionalTestTargetFrameworks)' == ''">$(DefaultFunctionalTestTargetFrameworks)</FunctionalTestTargetFrameworks>
     <IsPackable>false</IsPackable>
