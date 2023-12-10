@@ -10,6 +10,10 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Include="Generator\ContainerGenerator.Roslyn3.cs" />
+    </ItemGroup>
+
     <Import Project="../Jab/Jab.Common.props" />
 
 </Project>

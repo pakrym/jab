@@ -344,6 +344,12 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                 context.AddSource($"{root.Type.Name}.Generated.cs", codeWriter.ToString());
             }
         }
+#if IGNORE_MISSING_TYPE
+        catch (MissingTypeException)
+        {
+            //Ignore
+        }
+#endif
         catch (Exception e)
         {
             context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.UnexpectedErrorDescriptor, Location.None, e.ToString().Replace(Environment.NewLine, " ")));

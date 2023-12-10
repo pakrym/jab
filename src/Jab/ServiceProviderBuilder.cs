@@ -80,12 +80,12 @@ internal class KnownTypes
         static INamedTypeSymbol GetTypeByMetadataNameOrThrow(IAssemblySymbol assemblySymbol,
             string fullyQualifiedMetadataName) =>
             assemblySymbol.GetTypeByMetadataName(fullyQualifiedMetadataName)
-            ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
+            ?? throw new MissingTypeException(fullyQualifiedMetadataName);
 
         static INamedTypeSymbol GetTypeFromCompilationByMetadataNameOrThrow(Compilation compilation,
             string fullyQualifiedMetadataName) =>
             compilation.GetTypeByMetadataName(fullyQualifiedMetadataName)
-            ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
+            ?? throw new MissingTypeException(fullyQualifiedMetadataName);
 
         IEnumerableType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IEnumerableMetadataName);
         IServiceProviderType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IServiceProviderMetadataName);
@@ -114,6 +114,17 @@ internal class KnownTypes
 
         ModuleAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceProviderModuleAttributeMetadataName);
     }
+}
+
+public class MissingTypeException : Exception
+{
+    public MissingTypeException(string fullyQualifiedMetadataName)
+     : base($"Type with metadata '{fullyQualifiedMetadataName}' not found")
+    {
+        FullyQualifiedMetadataName = fullyQualifiedMetadataName;
+    }
+
+    public string FullyQualifiedMetadataName { get; }
 }
 
 internal class ServiceProviderBuilder
