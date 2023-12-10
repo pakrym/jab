@@ -12,10 +12,6 @@
     <IsTestProject Condition="'$(TargetFramework)' == 'netstandard2.0'">false</IsTestProject>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <DefineConstants Condition="'$(FunctionalTestPackageVersion)' == ''">$(DefineConstants);JAB_ATTRIBUTES_REFERENCED</DefineConstants>
-  </PropertyGroup>
-
   <Target Name="_SetProperties">
     <PropertyGroup>
       <!-- Force CoreCompile execution -->
@@ -36,7 +32,6 @@
 
   <ItemGroup Condition="'$(FunctionalTestPackageVersion)' == ''" >
     <ProjectReference Include="..\Jab\Jab.csproj" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\Jab.Attributes\Jab.Attributes.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
   </ItemGroup>
 
   <Target Name="DefineJabPreview" BeforeTargets="CoreCompile" Condition="'$(FunctionalTestPackageVersion)' == ''">
