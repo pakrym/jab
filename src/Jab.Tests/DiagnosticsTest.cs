@@ -420,7 +420,7 @@ public partial class Container {{}}
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
                     .CompilerError("JAB0014")
-                    .WithSeverity(DiagnosticSeverity.Warning)
+                    .WithSeverity(DiagnosticSeverity.Info)
                     .WithLocation(1)
                     .WithArguments("IDependency?", "Service"));
         }

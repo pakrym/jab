@@ -84,10 +84,10 @@ internal class KnownTypes
     public INamedTypeSymbol? FromKeyedServicesAttribute { get; }
     public INamedTypeSymbol? FromNamedServicesAttribute { get; }
 
-    public KnownTypes(Compilation compilation, IAssemblySymbol assemblySymbol)
+    public KnownTypes(Compilation compilation, IModuleSymbol module, IAssemblySymbol assemblySymbol)
     {
         assemblySymbol =
-            assemblySymbol.ContainingModule.ReferencedAssemblySymbols.FirstOrDefault(
+            module.ReferencedAssemblySymbols.FirstOrDefault(
                 s => s.Name == JabAttributesAssemblyName)
             ?? assemblySymbol;
 

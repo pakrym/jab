@@ -11,7 +11,7 @@ internal class ServiceProviderBuilder
     public ServiceProviderBuilder(GeneratorContext context)
     {
         _context = context;
-        _knownTypes = new KnownTypes(context.Compilation, context.Compilation.Assembly);
+        _knownTypes = new KnownTypes(context.Compilation, context.Compilation.SourceModule, context.Compilation.Assembly);
         _serviceProviderCallsite = new ServiceProviderCallSite(_knownTypes.IServiceProviderType);
         if (_knownTypes.IServiceScopeFactoryType != null)
         {
@@ -684,7 +684,8 @@ internal class ServiceProviderBuilder
                     Diagnostic diagnostic;
                     if (registrationName == null)
                     {
-                        diagnostic = Diagnostic.Create(DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
+                        diagnostic = Diagnostic.Create(
+                            isNullable ? DiagnosticDescriptors.NullableServiceNotRegistered : DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
                             registrationLocation,
                             parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
                             implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
@@ -864,7 +865,7 @@ internal class ServiceProviderBuilder
         var knownTypes =
             SymbolEqualityComparer.Default.Equals(moduleType.ContainingAssembly, _context.Compilation.Assembly)
                 ? _knownTypes
-                : new KnownTypes(_context.Compilation, moduleType.ContainingAssembly);
+                : new KnownTypes(_context.Compilation, moduleType.ContainingModule, moduleType.ContainingAssembly);
 
         foreach (var attributeData in moduleType.GetAttributes())
         {
