@@ -8,7 +8,6 @@ internal class ServiceProviderBuilder
     private readonly ScopeFactoryCallSite? _scopeFactoryCallSite;
     private readonly ServiceProviderIsServiceCallSite? _serviceProviderIsServiceCallSite;
 
-
     public ServiceProviderBuilder(GeneratorContext context)
     {
         _context = context;

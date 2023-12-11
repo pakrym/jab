@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+        <LangVersion>preview</LangVersion>
+        <RootNamespace>Jab</RootNamespace>
+        <DefineConstants>$(DefineConstants);JAB_ATTRIBUTES_PACKAGE;GENERIC_ATTRIBUTES</DefineConstants>
+        <Version>0.9.0</Version>
+        <Version Condition="'$(ReleaseVersion)' != ''">$(ReleaseVersion)</Version>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="$(MSBuildThisFileDirectory)/../Jab/Attributes.cs" />
+    </ItemGroup>
+
+</Project>

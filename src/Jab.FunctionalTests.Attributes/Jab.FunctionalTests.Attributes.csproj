@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../Jab.FunctionalTests.Common/Jab.FunctionalTests.Common.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(FunctionalTestTargetFrameworks)</TargetFrameworks>
+  </PropertyGroup>
+
+
+  <PropertyGroup>
+    <DefineConstants Condition="'$(FunctionalTestPackageVersion)' == ''">$(DefineConstants);JAB_ATTRIBUTES_REFERENCED</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(FunctionalTestPackageVersion)' != ''" >
+    <PackageReference Include="Jab.Attributes" Version="$(FunctionalTestPackageVersion)" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(FunctionalTestPackageVersion)' == ''" >
+    <ProjectReference Include="..\Jab.Attributes\Jab.Attributes.csproj" ReferenceOutputAssembly="true" />
+  </ItemGroup>
+</Project>

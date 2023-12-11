@@ -17,8 +17,13 @@ Get-ChildItem -Path $BasePath -File -Recurse | ForEach-Object {
 }
 
 $projectPath = Join-Path $BasePath "src/Jab/Jab.Common.props"
+$attributesProjectPath = Join-Path $BasePath "src/Jab.Attributes/Jab.Attributes.csproj"
+
 $project = Get-Content $projectPath -Raw 
 $projectRegexPrefix = "<Version>"
 $projectRegexToFind = "$projectRegexPrefix([\w\d\.]+)"
+
 Replace-In-File $projectPath $projectRegexPrefix $projectRegexToFind
+Replace-In-File $attributesProjectPath $projectRegexPrefix $projectRegexToFind
+
 

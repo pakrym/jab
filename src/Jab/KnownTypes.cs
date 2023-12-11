@@ -2,6 +2,7 @@ namespace Jab;
 
 internal class KnownTypes
 {
+    public const string JabAttributesAssemblyName = "Jab.Attributes";
     public const string TransientAttributeShortName = "Transient";
     public const string SingletonAttributeShortName = "Singleton";
     public const string ScopedAttributeShortName = "Scoped";
@@ -85,6 +86,11 @@ internal class KnownTypes
 
     public KnownTypes(Compilation compilation, IAssemblySymbol assemblySymbol)
     {
+        assemblySymbol =
+            assemblySymbol.ContainingModule.ReferencedAssemblySymbols.FirstOrDefault(
+                s => s.Name == JabAttributesAssemblyName)
+            ?? assemblySymbol;
+
         static INamedTypeSymbol GetTypeByMetadataNameOrThrow(IAssemblySymbol assemblySymbol,
             string fullyQualifiedMetadataName) =>
             assemblySymbol.GetTypeByMetadataName(fullyQualifiedMetadataName)
