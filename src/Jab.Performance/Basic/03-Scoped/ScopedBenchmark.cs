@@ -34,11 +34,11 @@ public class ScopedBenchmark
             using var scope = _container.CreateScope();
 
             if (NumbersOfClasses >= 1)
-                _container.GetService<IScoped1>();
+                scope.GetService<IScoped1>();
             if (NumbersOfClasses >= 2)
-                _container.GetService<IScoped2>();
+                scope.GetService<IScoped2>();
             if (NumbersOfClasses >= 3)
-                _container.GetService<IScoped3>();
+                scope.GetService<IScoped3>();
         }
     }
 
@@ -50,11 +50,11 @@ public class ScopedBenchmark
             using var scope = _provider.CreateScope();
 
             if (NumbersOfClasses >= 1)
-                _provider.GetService<IScoped1>();
+                scope.ServiceProvider.GetService<IScoped1>();
             if(NumbersOfClasses >= 2)
-                _provider.GetService<IScoped2>();
+                scope.ServiceProvider.GetService<IScoped2>();
             if (NumbersOfClasses >= 3)
-                _provider.GetService<IScoped3>();
+                scope.ServiceProvider.GetService<IScoped3>();
         }
     }
 }

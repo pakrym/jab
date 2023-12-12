@@ -1,4 +1,4 @@
-﻿namespace Jab.Performance.Basic.Mixed; 
+﻿namespace Jab.Performance.Basic.Mixed;
 
 using BenchmarkDotNet.Attributes;
 using Jab.Performance.Basic.Singleton;
@@ -58,7 +58,7 @@ public class MixedBenchmark
 
             if (NumbersOfClasses >= 1)
                 scope.ServiceProvider.GetService<IMix1>();
-            if(NumbersOfClasses >= 2)
+            if (NumbersOfClasses >= 2)
                 scope.ServiceProvider.GetService<IMix2>();
             if (NumbersOfClasses >= 3)
                 scope.ServiceProvider.GetService<IMix3>();
