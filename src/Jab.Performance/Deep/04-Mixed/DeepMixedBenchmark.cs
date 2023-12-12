@@ -1,0 +1,667 @@
+﻿namespace Jab.Performance.Deep.Mixed;
+
+using BenchmarkDotNet.Attributes;
+using Jab.Performance.Deep.Mixed;
+using Jab.Performance.Deep.Singleton;
+using Jab.Performance.Deep.Transient;
+using Jab.Performance.Deep.Scoped;
+using Microsoft.Extensions.DependencyInjection;
+using MEDI = Microsoft.Extensions.DependencyInjection;
+
+[MemoryDiagnoser]
+public class DeepMixedBenchmark
+{
+    private readonly MEDI.ServiceProvider _provider;
+    private readonly DeepContainerMixed _container = new();
+
+    public DeepMixedBenchmark()
+    {
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddSingleton<ISingleton1, Singleton1>();
+        serviceCollection.AddSingleton<ISingleton2, Singleton2>();
+        serviceCollection.AddSingleton<ISingleton3, Singleton3>();
+        serviceCollection.AddSingleton<ISingleton4, Singleton4>();
+        serviceCollection.AddSingleton<ISingleton5, Singleton5>();
+        serviceCollection.AddSingleton<ISingleton6, Singleton6>();
+        serviceCollection.AddSingleton<ISingleton7, Singleton7>();
+        serviceCollection.AddSingleton<ISingleton8, Singleton8>();
+        serviceCollection.AddSingleton<ISingleton9, Singleton9>();
+        serviceCollection.AddSingleton<ISingleton10, Singleton10>();
+        serviceCollection.AddSingleton<ISingleton11, Singleton11>();
+        serviceCollection.AddSingleton<ISingleton12, Singleton12>();
+        serviceCollection.AddSingleton<ISingleton13, Singleton13>();
+        serviceCollection.AddSingleton<ISingleton14, Singleton14>();
+        serviceCollection.AddSingleton<ISingleton15, Singleton15>();
+        serviceCollection.AddSingleton<ISingleton16, Singleton16>();
+        serviceCollection.AddSingleton<ISingleton17, Singleton17>();
+        serviceCollection.AddSingleton<ISingleton18, Singleton18>();
+        serviceCollection.AddSingleton<ISingleton19, Singleton19>();
+        serviceCollection.AddSingleton<ISingleton20, Singleton20>();
+        serviceCollection.AddSingleton<ISingleton21, Singleton21>();
+        serviceCollection.AddSingleton<ISingleton22, Singleton22>();
+        serviceCollection.AddSingleton<ISingleton23, Singleton23>();
+        serviceCollection.AddSingleton<ISingleton24, Singleton24>();
+        serviceCollection.AddSingleton<ISingleton25, Singleton25>();
+        serviceCollection.AddSingleton<ISingleton26, Singleton26>();
+        serviceCollection.AddSingleton<ISingleton27, Singleton27>();
+        serviceCollection.AddSingleton<ISingleton28, Singleton28>();
+        serviceCollection.AddSingleton<ISingleton29, Singleton29>();
+        serviceCollection.AddSingleton<ISingleton30, Singleton30>();
+        serviceCollection.AddSingleton<ISingleton31, Singleton31>();
+        serviceCollection.AddSingleton<ISingleton32, Singleton32>();
+        serviceCollection.AddSingleton<ISingleton33, Singleton33>();
+        serviceCollection.AddSingleton<ISingleton34, Singleton34>();
+        serviceCollection.AddSingleton<ISingleton35, Singleton35>();
+        serviceCollection.AddSingleton<ISingleton36, Singleton36>();
+        serviceCollection.AddSingleton<ISingleton37, Singleton37>();
+        serviceCollection.AddSingleton<ISingleton38, Singleton38>();
+        serviceCollection.AddSingleton<ISingleton39, Singleton39>();
+        serviceCollection.AddSingleton<ISingleton40, Singleton40>();
+        serviceCollection.AddSingleton<ISingleton41, Singleton41>();
+        serviceCollection.AddSingleton<ISingleton42, Singleton42>();
+        serviceCollection.AddSingleton<ISingleton43, Singleton43>();
+        serviceCollection.AddSingleton<ISingleton44, Singleton44>();
+        serviceCollection.AddSingleton<ISingleton45, Singleton45>();
+        serviceCollection.AddSingleton<ISingleton46, Singleton46>();
+        serviceCollection.AddSingleton<ISingleton47, Singleton47>();
+        serviceCollection.AddSingleton<ISingleton48, Singleton48>();
+        serviceCollection.AddSingleton<ISingleton49, Singleton49>();
+        serviceCollection.AddSingleton<ISingleton50, Singleton50>();
+        serviceCollection.AddSingleton<ISingleton51, Singleton51>();
+        serviceCollection.AddSingleton<ISingleton52, Singleton52>();
+        serviceCollection.AddSingleton<ISingleton53, Singleton53>();
+        serviceCollection.AddSingleton<ISingleton54, Singleton54>();
+        serviceCollection.AddSingleton<ISingleton55, Singleton55>();
+        serviceCollection.AddSingleton<ISingleton56, Singleton56>();
+        serviceCollection.AddSingleton<ISingleton57, Singleton57>();
+        serviceCollection.AddSingleton<ISingleton58, Singleton58>();
+        serviceCollection.AddSingleton<ISingleton59, Singleton59>();
+        serviceCollection.AddSingleton<ISingleton60, Singleton60>();
+        serviceCollection.AddSingleton<ISingleton61, Singleton61>();
+        serviceCollection.AddSingleton<ISingleton62, Singleton62>();
+        serviceCollection.AddSingleton<ISingleton63, Singleton63>();
+        serviceCollection.AddSingleton<ISingleton64, Singleton64>();
+        serviceCollection.AddSingleton<ISingleton65, Singleton65>();
+        serviceCollection.AddSingleton<ISingleton66, Singleton66>();
+        serviceCollection.AddSingleton<ISingleton67, Singleton67>();
+        serviceCollection.AddSingleton<ISingleton68, Singleton68>();
+        serviceCollection.AddSingleton<ISingleton69, Singleton69>();
+        serviceCollection.AddSingleton<ISingleton70, Singleton70>();
+        serviceCollection.AddSingleton<ISingleton71, Singleton71>();
+        serviceCollection.AddSingleton<ISingleton72, Singleton72>();
+        serviceCollection.AddSingleton<ISingleton73, Singleton73>();
+        serviceCollection.AddSingleton<ISingleton74, Singleton74>();
+        serviceCollection.AddSingleton<ISingleton75, Singleton75>();
+        serviceCollection.AddSingleton<ISingleton76, Singleton76>();
+        serviceCollection.AddSingleton<ISingleton77, Singleton77>();
+        serviceCollection.AddSingleton<ISingleton78, Singleton78>();
+        serviceCollection.AddSingleton<ISingleton79, Singleton79>();
+        serviceCollection.AddSingleton<ISingleton80, Singleton80>();
+        serviceCollection.AddSingleton<ISingleton81, Singleton81>();
+        serviceCollection.AddSingleton<ISingleton82, Singleton82>();
+        serviceCollection.AddSingleton<ISingleton83, Singleton83>();
+        serviceCollection.AddSingleton<ISingleton84, Singleton84>();
+        serviceCollection.AddSingleton<ISingleton85, Singleton85>();
+        serviceCollection.AddSingleton<ISingleton86, Singleton86>();
+        serviceCollection.AddSingleton<ISingleton87, Singleton87>();
+        serviceCollection.AddSingleton<ISingleton88, Singleton88>();
+        serviceCollection.AddSingleton<ISingleton89, Singleton89>();
+        serviceCollection.AddSingleton<ISingleton90, Singleton90>();
+        serviceCollection.AddSingleton<ISingleton91, Singleton91>();
+        serviceCollection.AddSingleton<ISingleton92, Singleton92>();
+        serviceCollection.AddSingleton<ISingleton93, Singleton93>();
+        serviceCollection.AddSingleton<ISingleton94, Singleton94>();
+        serviceCollection.AddSingleton<ISingleton95, Singleton95>();
+        serviceCollection.AddSingleton<ISingleton96, Singleton96>();
+        serviceCollection.AddSingleton<ISingleton97, Singleton97>();
+        serviceCollection.AddSingleton<ISingleton98, Singleton98>();
+        serviceCollection.AddSingleton<ISingleton99, Singleton99>();
+        serviceCollection.AddSingleton<ISingleton100, Singleton100>();
+        serviceCollection.AddTransient<ITransient1, Transient1>();
+        serviceCollection.AddTransient<ITransient2, Transient2>();
+        serviceCollection.AddTransient<ITransient3, Transient3>();
+        serviceCollection.AddTransient<ITransient4, Transient4>();
+        serviceCollection.AddTransient<ITransient5, Transient5>();
+        serviceCollection.AddTransient<ITransient6, Transient6>();
+        serviceCollection.AddTransient<ITransient7, Transient7>();
+        serviceCollection.AddTransient<ITransient8, Transient8>();
+        serviceCollection.AddTransient<ITransient9, Transient9>();
+        serviceCollection.AddTransient<ITransient10, Transient10>();
+        serviceCollection.AddTransient<ITransient11, Transient11>();
+        serviceCollection.AddTransient<ITransient12, Transient12>();
+        serviceCollection.AddTransient<ITransient13, Transient13>();
+        serviceCollection.AddTransient<ITransient14, Transient14>();
+        serviceCollection.AddTransient<ITransient15, Transient15>();
+        serviceCollection.AddTransient<ITransient16, Transient16>();
+        serviceCollection.AddTransient<ITransient17, Transient17>();
+        serviceCollection.AddTransient<ITransient18, Transient18>();
+        serviceCollection.AddTransient<ITransient19, Transient19>();
+        serviceCollection.AddTransient<ITransient20, Transient20>();
+        serviceCollection.AddTransient<ITransient21, Transient21>();
+        serviceCollection.AddTransient<ITransient22, Transient22>();
+        serviceCollection.AddTransient<ITransient23, Transient23>();
+        serviceCollection.AddTransient<ITransient24, Transient24>();
+        serviceCollection.AddTransient<ITransient25, Transient25>();
+        serviceCollection.AddTransient<ITransient26, Transient26>();
+        serviceCollection.AddTransient<ITransient27, Transient27>();
+        serviceCollection.AddTransient<ITransient28, Transient28>();
+        serviceCollection.AddTransient<ITransient29, Transient29>();
+        serviceCollection.AddTransient<ITransient30, Transient30>();
+        serviceCollection.AddTransient<ITransient31, Transient31>();
+        serviceCollection.AddTransient<ITransient32, Transient32>();
+        serviceCollection.AddTransient<ITransient33, Transient33>();
+        serviceCollection.AddTransient<ITransient34, Transient34>();
+        serviceCollection.AddTransient<ITransient35, Transient35>();
+        serviceCollection.AddTransient<ITransient36, Transient36>();
+        serviceCollection.AddTransient<ITransient37, Transient37>();
+        serviceCollection.AddTransient<ITransient38, Transient38>();
+        serviceCollection.AddTransient<ITransient39, Transient39>();
+        serviceCollection.AddTransient<ITransient40, Transient40>();
+        serviceCollection.AddTransient<ITransient41, Transient41>();
+        serviceCollection.AddTransient<ITransient42, Transient42>();
+        serviceCollection.AddTransient<ITransient43, Transient43>();
+        serviceCollection.AddTransient<ITransient44, Transient44>();
+        serviceCollection.AddTransient<ITransient45, Transient45>();
+        serviceCollection.AddTransient<ITransient46, Transient46>();
+        serviceCollection.AddTransient<ITransient47, Transient47>();
+        serviceCollection.AddTransient<ITransient48, Transient48>();
+        serviceCollection.AddTransient<ITransient49, Transient49>();
+        serviceCollection.AddTransient<ITransient50, Transient50>();
+        serviceCollection.AddTransient<ITransient51, Transient51>();
+        serviceCollection.AddTransient<ITransient52, Transient52>();
+        serviceCollection.AddTransient<ITransient53, Transient53>();
+        serviceCollection.AddTransient<ITransient54, Transient54>();
+        serviceCollection.AddTransient<ITransient55, Transient55>();
+        serviceCollection.AddTransient<ITransient56, Transient56>();
+        serviceCollection.AddTransient<ITransient57, Transient57>();
+        serviceCollection.AddTransient<ITransient58, Transient58>();
+        serviceCollection.AddTransient<ITransient59, Transient59>();
+        serviceCollection.AddTransient<ITransient60, Transient60>();
+        serviceCollection.AddTransient<ITransient61, Transient61>();
+        serviceCollection.AddTransient<ITransient62, Transient62>();
+        serviceCollection.AddTransient<ITransient63, Transient63>();
+        serviceCollection.AddTransient<ITransient64, Transient64>();
+        serviceCollection.AddTransient<ITransient65, Transient65>();
+        serviceCollection.AddTransient<ITransient66, Transient66>();
+        serviceCollection.AddTransient<ITransient67, Transient67>();
+        serviceCollection.AddTransient<ITransient68, Transient68>();
+        serviceCollection.AddTransient<ITransient69, Transient69>();
+        serviceCollection.AddTransient<ITransient70, Transient70>();
+        serviceCollection.AddTransient<ITransient71, Transient71>();
+        serviceCollection.AddTransient<ITransient72, Transient72>();
+        serviceCollection.AddTransient<ITransient73, Transient73>();
+        serviceCollection.AddTransient<ITransient74, Transient74>();
+        serviceCollection.AddTransient<ITransient75, Transient75>();
+        serviceCollection.AddTransient<ITransient76, Transient76>();
+        serviceCollection.AddTransient<ITransient77, Transient77>();
+        serviceCollection.AddTransient<ITransient78, Transient78>();
+        serviceCollection.AddTransient<ITransient79, Transient79>();
+        serviceCollection.AddTransient<ITransient80, Transient80>();
+        serviceCollection.AddTransient<ITransient81, Transient81>();
+        serviceCollection.AddTransient<ITransient82, Transient82>();
+        serviceCollection.AddTransient<ITransient83, Transient83>();
+        serviceCollection.AddTransient<ITransient84, Transient84>();
+        serviceCollection.AddTransient<ITransient85, Transient85>();
+        serviceCollection.AddTransient<ITransient86, Transient86>();
+        serviceCollection.AddTransient<ITransient87, Transient87>();
+        serviceCollection.AddTransient<ITransient88, Transient88>();
+        serviceCollection.AddTransient<ITransient89, Transient89>();
+        serviceCollection.AddTransient<ITransient90, Transient90>();
+        serviceCollection.AddTransient<ITransient91, Transient91>();
+        serviceCollection.AddTransient<ITransient92, Transient92>();
+        serviceCollection.AddTransient<ITransient93, Transient93>();
+        serviceCollection.AddTransient<ITransient94, Transient94>();
+        serviceCollection.AddTransient<ITransient95, Transient95>();
+        serviceCollection.AddTransient<ITransient96, Transient96>();
+        serviceCollection.AddTransient<ITransient97, Transient97>();
+        serviceCollection.AddTransient<ITransient98, Transient98>();
+        serviceCollection.AddTransient<ITransient99, Transient99>();
+        serviceCollection.AddTransient<ITransient100, Transient100>();
+        serviceCollection.AddTransient<IMix1, Mix1>();
+        serviceCollection.AddTransient<IMix2, Mix2>();
+        serviceCollection.AddTransient<IMix3, Mix3>();
+        serviceCollection.AddTransient<IMix4, Mix4>();
+        serviceCollection.AddTransient<IMix5, Mix5>();
+        serviceCollection.AddTransient<IMix6, Mix6>();
+        serviceCollection.AddTransient<IMix7, Mix7>();
+        serviceCollection.AddTransient<IMix8, Mix8>();
+        serviceCollection.AddTransient<IMix9, Mix9>();
+        serviceCollection.AddTransient<IMix10, Mix10>();
+        serviceCollection.AddTransient<IMix11, Mix11>();
+        serviceCollection.AddTransient<IMix12, Mix12>();
+        serviceCollection.AddTransient<IMix13, Mix13>();
+        serviceCollection.AddTransient<IMix14, Mix14>();
+        serviceCollection.AddTransient<IMix15, Mix15>();
+        serviceCollection.AddTransient<IMix16, Mix16>();
+        serviceCollection.AddTransient<IMix17, Mix17>();
+        serviceCollection.AddTransient<IMix18, Mix18>();
+        serviceCollection.AddTransient<IMix19, Mix19>();
+        serviceCollection.AddTransient<IMix20, Mix20>();
+        serviceCollection.AddTransient<IMix21, Mix21>();
+        serviceCollection.AddTransient<IMix22, Mix22>();
+        serviceCollection.AddTransient<IMix23, Mix23>();
+        serviceCollection.AddTransient<IMix24, Mix24>();
+        serviceCollection.AddTransient<IMix25, Mix25>();
+        serviceCollection.AddTransient<IMix26, Mix26>();
+        serviceCollection.AddTransient<IMix27, Mix27>();
+        serviceCollection.AddTransient<IMix28, Mix28>();
+        serviceCollection.AddTransient<IMix29, Mix29>();
+        serviceCollection.AddTransient<IMix30, Mix30>();
+        serviceCollection.AddTransient<IMix31, Mix31>();
+        serviceCollection.AddTransient<IMix32, Mix32>();
+        serviceCollection.AddTransient<IMix33, Mix33>();
+        serviceCollection.AddTransient<IMix34, Mix34>();
+        serviceCollection.AddTransient<IMix35, Mix35>();
+        serviceCollection.AddTransient<IMix36, Mix36>();
+        serviceCollection.AddTransient<IMix37, Mix37>();
+        serviceCollection.AddTransient<IMix38, Mix38>();
+        serviceCollection.AddTransient<IMix39, Mix39>();
+        serviceCollection.AddTransient<IMix40, Mix40>();
+        serviceCollection.AddTransient<IMix41, Mix41>();
+        serviceCollection.AddTransient<IMix42, Mix42>();
+        serviceCollection.AddTransient<IMix43, Mix43>();
+        serviceCollection.AddTransient<IMix44, Mix44>();
+        serviceCollection.AddTransient<IMix45, Mix45>();
+        serviceCollection.AddTransient<IMix46, Mix46>();
+        serviceCollection.AddTransient<IMix47, Mix47>();
+        serviceCollection.AddTransient<IMix48, Mix48>();
+        serviceCollection.AddTransient<IMix49, Mix49>();
+        serviceCollection.AddTransient<IMix50, Mix50>();
+        serviceCollection.AddTransient<IMix51, Mix51>();
+        serviceCollection.AddTransient<IMix52, Mix52>();
+        serviceCollection.AddTransient<IMix53, Mix53>();
+        serviceCollection.AddTransient<IMix54, Mix54>();
+        serviceCollection.AddTransient<IMix55, Mix55>();
+        serviceCollection.AddTransient<IMix56, Mix56>();
+        serviceCollection.AddTransient<IMix57, Mix57>();
+        serviceCollection.AddTransient<IMix58, Mix58>();
+        serviceCollection.AddTransient<IMix59, Mix59>();
+        serviceCollection.AddTransient<IMix60, Mix60>();
+        serviceCollection.AddTransient<IMix61, Mix61>();
+        serviceCollection.AddTransient<IMix62, Mix62>();
+        serviceCollection.AddTransient<IMix63, Mix63>();
+        serviceCollection.AddTransient<IMix64, Mix64>();
+        serviceCollection.AddTransient<IMix65, Mix65>();
+        serviceCollection.AddTransient<IMix66, Mix66>();
+        serviceCollection.AddTransient<IMix67, Mix67>();
+        serviceCollection.AddTransient<IMix68, Mix68>();
+        serviceCollection.AddTransient<IMix69, Mix69>();
+        serviceCollection.AddTransient<IMix70, Mix70>();
+        serviceCollection.AddTransient<IMix71, Mix71>();
+        serviceCollection.AddTransient<IMix72, Mix72>();
+        serviceCollection.AddTransient<IMix73, Mix73>();
+        serviceCollection.AddTransient<IMix74, Mix74>();
+        serviceCollection.AddTransient<IMix75, Mix75>();
+        serviceCollection.AddTransient<IMix76, Mix76>();
+        serviceCollection.AddTransient<IMix77, Mix77>();
+        serviceCollection.AddTransient<IMix78, Mix78>();
+        serviceCollection.AddTransient<IMix79, Mix79>();
+        serviceCollection.AddTransient<IMix80, Mix80>();
+        serviceCollection.AddTransient<IMix81, Mix81>();
+        serviceCollection.AddTransient<IMix82, Mix82>();
+        serviceCollection.AddTransient<IMix83, Mix83>();
+        serviceCollection.AddTransient<IMix84, Mix84>();
+        serviceCollection.AddTransient<IMix85, Mix85>();
+        serviceCollection.AddTransient<IMix86, Mix86>();
+        serviceCollection.AddTransient<IMix87, Mix87>();
+        serviceCollection.AddTransient<IMix88, Mix88>();
+        serviceCollection.AddTransient<IMix89, Mix89>();
+        serviceCollection.AddTransient<IMix90, Mix90>();
+        serviceCollection.AddTransient<IMix91, Mix91>();
+        serviceCollection.AddTransient<IMix92, Mix92>();
+        serviceCollection.AddTransient<IMix93, Mix93>();
+        serviceCollection.AddTransient<IMix94, Mix94>();
+        serviceCollection.AddTransient<IMix95, Mix95>();
+        serviceCollection.AddTransient<IMix96, Mix96>();
+        serviceCollection.AddTransient<IMix97, Mix97>();
+        serviceCollection.AddTransient<IMix98, Mix98>();
+        serviceCollection.AddTransient<IMix99, Mix99>();
+        serviceCollection.AddTransient<IMix100, Mix100>();
+
+        _provider = serviceCollection.BuildServiceProvider();
+    }
+
+    [Params(1, 10, 100)]
+    public int NumbersOfCalls { get; set; }
+
+    [Params(1, 10, 100)]
+    public int Deep { get; set; }
+
+    [Benchmark(Baseline = true)]
+    public void Jab()
+    {
+        for (var i = 0; i < NumbersOfCalls; i++)
+        {
+            using var scope = _container.CreateScope();
+
+            if (Deep == 1)
+                scope.GetService<IMix100>();
+            if (Deep == 10)
+                scope.GetService<IMix90>();
+            if (Deep == 100)
+                scope.GetService<IMix1>();
+        }
+    }
+
+    [Benchmark]
+    public void MEDI()
+    {
+        for (var i = 0; i < NumbersOfCalls; i++)
+        {
+            using var scope = _provider.CreateScope();
+
+            if (Deep == 1)
+                scope.ServiceProvider.GetService<IMix100>();
+            if (Deep == 10)
+                scope.ServiceProvider.GetService<IMix90>();
+            if (Deep == 100)
+                scope.ServiceProvider.GetService<IMix1>();
+        }
+    }
+}
+
+[ServiceProvider]
+[Singleton(typeof(ISingleton1), typeof(Singleton1))]
+[Singleton(typeof(ISingleton2), typeof(Singleton2))]
+[Singleton(typeof(ISingleton3), typeof(Singleton3))]
+[Singleton(typeof(ISingleton4), typeof(Singleton4))]
+[Singleton(typeof(ISingleton5), typeof(Singleton5))]
+[Singleton(typeof(ISingleton6), typeof(Singleton6))]
+[Singleton(typeof(ISingleton7), typeof(Singleton7))]
+[Singleton(typeof(ISingleton8), typeof(Singleton8))]
+[Singleton(typeof(ISingleton9), typeof(Singleton9))]
+[Singleton(typeof(ISingleton10), typeof(Singleton10))]
+[Singleton(typeof(ISingleton11), typeof(Singleton11))]
+[Singleton(typeof(ISingleton12), typeof(Singleton12))]
+[Singleton(typeof(ISingleton13), typeof(Singleton13))]
+[Singleton(typeof(ISingleton14), typeof(Singleton14))]
+[Singleton(typeof(ISingleton15), typeof(Singleton15))]
+[Singleton(typeof(ISingleton16), typeof(Singleton16))]
+[Singleton(typeof(ISingleton17), typeof(Singleton17))]
+[Singleton(typeof(ISingleton18), typeof(Singleton18))]
+[Singleton(typeof(ISingleton19), typeof(Singleton19))]
+[Singleton(typeof(ISingleton20), typeof(Singleton20))]
+[Singleton(typeof(ISingleton21), typeof(Singleton21))]
+[Singleton(typeof(ISingleton22), typeof(Singleton22))]
+[Singleton(typeof(ISingleton23), typeof(Singleton23))]
+[Singleton(typeof(ISingleton24), typeof(Singleton24))]
+[Singleton(typeof(ISingleton25), typeof(Singleton25))]
+[Singleton(typeof(ISingleton26), typeof(Singleton26))]
+[Singleton(typeof(ISingleton27), typeof(Singleton27))]
+[Singleton(typeof(ISingleton28), typeof(Singleton28))]
+[Singleton(typeof(ISingleton29), typeof(Singleton29))]
+[Singleton(typeof(ISingleton30), typeof(Singleton30))]
+[Singleton(typeof(ISingleton31), typeof(Singleton31))]
+[Singleton(typeof(ISingleton32), typeof(Singleton32))]
+[Singleton(typeof(ISingleton33), typeof(Singleton33))]
+[Singleton(typeof(ISingleton34), typeof(Singleton34))]
+[Singleton(typeof(ISingleton35), typeof(Singleton35))]
+[Singleton(typeof(ISingleton36), typeof(Singleton36))]
+[Singleton(typeof(ISingleton37), typeof(Singleton37))]
+[Singleton(typeof(ISingleton38), typeof(Singleton38))]
+[Singleton(typeof(ISingleton39), typeof(Singleton39))]
+[Singleton(typeof(ISingleton40), typeof(Singleton40))]
+[Singleton(typeof(ISingleton41), typeof(Singleton41))]
+[Singleton(typeof(ISingleton42), typeof(Singleton42))]
+[Singleton(typeof(ISingleton43), typeof(Singleton43))]
+[Singleton(typeof(ISingleton44), typeof(Singleton44))]
+[Singleton(typeof(ISingleton45), typeof(Singleton45))]
+[Singleton(typeof(ISingleton46), typeof(Singleton46))]
+[Singleton(typeof(ISingleton47), typeof(Singleton47))]
+[Singleton(typeof(ISingleton48), typeof(Singleton48))]
+[Singleton(typeof(ISingleton49), typeof(Singleton49))]
+[Singleton(typeof(ISingleton50), typeof(Singleton50))]
+[Singleton(typeof(ISingleton51), typeof(Singleton51))]
+[Singleton(typeof(ISingleton52), typeof(Singleton52))]
+[Singleton(typeof(ISingleton53), typeof(Singleton53))]
+[Singleton(typeof(ISingleton54), typeof(Singleton54))]
+[Singleton(typeof(ISingleton55), typeof(Singleton55))]
+[Singleton(typeof(ISingleton56), typeof(Singleton56))]
+[Singleton(typeof(ISingleton57), typeof(Singleton57))]
+[Singleton(typeof(ISingleton58), typeof(Singleton58))]
+[Singleton(typeof(ISingleton59), typeof(Singleton59))]
+[Singleton(typeof(ISingleton60), typeof(Singleton60))]
+[Singleton(typeof(ISingleton61), typeof(Singleton61))]
+[Singleton(typeof(ISingleton62), typeof(Singleton62))]
+[Singleton(typeof(ISingleton63), typeof(Singleton63))]
+[Singleton(typeof(ISingleton64), typeof(Singleton64))]
+[Singleton(typeof(ISingleton65), typeof(Singleton65))]
+[Singleton(typeof(ISingleton66), typeof(Singleton66))]
+[Singleton(typeof(ISingleton67), typeof(Singleton67))]
+[Singleton(typeof(ISingleton68), typeof(Singleton68))]
+[Singleton(typeof(ISingleton69), typeof(Singleton69))]
+[Singleton(typeof(ISingleton70), typeof(Singleton70))]
+[Singleton(typeof(ISingleton71), typeof(Singleton71))]
+[Singleton(typeof(ISingleton72), typeof(Singleton72))]
+[Singleton(typeof(ISingleton73), typeof(Singleton73))]
+[Singleton(typeof(ISingleton74), typeof(Singleton74))]
+[Singleton(typeof(ISingleton75), typeof(Singleton75))]
+[Singleton(typeof(ISingleton76), typeof(Singleton76))]
+[Singleton(typeof(ISingleton77), typeof(Singleton77))]
+[Singleton(typeof(ISingleton78), typeof(Singleton78))]
+[Singleton(typeof(ISingleton79), typeof(Singleton79))]
+[Singleton(typeof(ISingleton80), typeof(Singleton80))]
+[Singleton(typeof(ISingleton81), typeof(Singleton81))]
+[Singleton(typeof(ISingleton82), typeof(Singleton82))]
+[Singleton(typeof(ISingleton83), typeof(Singleton83))]
+[Singleton(typeof(ISingleton84), typeof(Singleton84))]
+[Singleton(typeof(ISingleton85), typeof(Singleton85))]
+[Singleton(typeof(ISingleton86), typeof(Singleton86))]
+[Singleton(typeof(ISingleton87), typeof(Singleton87))]
+[Singleton(typeof(ISingleton88), typeof(Singleton88))]
+[Singleton(typeof(ISingleton89), typeof(Singleton89))]
+[Singleton(typeof(ISingleton90), typeof(Singleton90))]
+[Singleton(typeof(ISingleton91), typeof(Singleton91))]
+[Singleton(typeof(ISingleton92), typeof(Singleton92))]
+[Singleton(typeof(ISingleton93), typeof(Singleton93))]
+[Singleton(typeof(ISingleton94), typeof(Singleton94))]
+[Singleton(typeof(ISingleton95), typeof(Singleton95))]
+[Singleton(typeof(ISingleton96), typeof(Singleton96))]
+[Singleton(typeof(ISingleton97), typeof(Singleton97))]
+[Singleton(typeof(ISingleton98), typeof(Singleton98))]
+[Singleton(typeof(ISingleton99), typeof(Singleton99))]
+[Singleton(typeof(ISingleton100), typeof(Singleton100))]
+[Transient(typeof(ITransient1), typeof(Transient1))]
+[Transient(typeof(ITransient2), typeof(Transient2))]
+[Transient(typeof(ITransient3), typeof(Transient3))]
+[Transient(typeof(ITransient4), typeof(Transient4))]
+[Transient(typeof(ITransient5), typeof(Transient5))]
+[Transient(typeof(ITransient6), typeof(Transient6))]
+[Transient(typeof(ITransient7), typeof(Transient7))]
+[Transient(typeof(ITransient8), typeof(Transient8))]
+[Transient(typeof(ITransient9), typeof(Transient9))]
+[Transient(typeof(ITransient10), typeof(Transient10))]
+[Transient(typeof(ITransient11), typeof(Transient11))]
+[Transient(typeof(ITransient12), typeof(Transient12))]
+[Transient(typeof(ITransient13), typeof(Transient13))]
+[Transient(typeof(ITransient14), typeof(Transient14))]
+[Transient(typeof(ITransient15), typeof(Transient15))]
+[Transient(typeof(ITransient16), typeof(Transient16))]
+[Transient(typeof(ITransient17), typeof(Transient17))]
+[Transient(typeof(ITransient18), typeof(Transient18))]
+[Transient(typeof(ITransient19), typeof(Transient19))]
+[Transient(typeof(ITransient20), typeof(Transient20))]
+[Transient(typeof(ITransient21), typeof(Transient21))]
+[Transient(typeof(ITransient22), typeof(Transient22))]
+[Transient(typeof(ITransient23), typeof(Transient23))]
+[Transient(typeof(ITransient24), typeof(Transient24))]
+[Transient(typeof(ITransient25), typeof(Transient25))]
+[Transient(typeof(ITransient26), typeof(Transient26))]
+[Transient(typeof(ITransient27), typeof(Transient27))]
+[Transient(typeof(ITransient28), typeof(Transient28))]
+[Transient(typeof(ITransient29), typeof(Transient29))]
+[Transient(typeof(ITransient30), typeof(Transient30))]
+[Transient(typeof(ITransient31), typeof(Transient31))]
+[Transient(typeof(ITransient32), typeof(Transient32))]
+[Transient(typeof(ITransient33), typeof(Transient33))]
+[Transient(typeof(ITransient34), typeof(Transient34))]
+[Transient(typeof(ITransient35), typeof(Transient35))]
+[Transient(typeof(ITransient36), typeof(Transient36))]
+[Transient(typeof(ITransient37), typeof(Transient37))]
+[Transient(typeof(ITransient38), typeof(Transient38))]
+[Transient(typeof(ITransient39), typeof(Transient39))]
+[Transient(typeof(ITransient40), typeof(Transient40))]
+[Transient(typeof(ITransient41), typeof(Transient41))]
+[Transient(typeof(ITransient42), typeof(Transient42))]
+[Transient(typeof(ITransient43), typeof(Transient43))]
+[Transient(typeof(ITransient44), typeof(Transient44))]
+[Transient(typeof(ITransient45), typeof(Transient45))]
+[Transient(typeof(ITransient46), typeof(Transient46))]
+[Transient(typeof(ITransient47), typeof(Transient47))]
+[Transient(typeof(ITransient48), typeof(Transient48))]
+[Transient(typeof(ITransient49), typeof(Transient49))]
+[Transient(typeof(ITransient50), typeof(Transient50))]
+[Transient(typeof(ITransient51), typeof(Transient51))]
+[Transient(typeof(ITransient52), typeof(Transient52))]
+[Transient(typeof(ITransient53), typeof(Transient53))]
+[Transient(typeof(ITransient54), typeof(Transient54))]
+[Transient(typeof(ITransient55), typeof(Transient55))]
+[Transient(typeof(ITransient56), typeof(Transient56))]
+[Transient(typeof(ITransient57), typeof(Transient57))]
+[Transient(typeof(ITransient58), typeof(Transient58))]
+[Transient(typeof(ITransient59), typeof(Transient59))]
+[Transient(typeof(ITransient60), typeof(Transient60))]
+[Transient(typeof(ITransient61), typeof(Transient61))]
+[Transient(typeof(ITransient62), typeof(Transient62))]
+[Transient(typeof(ITransient63), typeof(Transient63))]
+[Transient(typeof(ITransient64), typeof(Transient64))]
+[Transient(typeof(ITransient65), typeof(Transient65))]
+[Transient(typeof(ITransient66), typeof(Transient66))]
+[Transient(typeof(ITransient67), typeof(Transient67))]
+[Transient(typeof(ITransient68), typeof(Transient68))]
+[Transient(typeof(ITransient69), typeof(Transient69))]
+[Transient(typeof(ITransient70), typeof(Transient70))]
+[Transient(typeof(ITransient71), typeof(Transient71))]
+[Transient(typeof(ITransient72), typeof(Transient72))]
+[Transient(typeof(ITransient73), typeof(Transient73))]
+[Transient(typeof(ITransient74), typeof(Transient74))]
+[Transient(typeof(ITransient75), typeof(Transient75))]
+[Transient(typeof(ITransient76), typeof(Transient76))]
+[Transient(typeof(ITransient77), typeof(Transient77))]
+[Transient(typeof(ITransient78), typeof(Transient78))]
+[Transient(typeof(ITransient79), typeof(Transient79))]
+[Transient(typeof(ITransient80), typeof(Transient80))]
+[Transient(typeof(ITransient81), typeof(Transient81))]
+[Transient(typeof(ITransient82), typeof(Transient82))]
+[Transient(typeof(ITransient83), typeof(Transient83))]
+[Transient(typeof(ITransient84), typeof(Transient84))]
+[Transient(typeof(ITransient85), typeof(Transient85))]
+[Transient(typeof(ITransient86), typeof(Transient86))]
+[Transient(typeof(ITransient87), typeof(Transient87))]
+[Transient(typeof(ITransient88), typeof(Transient88))]
+[Transient(typeof(ITransient89), typeof(Transient89))]
+[Transient(typeof(ITransient90), typeof(Transient90))]
+[Transient(typeof(ITransient91), typeof(Transient91))]
+[Transient(typeof(ITransient92), typeof(Transient92))]
+[Transient(typeof(ITransient93), typeof(Transient93))]
+[Transient(typeof(ITransient94), typeof(Transient94))]
+[Transient(typeof(ITransient95), typeof(Transient95))]
+[Transient(typeof(ITransient96), typeof(Transient96))]
+[Transient(typeof(ITransient97), typeof(Transient97))]
+[Transient(typeof(ITransient98), typeof(Transient98))]
+[Transient(typeof(ITransient99), typeof(Transient99))]
+[Transient(typeof(ITransient100), typeof(Transient100))]
+[Transient(typeof(IMix1), typeof(Mix1))]
+[Transient(typeof(IMix2), typeof(Mix2))]
+[Transient(typeof(IMix3), typeof(Mix3))]
+[Transient(typeof(IMix4), typeof(Mix4))]
+[Transient(typeof(IMix5), typeof(Mix5))]
+[Transient(typeof(IMix6), typeof(Mix6))]
+[Transient(typeof(IMix7), typeof(Mix7))]
+[Transient(typeof(IMix8), typeof(Mix8))]
+[Transient(typeof(IMix9), typeof(Mix9))]
+[Transient(typeof(IMix10), typeof(Mix10))]
+[Transient(typeof(IMix11), typeof(Mix11))]
+[Transient(typeof(IMix12), typeof(Mix12))]
+[Transient(typeof(IMix13), typeof(Mix13))]
+[Transient(typeof(IMix14), typeof(Mix14))]
+[Transient(typeof(IMix15), typeof(Mix15))]
+[Transient(typeof(IMix16), typeof(Mix16))]
+[Transient(typeof(IMix17), typeof(Mix17))]
+[Transient(typeof(IMix18), typeof(Mix18))]
+[Transient(typeof(IMix19), typeof(Mix19))]
+[Transient(typeof(IMix20), typeof(Mix20))]
+[Transient(typeof(IMix21), typeof(Mix21))]
+[Transient(typeof(IMix22), typeof(Mix22))]
+[Transient(typeof(IMix23), typeof(Mix23))]
+[Transient(typeof(IMix24), typeof(Mix24))]
+[Transient(typeof(IMix25), typeof(Mix25))]
+[Transient(typeof(IMix26), typeof(Mix26))]
+[Transient(typeof(IMix27), typeof(Mix27))]
+[Transient(typeof(IMix28), typeof(Mix28))]
+[Transient(typeof(IMix29), typeof(Mix29))]
+[Transient(typeof(IMix30), typeof(Mix30))]
+[Transient(typeof(IMix31), typeof(Mix31))]
+[Transient(typeof(IMix32), typeof(Mix32))]
+[Transient(typeof(IMix33), typeof(Mix33))]
+[Transient(typeof(IMix34), typeof(Mix34))]
+[Transient(typeof(IMix35), typeof(Mix35))]
+[Transient(typeof(IMix36), typeof(Mix36))]
+[Transient(typeof(IMix37), typeof(Mix37))]
+[Transient(typeof(IMix38), typeof(Mix38))]
+[Transient(typeof(IMix39), typeof(Mix39))]
+[Transient(typeof(IMix40), typeof(Mix40))]
+[Transient(typeof(IMix41), typeof(Mix41))]
+[Transient(typeof(IMix42), typeof(Mix42))]
+[Transient(typeof(IMix43), typeof(Mix43))]
+[Transient(typeof(IMix44), typeof(Mix44))]
+[Transient(typeof(IMix45), typeof(Mix45))]
+[Transient(typeof(IMix46), typeof(Mix46))]
+[Transient(typeof(IMix47), typeof(Mix47))]
+[Transient(typeof(IMix48), typeof(Mix48))]
+[Transient(typeof(IMix49), typeof(Mix49))]
+[Transient(typeof(IMix50), typeof(Mix50))]
+[Transient(typeof(IMix51), typeof(Mix51))]
+[Transient(typeof(IMix52), typeof(Mix52))]
+[Transient(typeof(IMix53), typeof(Mix53))]
+[Transient(typeof(IMix54), typeof(Mix54))]
+[Transient(typeof(IMix55), typeof(Mix55))]
+[Transient(typeof(IMix56), typeof(Mix56))]
+[Transient(typeof(IMix57), typeof(Mix57))]
+[Transient(typeof(IMix58), typeof(Mix58))]
+[Transient(typeof(IMix59), typeof(Mix59))]
+[Transient(typeof(IMix60), typeof(Mix60))]
+[Transient(typeof(IMix61), typeof(Mix61))]
+[Transient(typeof(IMix62), typeof(Mix62))]
+[Transient(typeof(IMix63), typeof(Mix63))]
+[Transient(typeof(IMix64), typeof(Mix64))]
+[Transient(typeof(IMix65), typeof(Mix65))]
+[Transient(typeof(IMix66), typeof(Mix66))]
+[Transient(typeof(IMix67), typeof(Mix67))]
+[Transient(typeof(IMix68), typeof(Mix68))]
+[Transient(typeof(IMix69), typeof(Mix69))]
+[Transient(typeof(IMix70), typeof(Mix70))]
+[Transient(typeof(IMix71), typeof(Mix71))]
+[Transient(typeof(IMix72), typeof(Mix72))]
+[Transient(typeof(IMix73), typeof(Mix73))]
+[Transient(typeof(IMix74), typeof(Mix74))]
+[Transient(typeof(IMix75), typeof(Mix75))]
+[Transient(typeof(IMix76), typeof(Mix76))]
+[Transient(typeof(IMix77), typeof(Mix77))]
+[Transient(typeof(IMix78), typeof(Mix78))]
+[Transient(typeof(IMix79), typeof(Mix79))]
+[Transient(typeof(IMix80), typeof(Mix80))]
+[Transient(typeof(IMix81), typeof(Mix81))]
+[Transient(typeof(IMix82), typeof(Mix82))]
+[Transient(typeof(IMix83), typeof(Mix83))]
+[Transient(typeof(IMix84), typeof(Mix84))]
+[Transient(typeof(IMix85), typeof(Mix85))]
+[Transient(typeof(IMix86), typeof(Mix86))]
+[Transient(typeof(IMix87), typeof(Mix87))]
+[Transient(typeof(IMix88), typeof(Mix88))]
+[Transient(typeof(IMix89), typeof(Mix89))]
+[Transient(typeof(IMix90), typeof(Mix90))]
+[Transient(typeof(IMix91), typeof(Mix91))]
+[Transient(typeof(IMix92), typeof(Mix92))]
+[Transient(typeof(IMix93), typeof(Mix93))]
+[Transient(typeof(IMix94), typeof(Mix94))]
+[Transient(typeof(IMix95), typeof(Mix95))]
+[Transient(typeof(IMix96), typeof(Mix96))]
+[Transient(typeof(IMix97), typeof(Mix97))]
+[Transient(typeof(IMix98), typeof(Mix98))]
+[Transient(typeof(IMix99), typeof(Mix99))]
+[Transient(typeof(IMix100), typeof(Mix100))]
+
+internal partial class DeepContainerMixed
+{
+}
