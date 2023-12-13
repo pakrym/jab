@@ -16,10 +16,8 @@ namespace Jab
 
         public void Execute(GeneratorExecutionContext context)
         {
-            var moduleName = context.Compilation.SourceModule.Name;
-            if (moduleName.StartsWith("UnityEngine.")) return;
-            if (moduleName.StartsWith("UnityEditor.")) return;
-            if (moduleName.StartsWith("Unity.")) return;
+            if(!KnownTypes.HasKnownTypes(context.Compilation.SourceModule))
+                return;
 
             Execute(new GeneratorContext(context));
         }
