@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Include="Generator\ContainerGenerator.Roslyn3.cs" />
+        <Compile Include="ContainerGenerator.Roslyn3.cs" />
     </ItemGroup>
 
     <Import Project="../Jab/Jab.Common.props" />

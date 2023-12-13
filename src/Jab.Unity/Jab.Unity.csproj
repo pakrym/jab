@@ -6,20 +6,12 @@
         <NoWarn>$(NoWarn);RS2008</NoWarn>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <DefineConstants>TRACE;</DefineConstants>
-    </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <DefineConstants>TRACE;</DefineConstants>
-    </PropertyGroup>
-
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Include="Generator\ContainerGenerator.Unity.cs" />
+      <Compile Include="ContainerGenerator.Unity.cs" />
     </ItemGroup>
 
     <Import Project="../Jab/Jab.Common.props" />
