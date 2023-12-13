@@ -1,0 +1,22 @@
+{
+  "name": "jab.unity",
+  "version": "1.0.0",
+  "description": "C# Source Generator based dependency injection container implementation.",
+  "licensesUrl": "https://github.com/pakrym/jab/blob/main/LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pakrym/jab.git"
+  },
+  "keywords": [
+    "dependency-injection",
+    "source-generator",
+    "roslyn"
+  ],
+  "author": "pakrym",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pakrym/jab/issues"
+  },
+  "homepage": "https://github.com/pakrym/jab#readme",
+  "displayName": "Jab.Unity"
+}
