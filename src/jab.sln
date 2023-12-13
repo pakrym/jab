@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab.Attributes", "Jab.Attri
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab.FunctionalTests.Attributes", "Jab.FunctionalTests.Attributes\Jab.FunctionalTests.Attributes.csproj", "{471D59B3-518B-4821-9643-6010AACF1433}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jab.Unity", "Jab.Unity\Jab.Unity.csproj", "{6BD07051-FFDD-4801-9440-BBC73E46F80C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -170,5 +172,17 @@ Global
 		{471D59B3-518B-4821-9643-6010AACF1433}.Release|x64.Build.0 = Release|Any CPU
 		{471D59B3-518B-4821-9643-6010AACF1433}.Release|x86.ActiveCfg = Release|Any CPU
 		{471D59B3-518B-4821-9643-6010AACF1433}.Release|x86.Build.0 = Release|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Debug|x64.Build.0 = Debug|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Debug|x86.Build.0 = Debug|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Release|x64.ActiveCfg = Release|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Release|x64.Build.0 = Release|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Release|x86.ActiveCfg = Release|Any CPU
+		{6BD07051-FFDD-4801-9440-BBC73E46F80C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
