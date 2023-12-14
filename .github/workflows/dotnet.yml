@@ -106,6 +106,7 @@ jobs:
     - name: Publish unity packages to npm
       shell: pwsh
       run: |
+        npm config set registry http://registry.npmjs.org
         npm config set //registry.npmjs.org/:_authToken=${{ secrets.NUGET_KEY }}
         npm publish ./nuget/com.pakrym.jab-${{ needs.build.outputs.PackageVersion }}.tgz
     - name: Add GitHub package source
