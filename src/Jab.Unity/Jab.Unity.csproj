@@ -14,6 +14,10 @@
       <Compile Include="ContainerGenerator.Unity.cs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Jab.Attributes\Jab.Attributes.csproj" />
+    </ItemGroup>
+
     <Import Project="../Jab/Jab.Common.props" />
 
 </Project>

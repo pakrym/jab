@@ -1,0 +1,4 @@
+*.dll
+!*.meta
+*.tgz
+README.md
