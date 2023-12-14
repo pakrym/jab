@@ -98,10 +98,17 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
+    - name: Publish unity packages to npm
+      run: |
+        cd src/Jab.Unity
+        npm version ${{ needs.build.outputs.PackageVersion }} 
+        npm config set _authToken=${{ secrets.NUGET_KEY }}
+        npm publish
     - name: Add GitHub package source
       run: dotnet nuget add source https://nuget.pkg.github.com/pakrym/index.json --name "github" --username NotUsed --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
     - name: Publish NuGet packages to NuGet
       run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source "nuget.org" --skip-duplicate --no-symbols
+
   update_versions:
     needs: [build, publish]
     runs-on: ubuntu-latest
