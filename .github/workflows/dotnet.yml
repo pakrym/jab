@@ -37,7 +37,7 @@ jobs:
         $name = (gci nuget/*.nupkg -Recurse)[0].Name
         $version = $name.Substring($name.IndexOf(".") + 1)
         $version = $version.Substring(0, $version.LastIndexOf("."))
-        echo "PackageVersion=$version" >> $GITHUB_OUTPUT
+        Write-Output "PackageVersion=$version" | Out-File "${env:GITHUB_OUTPUT}" -Append
     - name: Pack
       run: |
         cd src/Jab.Unity
@@ -86,7 +86,7 @@ jobs:
         $name = (gci nuget/*.nupkg -Recurse)[0].Name
         $version = $name.Substring($name.IndexOf(".") + 1)
         $version = $version.Substring(0, $version.LastIndexOf("."))
-        "::set-output name=FunctionalTestPackageVersion::$version"
+        Write-Output "FunctionalTestPackageVersion=$version" | Out-File "${env:GITHUB_OUTPUT}" -Append
     - name: Test
       run: dotnet test eng/FunctionaTests.proj /p:FunctionalTestTargetFrameworks=${{ matrix.tfm }} /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
   publish:
