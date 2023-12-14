@@ -20,13 +20,4 @@
 
     <Import Project="../Jab/Jab.Common.props" />
 
-    <!-- Copy files for Unity npm package -->
-    <PropertyGroup>
-        <DestinationRoot>$(MSBuildProjectDirectory)\$(ProjectDir)\UnityPackage</DestinationRoot>
-    </PropertyGroup>
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(Configuration) == 'Release'">
-        <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(DestinationRoot)\$(TargetFileName)" SkipUnchangedFiles="true" />
-        <Copy SourceFiles="$(TargetDir)/Jab.Attributes.dll" DestinationFiles="$(DestinationRoot)\Jab.Attributes.dll" SkipUnchangedFiles="true" />
-    </Target>
-
 </Project>
