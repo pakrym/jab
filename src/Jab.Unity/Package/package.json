@@ -1,5 +1,5 @@
 {
-  "name": "jab.unity",
+  "name": "com.jab.unity",
   "version": "1.0.0",
   "description": "C# Source Generator based dependency injection container implementation.",
   "licensesUrl": "https://github.com/pakrym/jab/blob/main/LICENSE",
