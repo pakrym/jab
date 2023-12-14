@@ -108,6 +108,7 @@ jobs:
       run: |
         npm config set registry https://registry.npmjs.org
         npm config set //registry.npmjs.org/:_authToken=${{ secrets.NUGET_KEY }}
+        npm whoami
         npm publish ./nuget/com.pakrym.jab-${{ needs.build.outputs.PackageVersion }}.tgz
     - name: Add GitHub package source
       run: dotnet nuget add source https://nuget.pkg.github.com/pakrym/index.json --name "github" --username NotUsed --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
