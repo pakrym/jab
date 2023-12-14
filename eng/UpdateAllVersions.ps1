@@ -26,5 +26,10 @@ $projectRegexToFind = "$projectRegexPrefix([\w\d\.]+)"
 Replace-In-File $projectPath $projectRegexPrefix $projectRegexToFind
 Replace-In-File $attributesProjectPath $projectRegexPrefix $projectRegexToFind
 
-pusd src/Jab.Unity
+
+$npmPrefix = "`"com.pakrym.jab`": `""
+$npmPrefixRegexToFind = "$npmPrefix([\w\d\.]+)"
+Replace-In-File README.md $npmPrefix $npmPrefixRegexToFind
+
+pushd src/Jab.Unity
 npm version $NewVersion
