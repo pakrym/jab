@@ -246,6 +246,34 @@ The `GetService` benchmark measures the `provider.GetService<IService>()` call.
 |    Jab |  5.619 ns | 0.0770 ns | 0.0643 ns |  1.00 |    0.00 | 0.0023 |     - |     - |      24 B |
 ```
 
+## Unity installation
+1. Navigate to the Packages directory of your project.
+2. Adjust the [project manifest file](https://docs.unity3d.com/Manual/upm-manifestPrj.html) manifest.json in a text editor.
+3. Ensure `https://registry.npmjs.org/` is part of `scopedRegistries`.
+4. Ensure `com.pakrym` is part of `scopes`.
+5. Add `com.pakrym.jab` to the dependencies, stating the latest version.
+
+A minimal example ends up looking like this:
+
+```
+{
+  "scopedRegistries": [
+    {
+      "name": "npmjs",
+      "url": "https://registry.npmjs.org/",
+      "scopes": [
+        "com.pakrym"
+      ]
+    }
+  ],
+  "dependencies": {
+    "com.pakrym.jab": "0.9.1",
+    ...
+  }
+}
+```
+
+
 ## Debugging locally
 
 Run `dotnet build /t:CreateLaunchSettings` in the `Jab.Tests` directory would update the `Jab\Properties\launchSettings.json` file to include `csc` invocation that allows F5 debugging of the generator targeting the `Jab.Tests` project.
