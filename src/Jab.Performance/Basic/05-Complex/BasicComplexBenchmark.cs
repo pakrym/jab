@@ -10,12 +10,12 @@ using MEDI = Microsoft.Extensions.DependencyInjection;
 
 
 [MemoryDiagnoser]
-public class ComplexBenchmark
+public class BasicComplexBenchmark
 {
     private readonly MEDI.ServiceProvider _provider;
     private readonly ContainerComplex _container = new();
 
-    public ComplexBenchmark()
+    public BasicComplexBenchmark()
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddScoped<IComplex1, Complex1>();

@@ -1,4 +1,4 @@
-﻿namespace Jab.Performance.Basic.Transient; 
+﻿namespace Jab.Performance.Basic.Scoped; 
 
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,17 +6,17 @@ using MEDI = Microsoft.Extensions.DependencyInjection;
 
 
 [MemoryDiagnoser]
-public class TransientBenchmark
+public class BasicScopedBenchmark
 {
     private readonly MEDI.ServiceProvider _provider;
-    private readonly ContainerTransient _container = new();
+    private readonly ContainerScoped _container = new();
 
-    public TransientBenchmark()
+    public BasicScopedBenchmark()
     {
         var serviceCollection = new ServiceCollection();
-        serviceCollection.AddTransient<ITransient1, Transient1>();
-        serviceCollection.AddTransient<ITransient2, Transient2>();
-        serviceCollection.AddTransient<ITransient3, Transient3>();
+        serviceCollection.AddScoped<IScoped1, Scoped1>();
+        serviceCollection.AddScoped<IScoped2, Scoped2>();
+        serviceCollection.AddScoped<IScoped3, Scoped3>();
         _provider = serviceCollection.BuildServiceProvider();
     }
 
@@ -31,13 +31,14 @@ public class TransientBenchmark
     {
         for (var i = 0; i < NumbersOfCalls; i++)
         {
-            
+            using var scope = _container.CreateScope();
+
             if (NumbersOfClasses >= 1)
-                _container.GetService<ITransient1>();
+                scope.GetService<IScoped1>();
             if (NumbersOfClasses >= 2)
-                _container.GetService<ITransient2>();
+                scope.GetService<IScoped2>();
             if (NumbersOfClasses >= 3)
-                _container.GetService<ITransient3>();
+                scope.GetService<IScoped3>();
         }
     }
 
@@ -46,20 +47,22 @@ public class TransientBenchmark
     {
         for (var i = 0; i < NumbersOfCalls; i++)
         {
+            using var scope = _provider.CreateScope();
+
             if (NumbersOfClasses >= 1)
-                _provider.GetService<ITransient1>();
+                scope.ServiceProvider.GetService<IScoped1>();
             if(NumbersOfClasses >= 2)
-                _provider.GetService<ITransient2>();
+                scope.ServiceProvider.GetService<IScoped2>();
             if (NumbersOfClasses >= 3)
-                _provider.GetService<ITransient3>();
+                scope.ServiceProvider.GetService<IScoped3>();
         }
     }
 }
 
 [ServiceProvider]
-[Transient(typeof(ITransient1), typeof(Transient1))]
-[Transient(typeof(ITransient2), typeof(Transient2))]
-[Transient(typeof(ITransient3), typeof(Transient3))]
-internal partial class ContainerTransient
+[Scoped(typeof(IScoped1), typeof(Scoped1))]
+[Scoped(typeof(IScoped2), typeof(Scoped2))]
+[Scoped(typeof(IScoped3), typeof(Scoped3))]
+internal partial class ContainerScoped
 {
 }

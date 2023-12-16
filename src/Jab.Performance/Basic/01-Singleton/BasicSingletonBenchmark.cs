@@ -1,4 +1,4 @@
-﻿namespace Jab.Performance.Basic.Scoped; 
+﻿namespace Jab.Performance.Basic.Singleton; 
 
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,17 +6,17 @@ using MEDI = Microsoft.Extensions.DependencyInjection;
 
 
 [MemoryDiagnoser]
-public class ScopedBenchmark
+public class BasicSingletonBenchmark
 {
     private readonly MEDI.ServiceProvider _provider;
-    private readonly ContainerScoped _container = new();
+    private readonly ContainerSingleton _container = new();
 
-    public ScopedBenchmark()
+    public BasicSingletonBenchmark()
     {
         var serviceCollection = new ServiceCollection();
-        serviceCollection.AddScoped<IScoped1, Scoped1>();
-        serviceCollection.AddScoped<IScoped2, Scoped2>();
-        serviceCollection.AddScoped<IScoped3, Scoped3>();
+        serviceCollection.AddSingleton<ISingleton1, Singleton1>();
+        serviceCollection.AddSingleton<ISingleton2, Singleton2>();
+        serviceCollection.AddSingleton<ISingleton3, Singleton3>();
         _provider = serviceCollection.BuildServiceProvider();
     }
 
@@ -31,14 +31,13 @@ public class ScopedBenchmark
     {
         for (var i = 0; i < NumbersOfCalls; i++)
         {
-            using var scope = _container.CreateScope();
-
+            
             if (NumbersOfClasses >= 1)
-                scope.GetService<IScoped1>();
+                _container.GetService<ISingleton1>();
             if (NumbersOfClasses >= 2)
-                scope.GetService<IScoped2>();
+                _container.GetService<ISingleton2>();
             if (NumbersOfClasses >= 3)
-                scope.GetService<IScoped3>();
+                _container.GetService<ISingleton3>();
         }
     }
 
@@ -47,22 +46,20 @@ public class ScopedBenchmark
     {
         for (var i = 0; i < NumbersOfCalls; i++)
         {
-            using var scope = _provider.CreateScope();
-
             if (NumbersOfClasses >= 1)
-                scope.ServiceProvider.GetService<IScoped1>();
+                _provider.GetService<ISingleton1>();
             if(NumbersOfClasses >= 2)
-                scope.ServiceProvider.GetService<IScoped2>();
+                _provider.GetService<ISingleton2>();
             if (NumbersOfClasses >= 3)
-                scope.ServiceProvider.GetService<IScoped3>();
+                _provider.GetService<ISingleton3>();
         }
     }
 }
 
 [ServiceProvider]
-[Scoped(typeof(IScoped1), typeof(Scoped1))]
-[Scoped(typeof(IScoped2), typeof(Scoped2))]
-[Scoped(typeof(IScoped3), typeof(Scoped3))]
-internal partial class ContainerScoped
+[Singleton(typeof(ISingleton1), typeof(Singleton1))]
+[Singleton(typeof(ISingleton2), typeof(Singleton2))]
+[Singleton(typeof(ISingleton3), typeof(Singleton3))]
+internal partial class ContainerSingleton
 {
 }

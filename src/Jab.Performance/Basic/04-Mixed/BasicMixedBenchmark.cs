@@ -7,12 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using MEDI = Microsoft.Extensions.DependencyInjection;
 
 [MemoryDiagnoser]
-public class MixedBenchmark
+public class BasicMixedBenchmark
 {
     private readonly MEDI.ServiceProvider _provider;
     private readonly ContainerMixed _container = new();
 
-    public MixedBenchmark()
+    public BasicMixedBenchmark()
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddTransient<IMix1, Mix1>();
