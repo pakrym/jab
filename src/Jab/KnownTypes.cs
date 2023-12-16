@@ -131,4 +131,9 @@ internal class KnownTypes
         ModuleAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, ServiceProviderModuleAttributeMetadataName);
         FromNamedServicesAttribute = GetTypeByMetadataNameOrThrow(assemblySymbol, FromNamedServicesAttributeMetadataName);
     }
+
+    public static bool HasKnownTypes(IModuleSymbol sourceModule)
+    {
+        return sourceModule.ReferencedAssemblySymbols.Any(s => s.Name == JabAttributesAssemblyName);
+    }
 }

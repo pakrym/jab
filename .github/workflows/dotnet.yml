@@ -37,7 +37,12 @@ jobs:
         $name = (gci nuget/*.nupkg -Recurse)[0].Name
         $version = $name.Substring($name.IndexOf(".") + 1)
         $version = $version.Substring(0, $version.LastIndexOf("."))
-        "::set-output name=PackageVersion::$version"
+        Write-Output "PackageVersion=$version" | Out-File "${env:GITHUB_OUTPUT}" -Append
+    - name: Pack
+      run: |
+        cd src/Jab.Unity
+        npm version ${{ steps.vars.outputs.PackageVersion }} 
+        npm pack --pack-destination=../../nuget
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:
@@ -81,7 +86,7 @@ jobs:
         $name = (gci nuget/*.nupkg -Recurse)[0].Name
         $version = $name.Substring($name.IndexOf(".") + 1)
         $version = $version.Substring(0, $version.LastIndexOf("."))
-        "::set-output name=FunctionalTestPackageVersion::$version"
+        Write-Output "FunctionalTestPackageVersion=$version" | Out-File "${env:GITHUB_OUTPUT}" -Append
     - name: Test
       run: dotnet test eng/FunctionaTests.proj /p:FunctionalTestTargetFrameworks=${{ matrix.tfm }} /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
   publish:
@@ -98,10 +103,17 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
+    - name: Publish unity packages to npm
+      shell: pwsh
+      run: |
+        npm config set //registry.npmjs.org/:_authToken ${{ secrets.NPM_KEY }}
+        npm whoami
+        npm publish ./nuget/com.pakrym.jab-${{ needs.build.outputs.PackageVersion }}.tgz
     - name: Add GitHub package source
       run: dotnet nuget add source https://nuget.pkg.github.com/pakrym/index.json --name "github" --username NotUsed --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
     - name: Publish NuGet packages to NuGet
       run: dotnet nuget push nuget/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source "nuget.org" --skip-duplicate --no-symbols
+
   update_versions:
     needs: [build, publish]
     runs-on: ubuntu-latest

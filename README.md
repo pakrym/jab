@@ -21,7 +21,7 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 - Registration validation. Container configuration issues become compiler errors:
 
     ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/errors.png)
-- Incremental generation, .NET 5/6 SDK support, .NET Standard 2.0 support
+- Incremental generation, .NET 5/6/7/8 SDK support, .NET Standard 2.0 support, [Unity support](README.md#Unity-installation)
 
 ## Example
 
@@ -245,6 +245,34 @@ The `GetService` benchmark measures the `provider.GetService<IService>()` call.
 |   MEDI | 39.340 ns | 0.2419 ns | 0.2263 ns |  7.01 |    0.09 | 0.0023 |     - |     - |      24 B |
 |    Jab |  5.619 ns | 0.0770 ns | 0.0643 ns |  1.00 |    0.00 | 0.0023 |     - |     - |      24 B |
 ```
+
+## Unity installation
+1. Navigate to the Packages directory of your project.
+2. Adjust the [project manifest file](https://docs.unity3d.com/Manual/upm-manifestPrj.html) manifest.json in a text editor.
+3. Ensure `https://registry.npmjs.org/` is part of `scopedRegistries`.
+4. Ensure `com.pakrym` is part of `scopes`.
+5. Add `com.pakrym.jab` to the dependencies, stating the latest version.
+
+A minimal example ends up looking like this:
+
+```
+{
+  "scopedRegistries": [
+    {
+      "name": "npmjs",
+      "url": "https://registry.npmjs.org/",
+      "scopes": [
+        "com.pakrym"
+      ]
+    }
+  ],
+  "dependencies": {
+    "com.pakrym.jab": "0.9.1",
+    ...
+  }
+}
+```
+
 
 ## Debugging locally
 
