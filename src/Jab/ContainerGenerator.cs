@@ -5,6 +5,9 @@
 public partial class ContainerGenerator : DiagnosticAnalyzer
 #pragma warning restore RS1001 // We don't want this to be discovered as analyzer but it simplifies testing
 {
+    /// <summary>Code for a [GeneratedCode] attribute to put on the top-level generated members.</summary>
+    private static readonly string _generatedCodeAttribute = $"[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{typeof(ContainerGenerator).Assembly.GetName().Name}\", \"{typeof(ContainerGenerator).Assembly.GetName().Version}\")]";
+
     private void GenerateCallSiteWithCache(CodeWriter codeWriter, string rootReference, ServiceCallSite serviceCallSite, Action<CodeWriter, CodeWriterDelegate> valueCallback)
     {
         if (serviceCallSite is ErrorCallSite errorCallSite)
@@ -199,6 +202,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                         codeWriter.Scope($"{SyntaxFacts.GetText(containingType.DeclaredAccessibility)} partial class {containingType.Name}") :
                         null;
 
+                    codeWriter.LineRaw(_generatedCodeAttribute);
                     codeWriter.Append($"{SyntaxFacts.GetText(root.Type.DeclaredAccessibility)} partial class {root.Type.Name}");
                     WriteInterfaces(codeWriter, root, false);
                     using (codeWriter.Scope())

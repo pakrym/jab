@@ -13,6 +13,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ServiceProviderAttribute: Attribute
@@ -24,6 +25,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ServiceProviderModuleAttribute: Attribute
@@ -34,6 +36,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ImportAttribute: Attribute
@@ -50,6 +53,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class SingletonAttribute: Attribute
@@ -78,6 +82,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class TransientAttribute : Attribute
@@ -104,6 +109,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ScopedAttribute : Attribute
@@ -131,6 +137,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ImportAttribute<TModule> : ImportAttribute
@@ -144,6 +151,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class TransientAttribute<TService> : TransientAttribute
@@ -157,6 +165,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class TransientAttribute<TService, TImpl> : TransientAttribute where TImpl: TService
@@ -170,6 +179,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ScopedAttribute<TService> : ScopedAttribute
@@ -183,6 +193,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ScopedAttribute<TService, TImpl> : ScopedAttribute where TImpl: TService
@@ -197,6 +208,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class SingletonAttribute<TService> : SingletonAttribute
@@ -210,6 +222,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class SingletonAttribute<TService, TImpl> : SingletonAttribute where TImpl: TService
@@ -224,6 +237,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     interface IServiceProvider<T>
@@ -234,6 +248,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     static class JabHelpers
