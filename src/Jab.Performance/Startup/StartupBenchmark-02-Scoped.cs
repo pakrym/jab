@@ -5,25 +5,24 @@ using Jab;
 using Jab.Performance.Basic.Scoped;
 using Microsoft.Extensions.DependencyInjection;
 
-[MemoryDiagnoser]
-public class StartupScopedBenchmark
+public partial class StartupBenchmark
 {
-    [Benchmark(Baseline = true)]
-    public void Jab()
+    [Benchmark(Baseline = true), BenchmarkCategory("02", "Scoped", "Jab")]
+    public IServiceProvider Jab_Scoped()
     {
         var provider = new ContainerStartupScoped();
-        var _ = provider.GetService<IServiceProvider>();
+        return provider.GetService<IServiceProvider>();
     }
 
-    [Benchmark]
-    public void MEDI()
+    [Benchmark, BenchmarkCategory("02", "Scoped", "MEDI")]
+    public IServiceProvider MEDI_Scoped()
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddScoped<IScoped1, Scoped1>();
         serviceCollection.AddScoped<IScoped2, Scoped2>();
         serviceCollection.AddScoped<IScoped3, Scoped3>();
         var provider = serviceCollection.BuildServiceProvider();
-        var _ = provider.GetService<IServiceProvider>();
+        return provider.GetService<IServiceProvider>()!;
     }
 
 }

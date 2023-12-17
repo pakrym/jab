@@ -5,25 +5,24 @@ using Jab;
 using Jab.Performance.Basic.Singleton;
 using Microsoft.Extensions.DependencyInjection;
 
-[MemoryDiagnoser]
-public class StartupSingletonBenchmark
+public partial class StartupBenchmark
 {
-    [Benchmark(Baseline = true)]
-    public void Jab()
+    [Benchmark(Baseline = true), BenchmarkCategory("01", "Singleton", "Jab")]
+    public IServiceProvider Jab_Singleton()
     {
         var provider = new ContainerStartupSingleton();
-        var _ = provider.GetService<IServiceProvider>();
+        return provider.GetService<IServiceProvider>();
     }
 
-    [Benchmark]
-    public void MEDI() 
+    [Benchmark, BenchmarkCategory("01", "Singleton", "MEDI")]
+    public IServiceProvider MEDI_Singleton() 
     { 
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddSingleton<ISingleton1, Singleton1>();
         serviceCollection.AddSingleton<ISingleton2, Singleton2>();
         serviceCollection.AddSingleton<ISingleton3, Singleton3>();
         var provider = serviceCollection.BuildServiceProvider();
-        var _ = provider.GetService<IServiceProvider>();
+        return provider.GetService<IServiceProvider>()!;
     }
 }
 
