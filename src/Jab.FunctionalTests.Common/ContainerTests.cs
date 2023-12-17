@@ -1241,6 +1241,19 @@ namespace JabTests
         {
             Func<IService> Instance = () => new ServiceImplementation();
         }
+
+        [Fact]
+        public void SupportsScopedValueType()
+        {
+            SupportsScopedValueTypeContainer c = new();
+            Assert.IsType<int>(c.GetService<int>());
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(int))]
+        internal partial class SupportsScopedValueTypeContainer
+        {
+        }
     }
 }
 
