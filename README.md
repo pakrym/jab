@@ -224,16 +224,29 @@ Sample Jab usage in console application can be found in [src/samples/ConsoleSamp
 
 The performance benchmark project is available in [src/Jab.Performance/](src/Jab.Performance/).
 
+And the results in [docs/benchmark/](docs/benchmark/)
+
 ### Startup time
 
 The startup time benchmark measures time between application startup and the first service being resolved.
 
 ```
-| Method |        Mean |     Error |    StdDev |  Ratio | RatioSD |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|------- |------------:|----------:|----------:|-------:|--------:|-------:|-------:|------:|----------:|
-|   MEDI | 2,437.88 ns | 14.565 ns | 12.163 ns | 220.91 |    2.72 | 0.6332 | 0.0114 |     - |    6632 B |
-|    Jab |    11.03 ns |  0.158 ns |  0.123 ns |   1.00 |    0.00 | 0.0046 |      - |     - |      48 B |
-```
+| Method         | Mean         | Error        | StdDev      | Gen0   | Gen1   | Allocated | Alloc Ratio |
+|--------------- |-------------:|-------------:|------------:|-------:|-------:|----------:|------------:|
+| Jab_Singleton  |     8.629 ns |     7.745 ns |   0.4245 ns | 0.0067 |      - |      56 B |        1.00 |
+| MEDI_Singleton | 2,177.868 ns | 4,000.891 ns | 219.3023 ns | 0.8640 | 0.2155 |    7232 B |           ? |
+|                |              |              |             |        |        |           |             |
+| Jab_Scoped     |     7.988 ns |     6.414 ns |   0.3515 ns | 0.0038 |      - |      32 B |        1.00 |
+| MEDI_Scoped    | 1,897.986 ns | 1,878.578 ns | 102.9712 ns | 0.8640 | 0.2155 |    7232 B |           ? |
+|                |              |              |             |        |        |           |             |
+| Jab_Transient  |     8.279 ns |     6.090 ns |   0.3338 ns | 0.0038 |      - |      32 B |        1.00 |
+| MEDI_Transient | 1,864.865 ns | 2,109.098 ns | 115.6068 ns | 0.8640 | 0.2155 |    7232 B |           ? |
+|                |              |              |             |        |        |           |             |
+| Jab_Mixed      |    10.311 ns |     7.034 ns |   0.3856 ns | 0.0067 |      - |      56 B |        1.00 |
+| MEDI_Mixed     | 2,475.742 ns | 2,388.959 ns | 130.9469 ns | 1.0834 | 0.2689 |    9064 B |           ? |
+|                |              |              |             |        |        |           |             |
+| Jab_Complex    |    14.194 ns |    24.354 ns |   1.3349 ns | 0.0067 |      - |      56 B |        1.00 |
+| MEDI_Complex   | 2,382.348 ns | 1,215.594 ns |  66.6308 ns | 1.1330 | 0.2823 |    9496 B |           ? |```
 
 ### GetService
 
