@@ -246,7 +246,8 @@ The startup time benchmark measures time between application startup and the fir
 | MEDI_Mixed     | 2,475.742 ns | 2,388.959 ns | 130.9469 ns | 1.0834 | 0.2689 |    9064 B |           ? |
 |                |              |              |             |        |        |           |             |
 | Jab_Complex    |    14.194 ns |    24.354 ns |   1.3349 ns | 0.0067 |      - |      56 B |        1.00 |
-| MEDI_Complex   | 2,382.348 ns | 1,215.594 ns |  66.6308 ns | 1.1330 | 0.2823 |    9496 B |           ? |```
+| MEDI_Complex   | 2,382.348 ns | 1,215.594 ns |  66.6308 ns | 1.1330 | 0.2823 |    9496 B |           ? |
+```
 
 ### GetService
 
