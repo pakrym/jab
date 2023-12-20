@@ -38,7 +38,7 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     });
             }
 
-            if (serviceCallSite.ServiceType.IsValueType)
+            if (serviceCallSite.ImplementationType.IsValueType)
             {
                 valueCallback(codeWriter, w => w.Append($"{cacheLocation}!.Value"));
             }
