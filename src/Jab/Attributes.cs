@@ -60,6 +60,8 @@ namespace Jab
     {
         public Type ServiceType { get; }
 
+        public string? Name { get; set; }
+
         public Type? ImplementationType { get; }
 
         public string? Instance { get; set; }
@@ -88,6 +90,7 @@ namespace Jab
     class TransientAttribute : Attribute
     {
         public Type ServiceType { get; }
+        public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
 
@@ -115,6 +118,7 @@ namespace Jab
     class ScopedAttribute : Attribute
     {
         public Type ServiceType { get; }
+        public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
 
@@ -129,6 +133,23 @@ namespace Jab
         {
             ServiceType = serviceType;
             ImplementationType = implementationType;
+        }
+    }
+
+
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+#if JAB_ATTRIBUTES_PACKAGE
+    public
+#else
+    internal
+#endif
+        class FromNamedServicesAttribute : Attribute
+    {
+        public string? Name { get; set; }
+
+        public FromNamedServicesAttribute(string name)
+        {
+            Name = name;
         }
     }
 
@@ -251,12 +272,25 @@ namespace Jab
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
+    interface INamedServiceProvider<T>
+    {
+        T GetService(string name);
+    }
+
+#if JAB_ATTRIBUTES_PACKAGE
+    public
+#else
+    internal
+#endif
     static class JabHelpers
     {
-        public static InvalidOperationException CreateServiceNotFoundException<T>()
-        {
-            return new InvalidOperationException($"Service Type {typeof(T)} not registered");
-        }
+        public static InvalidOperationException CreateServiceNotFoundException<T>(string? name = null) =>
+            CreateServiceNotFoundException(typeof(T), name);
+        public static InvalidOperationException CreateServiceNotFoundException(Type type, string? name = null) =>
+            new InvalidOperationException(
+                name != null ?
+                    $"Service with type {type} and name {name} not registered" :
+                    $"Service with type {type} not registered");
     }
 }
 
