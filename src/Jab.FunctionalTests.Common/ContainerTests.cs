@@ -1276,15 +1276,17 @@ namespace JabTests
 		}
 
 		[Fact]
-        public void SupportsScopedValueType()
+        public void SupportsNoneTransientValueType()
         {
-            SupportsScopedValueTypeContainer c = new();
+            SupportsNoneTransientValueTypeContainer c = new();
             Assert.IsType<int>(c.GetService<int>());
+            Assert.IsType<float>(c.GetService<float>());
         }
 
         [ServiceProvider]
         [Scoped(typeof(int))]
-        internal partial class SupportsScopedValueTypeContainer
+        [Singleton(typeof(float))]
+        internal partial class SupportsNoneTransientValueTypeContainer
         {
         }
     }
