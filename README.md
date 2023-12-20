@@ -1,8 +1,6 @@
 # Jab Compile Time Dependency Injection
 
-[![Nuget (with prereleases)](https://img.shields.io/nuget/v/Jab)](https://www.nuget.org/packages/Jab)
-
-[![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Jab)](https://www.nuget.org/packages/Jab)
+[![Nuget](https://img.shields.io/nuget/v/Jab)](https://www.nuget.org/packages/Jab)
 
 Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/introducing-c-source-generators/) based dependency injection container implementation.
 
@@ -10,17 +8,9 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 - Fast resolution (7x faster than Microsoft.Extensions.DependencyInjection). [Details](#GetService).
 - No runtime dependencies.
 - AOT and linker friendly, all code is generated during project compilation.
-- Clean stack traces:
-
-    ![stacktrace](https://raw.githubusercontent.com/pakrym/jab/main/doc/stacktrace.png)
-    
-- Readable generated code:
-
-    ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/generatedcode.png)
-
-- Registration validation. Container configuration issues become compiler errors:
-
-    ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/errors.png)
+- Clean stack traces: <br> ![stacktrace](https://raw.githubusercontent.com/pakrym/jab/main/doc/stacktrace.png)
+- Readable generated code: <br> ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/generatedcode.png)
+- Registration validation. Container configuration issues become compiler errors: <br> ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/errors.png)
 - Incremental generation, .NET 5/6/7/8 SDK support, .NET Standard 2.0 support, [Unity support](README.md#Unity-installation)
 
 ## Example
@@ -28,7 +18,7 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 Add Jab package reference:
 ```xml
 <ItemGroup>
-    <PackageReference Include="Jab" Version="0.9.0" PrivateAssets="all" />
+    <PackageReference Include="Jab" Version="0.10.0" PrivateAssets="all" />
 </ItemGroup>
 ```
 
@@ -67,6 +57,7 @@ IService service = c.GetService<IService>();
 
 - No runtime dependency, safe to use in libraries
 - Transient, Singleton, Scoped service registration
+- Named registrations
 - Factory registration
 - Instance registration
 - `IEnumerable` resolution
@@ -106,6 +97,28 @@ c.MyServiceInstance = new ServiceImplementation();
 
 IService service = c.GetService<IService>();
 ```
+
+### Named services
+
+Use the `Name` property to assign a name to your service registrations and `[FromNamedServices("...")]` attribute to resolve a service using its name.
+
+```C#
+[ServiceProvider]
+[Singleton(typeof(INotificationService), typeof(EmailNotificationService), Name="email")]
+[Singleton(typeof(INotificationService), typeof(SmsNotificationService), Name="sms")]
+[Singleton(typeof(Notifier))]
+internal partial class MyServiceProvider {}
+
+class Notifier
+{
+    public Notifier(
+        [FromNamedServices("email")] INotificationService email,
+        [FromNamedServices("sms")] INotificationService sms)
+    {}
+}
+```
+
+NOTE: Jab also recognizes the `[FromKeyedServices]` attribute from `Microsoft.Extensions.DependencyInjection`.
 
 ### Factories
 
@@ -267,7 +280,7 @@ A minimal example ends up looking like this:
     }
   ],
   "dependencies": {
-    "com.pakrym.jab": "0.9.1",
+    "com.pakrym.jab": "0.10.0",
     ...
   }
 }

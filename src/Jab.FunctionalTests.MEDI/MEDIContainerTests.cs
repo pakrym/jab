@@ -47,7 +47,7 @@ namespace JabTests
         {
             CanUseIsServiceContainer c = new();
             IServiceProviderIsService iss = c;
-            
+
             Assert.True(iss.IsService(typeof(IServiceProvider)));
             Assert.True(iss.IsService(typeof(IServiceProviderIsService)));
             Assert.True(iss.IsService(typeof(IServiceScopeFactory)));
@@ -65,7 +65,7 @@ namespace JabTests
         public void CanResolveIsService()
         {
             CanUseIsServiceContainer c = new();
-            
+
             Assert.True(c.GetService<IServiceProviderIsService>().IsService(typeof(IServiceProvider)));
             Assert.Same(c, c.CreateScope().GetService<IServiceProviderIsService>());
             Assert.True(c.CreateScope().GetService<IServiceProviderIsService>().IsService(typeof(IServiceProvider)));
@@ -74,6 +74,45 @@ namespace JabTests
         [ServiceProvider()]
         internal partial class CanResolveIsServiceContainer
         {
+        }
+#endif
+
+#if NET8_OR_GREATER
+        [Fact]
+        public void SupportsKeyedServices()
+        {
+            SupportsKeyedServicesContainer c = new();
+
+            Assert.IsAssignableFrom<IKeyedServiceProvider>(c);
+
+            Assert.NotNull(c.GetKeyedService<ServiceImplementation>("Key"));
+            Assert.NotNull(c.GetRequiredKeyedService<ServiceImplementation>("Key"));
+
+            Assert.Null(c.GetKeyedService<ServiceImplementation>("Bla"));
+            Assert.Null(c.GetKeyedService<IService>("Bla"));
+            Assert.Throws<InvalidOperationException>(() => c.GetRequiredKeyedService<ServiceImplementation>("Bla"));
+            Assert.Throws<InvalidOperationException>(() => c.GetRequiredKeyedService<IService>("Bla"));
+
+            var serviceWithKeyedParameter = c.GetService<ServiceWithKeyedParameter<ServiceImplementation>>();
+            Assert.NotNull(serviceWithKeyedParameter);
+            Assert.NotNull(serviceWithKeyedParameter.InnerService);
+        }
+
+        [ServiceProvider]
+        [Singleton(typeof(ServiceImplementation), Name="Key")]
+        [Singleton(typeof(ServiceWithKeyedParameter<ServiceImplementation>))]
+        internal partial class SupportsKeyedServicesContainer
+        {
+        }
+
+        internal class ServiceWithKeyedParameter<T>
+        {
+            public T InnerService { get; }
+
+            public ServiceWithKeyedParameter([FromKeyedServices(typeof(string))] T innerService)
+            {
+                InnerService = innerService;
+            }
         }
 #endif
     }

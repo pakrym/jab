@@ -110,6 +110,25 @@ public partial class Container {{}}
                     .WithArguments("IDependency", "Service"));
         }
 
+
+        [Fact]
+        public async Task ProducesJAB0019WhenRequiredNamedDependencyNotFound()
+        {
+            string testCode = $@"
+class Dependency {{ }}
+class Service {{ public Service([FromNamedServices(""Named"")] Dependency dep) {{}} }}
+[ServiceProvider]
+[{{|#1:Transient(typeof(Service))|}}]
+[Transient(typeof(Dependency))]
+public partial class Container {{}}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0019")
+                    .WithLocation(1)
+                    .WithArguments("Dependency", "Named", "Service"));
+        }
+
         [Fact]
         public async Task ProducesJAB0002WhenRequiredDependenciesNotFound()
         {
@@ -204,9 +223,9 @@ public partial class Container {{
 interface IService {{}}
 class FirstService {{ public FirstService(IService s) {{}} }}
 class Service : IService {{ public Service(AnotherService s) {{}} }}
-class AnotherService {{ public AnotherService(IService s) {{}} }}
+class AnotherService {{ public AnotherService({{|#1:IService|}} s) {{}} }}
 [ServiceProvider]
-[{{|#1:Transient(typeof(FirstService))|}}]
+[Transient(typeof(FirstService))]
 [Transient(typeof(IService), typeof(Service))]
 [Transient(typeof(AnotherService))]
 public partial class Container {{}}
@@ -215,7 +234,7 @@ public partial class Container {{}}
                 DiagnosticResult
                     .CompilerError("JAB0008")
                     .WithLocation(1)
-                    .WithArguments("FirstService", "IService", "FirstService -> IService -> Service -> AnotherService -> IService"));
+                    .WithArguments("IService", "FirstService -> IService -> Service -> AnotherService -> IService"));
         }
 
         [Fact]
@@ -249,21 +268,31 @@ interface {{|#1:Container|}} {{}}
         }
 
         [Fact]
-        public async Task ProducesJAB0010IfGetServiceCallTypeUnregistered()
+        public async Task ProducesJAB0010OrJAB0018IfGetServiceCallTypeUnregistered()
         {
             string testCode = $@"
 interface IService {{}}
 [ServiceProvider]
 public partial class Container {{
     public T GetService<T>() => default;
-    public static void Main() {{ var container = new Container(); {{|#1:container.GetService<IService>()|}}; }}
+    public T GetService<T>(string name) => default;
+    public static void Main() {{ 
+        var container = new Container(); 
+        {{|#1:container.GetService<IService>()|}}; 
+        {{|#2:container.GetService<IService>(""Named"")|}}; 
+    }}
 }}
 ";
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
                     .CompilerError("JAB0010")
                     .WithLocation(1)
-                    .WithArguments("IService"));
+                    .WithArguments("IService"),
+
+                DiagnosticResult
+                    .CompilerError("JAB0018")
+                    .WithLocation(2)
+                    .WithArguments("IService", "Named"));
         }
 
         [Fact]
@@ -279,6 +308,81 @@ public partial class Container {{}}
                     .CompilerError("JAB0010")
                     .WithLocation(1)
                     .WithArguments("IService"));
+        }
+
+        [Fact]
+        public async Task ProducesDiagnosticWhenServiceNameNotAlphanumeric()
+        {
+            string testCode = @"
+public class Service {}
+[ServiceProvider]
+[{|#1:Singleton(typeof(Service), Name = """")|}]
+[{|#2:Singleton(typeof(Service), Name = ""'"")|}]
+[{|#3:Singleton(typeof(Service), Name = ""1a"")|}]
+[Singleton(typeof(Service), Name = ""aA10"")]
+public partial class Container {}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0015")
+                    .WithLocation(1)
+                    .WithArguments(""),
+
+                DiagnosticResult
+                    .CompilerError("JAB0015")
+                    .WithLocation(2)
+                    .WithArguments("'"),
+
+                DiagnosticResult
+                    .CompilerError("JAB0015")
+                    .WithLocation(3)
+                    .WithArguments("1a"));
+        }
+
+        [Fact]
+        public async Task ProducesDiagnosticWhenBuiltInServicesRequestedAsNamed()
+        {
+            string testCode = @"
+public class Service {
+    public Service(
+        [FromNamedServices(""A"")] {|#1:IServiceProvider|} sp
+    ) {}
+}
+
+[ServiceProvider]
+[Singleton(typeof(Service))]
+public partial class Container {}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0016")
+                    .WithLocation(1)
+                    .WithArguments("System.IServiceProvider"));
+        }
+
+
+        [Fact]
+        public async Task ProducesDiagnosticWhenImplicitIEnumerableRequestedAsNamed()
+        {
+            string testCode = @"
+public class Service1 {}
+public class Service {
+    public Service(
+        [FromNamedServices(""A"")] {|#1:IEnumerable<Service1>|} s,
+        IEnumerable<Service1> ss
+    ) {}
+}
+
+[ServiceProvider]
+[Singleton(typeof(Service))]
+[Singleton(typeof(Service1))]
+public partial class Container {}
+";
+            await Verify.VerifyAnalyzerAsync(testCode,
+                DiagnosticResult
+                    .CompilerError("JAB0017")
+                    .WithLocation(1)
+                    .WithArguments("System.Collections.Generic.IEnumerable<Service1>"));
         }
 
         [Fact]
@@ -316,7 +420,7 @@ public partial class Container {{}}
             await Verify.VerifyAnalyzerAsync(testCode,
                 DiagnosticResult
                     .CompilerError("JAB0014")
-                    .WithSeverity(DiagnosticSeverity.Warning)
+                    .WithSeverity(DiagnosticSeverity.Info)
                     .WithLocation(1)
                     .WithArguments("IDependency?", "Service"));
         }

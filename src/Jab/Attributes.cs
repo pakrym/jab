@@ -13,6 +13,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ServiceProviderAttribute: Attribute
@@ -24,6 +25,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ServiceProviderModuleAttribute: Attribute
@@ -34,6 +36,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ImportAttribute: Attribute
@@ -50,11 +53,14 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class SingletonAttribute: Attribute
     {
         public Type ServiceType { get; }
+
+        public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
 
@@ -78,11 +84,13 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class TransientAttribute : Attribute
     {
         public Type ServiceType { get; }
+        public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
 
@@ -104,11 +112,13 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ScopedAttribute : Attribute
     {
         public Type ServiceType { get; }
+        public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
 
@@ -126,11 +136,29 @@ namespace Jab
         }
     }
 
+
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+#if JAB_ATTRIBUTES_PACKAGE
+    public
+#else
+    internal
+#endif
+        class FromNamedServicesAttribute : Attribute
+    {
+        public string? Name { get; set; }
+
+        public FromNamedServicesAttribute(string name)
+        {
+            Name = name;
+        }
+    }
+
 #if GENERIC_ATTRIBUTES
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ImportAttribute<TModule> : ImportAttribute
@@ -144,6 +172,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class TransientAttribute<TService> : TransientAttribute
@@ -157,6 +186,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class TransientAttribute<TService, TImpl> : TransientAttribute where TImpl: TService
@@ -170,6 +200,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ScopedAttribute<TService> : ScopedAttribute
@@ -183,6 +214,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class ScopedAttribute<TService, TImpl> : ScopedAttribute where TImpl: TService
@@ -197,6 +229,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class SingletonAttribute<TService> : SingletonAttribute
@@ -210,6 +243,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     class SingletonAttribute<TService, TImpl> : SingletonAttribute where TImpl: TService
@@ -224,6 +258,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     interface IServiceProvider<T>
@@ -234,14 +269,28 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
+    internal
+#endif
+    interface INamedServiceProvider<T>
+    {
+        T GetService(string name);
+    }
+
+#if JAB_ATTRIBUTES_PACKAGE
+    public
+#else
     internal
 #endif
     static class JabHelpers
     {
-        public static InvalidOperationException CreateServiceNotFoundException<T>()
-        {
-            return new InvalidOperationException($"Service Type {typeof(T)} not registered");
-        }
+        public static InvalidOperationException CreateServiceNotFoundException<T>(string? name = null) =>
+            CreateServiceNotFoundException(typeof(T), name);
+        public static InvalidOperationException CreateServiceNotFoundException(Type type, string? name = null) =>
+            new InvalidOperationException(
+                name != null ?
+                    $"Service with type {type} and name {name} not registered" :
+                    $"Service with type {type} not registered");
     }
 }
 

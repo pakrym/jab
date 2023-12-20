@@ -41,7 +41,7 @@ jobs:
     - name: Pack
       run: |
         cd src/Jab.Unity
-        npm version ${{ steps.vars.outputs.PackageVersion }} 
+        npm version ${{ steps.vars.outputs.PackageVersion }} --allow-same-version
         npm pack --pack-destination=../../nuget
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2

@@ -32,7 +32,7 @@ internal static class DiagnosticDescriptors
 
     public static readonly DiagnosticDescriptor CyclicDependencyDetected = new("JAB0008",
         "A cyclic dependency detected when resolving a service",
-        "A cyclic dependency detected when resolving a service '{0}', cycle starts at service '{1}', dependency chain: '{2}'", "Usage", DiagnosticSeverity.Error, true);
+        "A cyclic dependency detected when resolving a service '{0}', dependency chain: '{1}'", "Usage", DiagnosticSeverity.Error, true);
 
     public static readonly DiagnosticDescriptor MissingServiceProviderAttribute = new("JAB0009",
         "A type contains service registrations but no ServiceProvider or ServiceProviderModule attribute",
@@ -40,7 +40,7 @@ internal static class DiagnosticDescriptors
 
     public static readonly DiagnosticDescriptor NoServiceTypeRegistered = new("JAB0010",
         "The service registration not found",
-        "The service '{0}' is not registered", "Usage", DiagnosticSeverity.Error, true);
+        "The service type '{0}' is not registered", "Usage", DiagnosticSeverity.Error, true);
 
     public static readonly DiagnosticDescriptor ImplementationTypeAndFactoryNotAllowed = new("JAB0011",
         "Can't specify both the implementation type and factory/instance",
@@ -50,12 +50,35 @@ internal static class DiagnosticDescriptors
         "The factory member has to be a method or have a delegate type",
         "The factory member '{0}' has to be a method of have a delegate type, for service '{1}'", "Usage", DiagnosticSeverity.Error, true);
 
+    public static readonly DiagnosticDescriptor ServiceNameMustBeAlphanumeric = new("JAB0015",
+        "Service name must be alphanumeric",
+        "Service name '{0}' must be non-empty, alphanumeric and start with a letter.", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor BuiltInServicesAreNotNamed = new("JAB0016",
+        "Built-in provider services can not be named",
+        "Built-in service '{0}' can not be named", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor ImplicitIEnumerableNotNamed = new("JAB0017",
+        "Implicit IEnumerable<> services can not be named",
+        "Implicit IEnumerable service '{0}' can not be named", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor NoServiceTypeAndNameRegistered = new("JAB0018",
+        "The service registration not found",
+        "The service type '{0}' and name '{1}' is not registered", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor NamedServiceRequiredToConstructNotRegistered = new("JAB0019",
+        "The named service registration not found",
+        "The service '{0}' with name '{1}' required to construct '{2}' is not registered", "Usage", DiagnosticSeverity.Error, true);
+
+    public static readonly DiagnosticDescriptor OnlyStringKeysAreSupported = new("JAB0020",
+        "Only string service keys are supported",
+        "Service key '{0}' is not supported, only string keys are supported", "Usage", DiagnosticSeverity.Error, true);
+
     public static readonly DiagnosticDescriptor NullableServiceNotRegistered = new("JAB0013",
         "Not registered nullable dependency without a default value",
         "The nullable service '{0}' requested to construct '{1}' is not registered. Add a default value to make the service reference optional", "Usage", DiagnosticSeverity.Error, true);
 
     public static readonly DiagnosticDescriptor NullableServiceRegistered = new("JAB0014",
         "Nullable dependency without a default value",
-        "'{0}' parameter to construct '{1}' will never be null when constructing using a service provider. Add a default value to make the service reference optional", "Usage", DiagnosticSeverity.Warning, true);
-
+        "'{0}' parameter to construct '{1}' will never be null when constructing using a service provider. Add a default value to make the service reference optional", "Usage", DiagnosticSeverity.Info, true);
 }

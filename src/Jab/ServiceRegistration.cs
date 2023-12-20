@@ -1,8 +1,17 @@
 ﻿namespace Jab;
 
-internal record ServiceRegistration(ServiceLifetime Lifetime, INamedTypeSymbol ServiceType, INamedTypeSymbol? ImplementationType, ISymbol? InstanceMember, ISymbol? FactoryMember, Location? Location, MemberLocation MemberLocation)
+internal record ServiceRegistration(
+    ServiceLifetime Lifetime,
+    INamedTypeSymbol ServiceType,
+    string? Name,
+    INamedTypeSymbol? ImplementationType,
+    ISymbol? InstanceMember,
+    ISymbol? FactoryMember,
+    Location? Location,
+    MemberLocation MemberLocation)
 {
     public INamedTypeSymbol ServiceType { get; } = ServiceType;
+    public string? Name { get; } = Name;
     public INamedTypeSymbol? ImplementationType { get; } = ImplementationType;
     public ISymbol? InstanceMember { get; } = InstanceMember;
     public ISymbol? FactoryMember { get; } = FactoryMember;
