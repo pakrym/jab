@@ -57,6 +57,7 @@ IService service = c.GetService<IService>();
 
 - No runtime dependency, safe to use in libraries
 - Transient, Singleton, Scoped service registration
+- Named registrations
 - Factory registration
 - Instance registration
 - `IEnumerable` resolution
