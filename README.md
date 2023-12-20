@@ -99,7 +99,7 @@ IService service = c.GetService<IService>();
 
 ### Named services
 
-Use the `Name` property to assign a name to your service registrations and `[FromNamedService("...")]` attribute to resolve a service using its name.
+Use the `Name` property to assign a name to your service registrations and `[FromNamedServices("...")]` attribute to resolve a service using its name.
 
 ```C#
 [ServiceProvider]
@@ -108,11 +108,11 @@ Use the `Name` property to assign a name to your service registrations and `[Fro
 [Singleton(typeof(Notifier))]
 internal partial class MyServiceProvider {}
 
-public class Notifier
+class Notifier
 {
     public Notifier(
-        [FromNamedService("email")] INotificationService email,
-        [FromNamedService("sms")] INotificationService sms)
+        [FromNamedServices("email")] INotificationService email,
+        [FromNamedServices("sms")] INotificationService sms)
     {}
 }
 ```
