@@ -1272,10 +1272,10 @@ namespace JabTests
         [Singleton(typeof(IAnotherService), typeof(AnotherServiceImplementation), Name="OnlyNamed")]
         [Singleton(typeof(ServiceImplementationWithNamed<IService>))]
         internal partial class SupportsNamedServicesContainer
-		{
-		}
+        {
+        }
 
-		[Fact]
+        [Fact]
         public void SupportsNoneTransientValueType()
         {
             SupportsNoneTransientValueTypeContainer c = new();
