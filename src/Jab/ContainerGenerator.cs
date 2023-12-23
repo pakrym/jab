@@ -24,9 +24,9 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         if (serviceCallSite.Lifetime != ServiceLifetime.Transient)
         {
             var cacheLocation = GetCacheLocation(serviceCallSite.Identity);
-            codeWriter.Line($"if ({cacheLocation} == default)");
+            codeWriter.Line($"if ({cacheLocation} == null)");
             codeWriter.Line($"lock (this)");
-            using (codeWriter.Scope($"if ({cacheLocation} == default)"))
+            using (codeWriter.Scope($"if ({cacheLocation} == null)"))
             {
                 GenerateCallSite(
                     codeWriter,
@@ -38,7 +38,14 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     });
             }
 
-            valueCallback(codeWriter, w => w.Append($"{cacheLocation}"));
+            if (serviceCallSite.ImplementationType.IsValueType)
+            {
+                valueCallback(codeWriter, w => w.Append($"{cacheLocation}.Value"));
+            }
+            else
+            {
+                valueCallback(codeWriter, w => w.Append($"{cacheLocation}"));
+            }
         }
         else if (serviceCallSite.IsDisposable != false)
         {

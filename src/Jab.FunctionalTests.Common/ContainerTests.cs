@@ -1274,6 +1274,21 @@ namespace JabTests
         internal partial class SupportsNamedServicesContainer
         {
         }
+
+        [Fact]
+        public void SupportsNoneTransientValueType()
+        {
+            SupportsNoneTransientValueTypeContainer c = new();
+            Assert.IsType<int>(c.GetService<int>());
+            Assert.IsType<float>(c.GetService<float>());
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(int))]
+        [Singleton(typeof(float))]
+        internal partial class SupportsNoneTransientValueTypeContainer
+        {
+        }
     }
 }
 
