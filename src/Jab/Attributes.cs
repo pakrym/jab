@@ -141,6 +141,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
         class FromNamedServicesAttribute : Attribute
@@ -280,6 +281,7 @@ namespace Jab
 #if JAB_ATTRIBUTES_PACKAGE
     public
 #else
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Jab", null)]
     internal
 #endif
     static class JabHelpers
