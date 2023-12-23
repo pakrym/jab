@@ -139,6 +139,17 @@ IService service = c.GetService<IService>();
 When using with `TransientAttribute` the factory method would be invoked for every service resolution.
 When used with `SingletonAttribute` it would only be invoked the first time the service is requested.
 
+Similar to constructors, factories support parameter injection:
+
+```
+[ServiceProvider]
+[Transient(typeof(IService), Factory = nameof(MyServiceFactory))]
+[Transient(typeof(SomeOtherService))]
+internal partial class MyServiceProvider {
+    public IService MyServiceFactory(SomeOtherService other) => new ServiceImplementation(other);
+}
+```
+
 ### Scoped Services
 
 Scoped services are created once per service provider scope. To create a scope use the `CreateScope()` method of the service provider.
