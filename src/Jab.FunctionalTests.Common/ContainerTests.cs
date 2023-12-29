@@ -923,6 +923,74 @@ namespace JabTests
         partial class CanGetMultipleOpenGenericScopedContainer
         {
         }
+        
+        [Fact]
+        public void SupportsImplicitFunc()
+        {
+            SupportsImplicitFuncFactoryContainer c = new();
+            var transientFunc = c.GetService<Func<IService>>();
+            var transientFunc2 = c.GetService<Func<IService>>();
+            var transientService1 = transientFunc();
+            var transientService2 = transientFunc();
+
+            var scope1 = c.CreateScope();
+            var scopedFunc = scope1.GetService<Func<IService1>>();
+            var scopedFunc2 = scope1.GetService<Func<IService1>>();
+            var scopedService1 = scopedFunc();
+            var scopedService2 = scopedFunc();
+            
+            var scope2 = c.CreateScope();
+            var scopedFunc3 = scope2.GetService<Func<IService1>>();
+            var scopedService3 = scopedFunc3();
+            
+            var singletonFunc = c.GetService<Func<IService2>>();
+            var singletonFunc2 = c.GetService<Func<IService2>>();
+            
+            var singletonService1 = singletonFunc();
+            var singletonService2 = singletonFunc2();
+            
+            Assert.Equal(2, c.TransientCount);
+            Assert.Equal(2, c.ScopedCount);
+            Assert.Equal(1, c.SingletonCount);
+            
+            Assert.Same(singletonFunc, singletonFunc2);
+            Assert.Same(transientFunc, transientFunc2);
+            Assert.Same(scopedFunc, scopedFunc2);
+            Assert.NotSame(scopedFunc2, scopedFunc3);
+            
+            Assert.Same(singletonService1, singletonService2);
+            Assert.Same(scopedService1, scopedService2);
+            Assert.NotSame(scopedService1, scopedService3);
+            
+            Assert.NotSame(transientService1, transientService2);
+        }
+
+        [ServiceProvider(RootServices = new [] { typeof(Func<IService1>) })]
+        [Transient(typeof(IService), Factory=nameof(TransientFactory))]
+        [Scoped(typeof(IService1), Factory=nameof(ScopedFactory))]
+        [Singleton(typeof(IService2), Factory=nameof(SingletonFactory))]
+        internal partial class SupportsImplicitFuncFactoryContainer
+        {
+            internal int TransientCount = 0;
+            internal int ScopedCount = 0;
+            internal int SingletonCount = 0;
+
+            internal ServiceImplementation TransientFactory()
+            {
+                TransientCount++;
+                return new();
+            }
+            internal ServiceImplementation ScopedFactory()
+            {
+                ScopedCount++;
+                return new();
+            }
+            internal ServiceImplementation SingletonFactory()
+            {
+                SingletonCount++;
+                return new();
+            }
+        }
 
 #region Non-generic member factory with parameters
         [Fact]
