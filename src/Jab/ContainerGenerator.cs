@@ -24,19 +24,20 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
         if (serviceCallSite.Lifetime != ServiceLifetime.Transient)
         {
             var cacheLocation = GetCacheLocation(serviceCallSite.Identity);
-            codeWriter.Line($"if ({cacheLocation} == null)");
-            codeWriter.Line($"lock (this)");
-            using (codeWriter.Scope($"if ({cacheLocation} == null)"))
+            var locking = serviceCallSite is not FuncCallSite;
+            if (locking)
             {
-                GenerateCallSite(
-                    codeWriter,
-                    rootReference,
-                    serviceCallSite,
-                    (w, v) =>
-                    {
-                        w.Line($"{cacheLocation} = {v};");
-                    });
+                codeWriter.Line($"if ({cacheLocation} == null)");
+                codeWriter.Line($"lock (this)");   
             }
+            GenerateCallSite(
+                codeWriter,
+                rootReference,
+                serviceCallSite,
+                (w, v) =>
+                {
+                    w.Line($"{cacheLocation} ??= {v};");
+                });
 
             if (serviceCallSite.ImplementationType.IsValueType)
             {
@@ -144,6 +145,14 @@ public partial class ContainerGenerator : DiagnosticAnalyzer
                     w.Append($"new {transientCallSite.ImplementationType}(");
                     AppendParameters(w, transientCallSite.Parameters, transientCallSite.OptionalParameters);
                     w.Append($")");
+                });
+                break;
+            
+            case FuncCallSite funcCallSite:
+                valueCallback(codeWriter, w =>
+                {
+                    w.Append($"() => ");
+                    WriteResolutionCall(codeWriter, funcCallSite.Inner.Identity, "this");
                 });
                 break;
             case MemberCallSite memberCallSite:

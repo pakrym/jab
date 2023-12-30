@@ -228,6 +228,7 @@ internal class ServiceProviderBuilder
             return TryCreateSpecial(serviceType, name, context) ??
                    TryCreateExact(serviceType, name, null, context) ??
                    TryCreateEnumerable(serviceType, name, context) ??
+                   TryCreateFunc(serviceType, name, context) ??
                    TryCreateGeneric(serviceType, name, context);
         }
         finally
@@ -432,6 +433,37 @@ internal class ServiceProviderBuilder
         return null;
     }
 
+    
+    private ServiceCallSite? TryCreateFunc(ITypeSymbol serviceType, string? name, ServiceResolutionContext context)
+    {
+        if (serviceType is INamedTypeSymbol { IsGenericType: true } genericType &&
+            SymbolEqualityComparer.Default.Equals(genericType.ConstructedFrom, _knownTypes.FuncType))
+        {
+            var identity = new ServiceIdentity(genericType, name, null);
+
+            if (context.CallSiteCache.TryGet(identity, out var callSite))
+            {
+                return callSite;
+            }
+
+            var innerType = genericType.TypeArguments[0];
+            var inner = GetCallSite(innerType, name, context);
+
+            if (inner == null)
+            {
+                return null;
+            }
+            
+            callSite = new FuncCallSite(identity, inner);
+
+            context.CallSiteCache.Add(callSite);
+
+            return callSite;
+        }
+
+        return null;
+    }
+
     private ServiceCallSite? TryCreateExact(
         ITypeSymbol serviceType,
         string? name,
@@ -612,7 +644,6 @@ internal class ServiceProviderBuilder
                 parameters.ToArray(),
                 namedParameters.ToArray(),
                 registration.Lifetime,
-                identity.ReverseIndex,
                 // TODO: this can be optimized to avoid check for all the types
                 isDisposable: null
             );
