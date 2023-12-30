@@ -964,8 +964,35 @@ namespace JabTests
             
             Assert.NotSame(transientService1, transientService2);
         }
+        
+        [Fact]
+        public void SupportsImplicitNamedFunc()
+        {
+            SupportsImplicitFuncFactoryContainer c = new();
+            var transientFunc = c.GetService<Func<IService>>("named");
+            var transientFunc2 = c.GetService<Func<IService>>("named");
+            var transientService1 = transientFunc();
+            var transientService2 = transientFunc();
+            
+            var singletonFunc = c.GetService<Func<IService2>>("named");
+            var singletonFunc2 = c.GetService<Func<IService2>>("named");
+            
+            var singletonService1 = singletonFunc();
+            var singletonService2 = singletonFunc2();
+            
+            Assert.Equal(2, c.TransientNamedCount);
+            Assert.Equal(1, c.SingletonNamedCount);
+            
+            Assert.Same(singletonFunc, singletonFunc2);
+            Assert.Same(transientFunc, transientFunc2);
+            
+            Assert.Same(singletonService1, singletonService2);
+            Assert.NotSame(transientService1, transientService2);
+        }
 
         [ServiceProvider(RootServices = new [] { typeof(Func<IService1>) })]
+        [Transient(typeof(IService), Factory=nameof(TransientNamedFactory), Name = "named")]
+        [Singleton(typeof(IService2), Factory=nameof(SingletonNamedFactory), Name = "named")]
         [Transient(typeof(IService), Factory=nameof(TransientFactory))]
         [Scoped(typeof(IService1), Factory=nameof(ScopedFactory))]
         [Singleton(typeof(IService2), Factory=nameof(SingletonFactory))]
@@ -974,6 +1001,9 @@ namespace JabTests
             internal int TransientCount = 0;
             internal int ScopedCount = 0;
             internal int SingletonCount = 0;
+            
+            internal int TransientNamedCount = 0;
+            internal int SingletonNamedCount = 0;
 
             internal ServiceImplementation TransientFactory()
             {
@@ -988,6 +1018,17 @@ namespace JabTests
             internal ServiceImplementation SingletonFactory()
             {
                 SingletonCount++;
+                return new();
+            }
+            
+            internal ServiceImplementation TransientNamedFactory()
+            {
+                TransientNamedCount++;
+                return new();
+            }
+            internal ServiceImplementation SingletonNamedFactory()
+            {
+                SingletonNamedCount++;
                 return new();
             }
         }
