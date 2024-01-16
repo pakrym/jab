@@ -248,27 +248,56 @@ Sample Jab usage in console application can be found in [src/samples/ConsoleSamp
 
 The performance benchmark project is available in [src/Jab.Performance/](src/Jab.Performance/).
 
+And the results in [docs/benchmark/](docs/benchmark/)
+
 ### Startup time
 
 The startup time benchmark measures time between application startup and the first service being resolved.
 
-```
-| Method |        Mean |     Error |    StdDev |  Ratio | RatioSD |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-|------- |------------:|----------:|----------:|-------:|--------:|-------:|-------:|------:|----------:|
-|   MEDI | 2,437.88 ns | 14.565 ns | 12.163 ns | 220.91 |    2.72 | 0.6332 | 0.0114 |     - |    6632 B |
-|    Jab |    11.03 ns |  0.158 ns |  0.123 ns |   1.00 |    0.00 | 0.0046 |      - |     - |      48 B |
-```
+| Method         | Mean         | Error         | StdDev      | Gen0   | Gen1   | Allocated |
+|--------------- |-------------:|--------------:|------------:|-------:|-------:|----------:|
+| Jab_Singleton  |     8.763 ns |     0.5496 ns |   0.0301 ns | 0.0067 |      - |      56 B |
+| MEDI_Singleton | 1,883.539 ns | 1,976.8621 ns | 108.3585 ns | 0.8640 | 0.2155 |    7232 B |
+|                |              |               |             |        |        |           |
+| Jab_Scoped     |     8.445 ns |     6.0425 ns |   0.3312 ns | 0.0038 |      - |      32 B |
+| MEDI_Scoped    | 1,894.341 ns | 1,854.7252 ns | 101.6637 ns | 0.8640 | 0.2155 |    7232 B |
+|                |              |               |             |        |        |           |
+| Jab_Transient  |     8.695 ns |    11.2536 ns |   0.6168 ns | 0.0038 |      - |      32 B |
+| MEDI_Transient | 1,894.840 ns | 2,000.5040 ns | 109.6544 ns | 0.8640 | 0.2155 |    7232 B |
+|                |              |               |             |        |        |           |
+| Jab_Mixed      |     9.722 ns |     2.2865 ns |   0.1253 ns | 0.0067 |      - |      56 B |
+| MEDI_Mixed     | 2,454.882 ns | 2,626.4526 ns | 143.9647 ns | 1.0834 | 0.2689 |    9064 B |
+|                |              |               |             |        |        |           |
+| Jab_Complex    |    13.402 ns |     4.5401 ns |   0.2489 ns | 0.0067 |      - |      56 B |
+| MEDI_Complex   | 2,350.227 ns | 2,335.5694 ns | 128.0204 ns | 1.1330 | 0.2823 |    9496 B |
 
 ### GetService
 
 The `GetService` benchmark measures the `provider.GetService<IService>()` call.
 
-```
-| Method |      Mean |     Error |    StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------- |----------:|----------:|----------:|------:|--------:|-------:|------:|------:|----------:|
-|   MEDI | 39.340 ns | 0.2419 ns | 0.2263 ns |  7.01 |    0.09 | 0.0023 |     - |     - |      24 B |
-|    Jab |  5.619 ns | 0.0770 ns | 0.0643 ns |  1.00 |    0.00 | 0.0023 |     - |     - |      24 B |
-```
+### Singleton
+
+| Method  | Mean         | Error         | StdDev        | Ratio    | RatioSD  |
+|-------- |-------------:|--------------:|--------------:|---------:|---------:|
+| **Jab** | **3.325 ns** | **2.1053 ns** | **0.1154 ns** | **1.00** | **0.00** |
+| MEDI    |     9.241 ns |     0.2836 ns |     0.0155 ns |     2.78 |     0.09 |
+
+### Transient
+
+| Method  | Mean         | Error        | StdDev       | Ratio    | RatioSD  |
+|-------- |-------------:|-------------:|-------------:|---------:|---------:|
+| **Jab** | **11.29 ns** | **3.599 ns** | **0.197 ns** | **1.00** | **0.00** |
+| MEDI    |     13.46 ns |     1.805 ns |     0.099 ns |     1.19 |     0.03 |
+
+
+### Complex
+
+| Method  | Mean         | Error         | StdDev      | Ratio     | RatioSD  |
+|-------- |-------------:|--------------:|------------:|----------:|---------:|
+| **Jab** | **279.6 ns** | **154.26 ns** | **8.46 ns** |  **1.00** | **0.00** |
+| MEDI    |     149.2 ns |      20.02 ns |     1.10 ns |      0.53 |     0.02 |
+
+
 
 ## Unity installation
 1. Navigate to the Packages directory of your project.
