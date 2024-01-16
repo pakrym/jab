@@ -230,35 +230,49 @@ And the results in [docs/benchmark/](docs/benchmark/)
 
 The startup time benchmark measures time between application startup and the first service being resolved.
 
-```
-| Method         | Mean         | Error        | StdDev      | Gen0   | Gen1   | Allocated | Alloc Ratio |
-|--------------- |-------------:|-------------:|------------:|-------:|-------:|----------:|------------:|
-| Jab_Singleton  |     8.629 ns |     7.745 ns |   0.4245 ns | 0.0067 |      - |      56 B |        1.00 |
-| MEDI_Singleton | 2,177.868 ns | 4,000.891 ns | 219.3023 ns | 0.8640 | 0.2155 |    7232 B |           ? |
-|                |              |              |             |        |        |           |             |
-| Jab_Scoped     |     7.988 ns |     6.414 ns |   0.3515 ns | 0.0038 |      - |      32 B |        1.00 |
-| MEDI_Scoped    | 1,897.986 ns | 1,878.578 ns | 102.9712 ns | 0.8640 | 0.2155 |    7232 B |           ? |
-|                |              |              |             |        |        |           |             |
-| Jab_Transient  |     8.279 ns |     6.090 ns |   0.3338 ns | 0.0038 |      - |      32 B |        1.00 |
-| MEDI_Transient | 1,864.865 ns | 2,109.098 ns | 115.6068 ns | 0.8640 | 0.2155 |    7232 B |           ? |
-|                |              |              |             |        |        |           |             |
-| Jab_Mixed      |    10.311 ns |     7.034 ns |   0.3856 ns | 0.0067 |      - |      56 B |        1.00 |
-| MEDI_Mixed     | 2,475.742 ns | 2,388.959 ns | 130.9469 ns | 1.0834 | 0.2689 |    9064 B |           ? |
-|                |              |              |             |        |        |           |             |
-| Jab_Complex    |    14.194 ns |    24.354 ns |   1.3349 ns | 0.0067 |      - |      56 B |        1.00 |
-| MEDI_Complex   | 2,382.348 ns | 1,215.594 ns |  66.6308 ns | 1.1330 | 0.2823 |    9496 B |           ? |
-```
+| Method         | Mean         | Error         | StdDev      | Gen0   | Gen1   | Allocated | Alloc Ratio |
+|--------------- |-------------:|--------------:|------------:|-------:|-------:|----------:|------------:|
+| Jab_Singleton  |     8.541 ns |     3.4715 ns |   0.1903 ns | 0.0067 |      - |      56 B |        1.00 |
+| MEDI_Singleton | 2,162.589 ns | 2,026.5482 ns | 111.0819 ns | 0.8640 | 0.2155 |    7232 B |           ? |
+|                |              |               |             |        |        |           |             |
+| Jab_Scoped     |     9.227 ns |     4.8011 ns |   0.2632 ns | 0.0038 |      - |      32 B |        1.00 |
+| MEDI_Scoped    | 1,895.721 ns | 2,150.1331 ns | 117.8560 ns | 0.8640 | 0.2155 |    7232 B |           ? |
+|                |              |               |             |        |        |           |             |
+| Jab_Transient  |     8.397 ns |     1.7967 ns |   0.0985 ns | 0.0038 |      - |      32 B |        1.00 |
+| MEDI_Transient | 2,116.654 ns | 4,289.4329 ns | 235.1183 ns | 0.8640 | 0.2155 |    7232 B |           ? |
+|                |              |               |             |        |        |           |             |
+| Jab_Mixed      |     9.697 ns |     0.1884 ns |   0.0103 ns | 0.0067 |      - |      56 B |        1.00 |
+| MEDI_Mixed     | 2,519.538 ns | 1,988.6074 ns | 109.0023 ns | 1.0834 | 0.2689 |    9064 B |           ? |
+|                |              |               |             |        |        |           |             |
+| Jab_Complex    |    13.230 ns |     9.9845 ns |   0.5473 ns | 0.0067 |      - |      56 B |        1.00 |
+| MEDI_Complex   | 2,429.244 ns | 1,541.6226 ns |  84.5015 ns | 1.1330 | 0.2823 |    9496 B |           ? |
 
 ### GetService
 
 The `GetService` benchmark measures the `provider.GetService<IService>()` call.
 
-```
-| Method |      Mean |     Error |    StdDev | Ratio | RatioSD |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------- |----------:|----------:|----------:|------:|--------:|-------:|------:|------:|----------:|
-|   MEDI | 39.340 ns | 0.2419 ns | 0.2263 ns |  7.01 |    0.09 | 0.0023 |     - |     - |      24 B |
-|    Jab |  5.619 ns | 0.0770 ns | 0.0643 ns |  1.00 |    0.00 | 0.0023 |     - |     - |      24 B |
-```
+### Singleton
+
+
+| Method  | Mean         | Error         | StdDev        | Ratio    | RatioSD  |
+|-------- |-------------:|--------------:|--------------:|---------:|---------:|
+| **Jab** | **3.305 ns** | **2.1067 ns** | **0.1155 ns** | **1.00** | **0.00** |
+| MEDI    |     9.419 ns |     6.5332 ns |     0.3581 ns |     2.85 |     0.12 |
+
+### Transient
+
+| Method  | Mean         | Error        | StdDev       | Ratio    | RatioSD  |
+|-------- |-------------:|-------------:|-------------:|---------:|---------:|
+| **Jab** | **11.33 ns** | **5.879 ns** | **0.322 ns** | **1.00** | **0.00** |
+| MEDI    |     14.12 ns |     3.393 ns |     0.186 ns |     1.25 |     0.02 |
+
+### Complex
+
+| Method  | Mean         | Error        | StdDev      | Ratio    | RatioSD  |
+|-------- |-------------:|-------------:|------------:|---------:|---------:|
+| **Jab** | **277.0 ns** | **62.11 ns** | **3.40 ns** | **1.00** | **0.00** | 
+| MEDI    |     162.0 ns |     47.78 ns |     2.62 ns |     0.59 |     0.02 |
+
 
 ## Debugging locally
 
