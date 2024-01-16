@@ -6,7 +6,7 @@ using BenchmarkDotNet.Configs;
 [ShortRunJob]
 [Config(typeof(Config))]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByJob, BenchmarkLogicalGroupRule.ByCategory, BenchmarkLogicalGroupRule.ByMethod, BenchmarkLogicalGroupRule.ByParams)]
-[MemoryDiagnoser]//, CategoriesColumn]
+[MemoryDiagnoser]
 public partial class StartupBenchmark
 {
     private class Config : ManualConfig
