@@ -1,8 +1,6 @@
 # Jab Compile Time Dependency Injection
 
-[![Nuget (with prereleases)](https://img.shields.io/nuget/v/Jab)](https://www.nuget.org/packages/Jab)
-
-[![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Jab)](https://www.nuget.org/packages/Jab)
+[![Nuget](https://img.shields.io/nuget/v/Jab)](https://www.nuget.org/packages/Jab)
 
 Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/introducing-c-source-generators/) based dependency injection container implementation.
 
@@ -10,25 +8,17 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 - Fast resolution (7x faster than Microsoft.Extensions.DependencyInjection). [Details](#GetService).
 - No runtime dependencies.
 - AOT and linker friendly, all code is generated during project compilation.
-- Clean stack traces:
-
-    ![stacktrace](https://raw.githubusercontent.com/pakrym/jab/main/doc/stacktrace.png)
-    
-- Readable generated code:
-
-    ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/generatedcode.png)
-
-- Registration validation. Container configuration issues become compiler errors:
-
-    ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/errors.png)
-- Incremental generation, .NET 5/6 SDK support, .NET Standard 2.0 support
+- Clean stack traces: <br> ![stacktrace](https://raw.githubusercontent.com/pakrym/jab/main/doc/stacktrace.png)
+- Readable generated code: <br> ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/generatedcode.png)
+- Registration validation. Container configuration issues become compiler errors: <br> ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/errors.png)
+- Incremental generation, .NET 5/6/7/8 SDK support, .NET Standard 2.0 support, [Unity support](README.md#Unity-installation)
 
 ## Example
 
 Add Jab package reference:
 ```xml
 <ItemGroup>
-    <PackageReference Include="Jab" Version="0.8.6" PrivateAssets="all" />
+    <PackageReference Include="Jab" Version="0.10.2" PrivateAssets="all" />
 </ItemGroup>
 ```
 
@@ -67,6 +57,7 @@ IService service = c.GetService<IService>();
 
 - No runtime dependency, safe to use in libraries
 - Transient, Singleton, Scoped service registration
+- Named registrations
 - Factory registration
 - Instance registration
 - `IEnumerable` resolution
@@ -107,6 +98,28 @@ c.MyServiceInstance = new ServiceImplementation();
 IService service = c.GetService<IService>();
 ```
 
+### Named services
+
+Use the `Name` property to assign a name to your service registrations and `[FromNamedServices("...")]` attribute to resolve a service using its name.
+
+```C#
+[ServiceProvider]
+[Singleton(typeof(INotificationService), typeof(EmailNotificationService), Name="email")]
+[Singleton(typeof(INotificationService), typeof(SmsNotificationService), Name="sms")]
+[Singleton(typeof(Notifier))]
+internal partial class MyServiceProvider {}
+
+class Notifier
+{
+    public Notifier(
+        [FromNamedServices("email")] INotificationService email,
+        [FromNamedServices("sms")] INotificationService sms)
+    {}
+}
+```
+
+NOTE: Jab also recognizes the `[FromKeyedServices]` attribute from `Microsoft.Extensions.DependencyInjection`.
+
 ### Factories
 
 Sometimes it's useful to provide a custom way to create a service instance without using the automatic construction selection.
@@ -125,6 +138,17 @@ IService service = c.GetService<IService>();
 
 When using with `TransientAttribute` the factory method would be invoked for every service resolution.
 When used with `SingletonAttribute` it would only be invoked the first time the service is requested.
+
+Similar to constructors, factories support parameter injection:
+
+```
+[ServiceProvider]
+[Transient(typeof(IService), Factory = nameof(MyServiceFactory))]
+[Transient(typeof(SomeOtherService))]
+internal partial class MyServiceProvider {
+    public IService MyServiceFactory(SomeOtherService other) => new ServiceImplementation(other);
+}
+```
 
 ### Scoped Services
 
@@ -272,6 +296,34 @@ The `GetService` benchmark measures the `provider.GetService<IService>()` call.
 |-------- |-------------:|-------------:|------------:|---------:|---------:|
 | **Jab** | **277.0 ns** | **62.11 ns** | **3.40 ns** | **1.00** | **0.00** | 
 | MEDI    |     162.0 ns |     47.78 ns |     2.62 ns |     0.59 |     0.02 |
+
+
+## Unity installation
+1. Navigate to the Packages directory of your project.
+2. Adjust the [project manifest file](https://docs.unity3d.com/Manual/upm-manifestPrj.html) manifest.json in a text editor.
+3. Ensure `https://registry.npmjs.org/` is part of `scopedRegistries`.
+4. Ensure `com.pakrym` is part of `scopes`.
+5. Add `com.pakrym.jab` to the dependencies, stating the latest version.
+
+A minimal example ends up looking like this:
+
+```
+{
+  "scopedRegistries": [
+    {
+      "name": "npmjs",
+      "url": "https://registry.npmjs.org/",
+      "scopes": [
+        "com.pakrym"
+      ]
+    }
+  ],
+  "dependencies": {
+    "com.pakrym.jab": "0.10.2",
+    ...
+  }
+}
+```
 
 
 ## Debugging locally

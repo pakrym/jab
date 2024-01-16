@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jab" Version="0.8.7" PrivateAssets="all" />
+	<PackageReference Include="Jab" Version="0.10.2" PrivateAssets="all" />
     <PackageReference Include="BenchmarkDotNet" Version="0.13.10" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
   </ItemGroup>

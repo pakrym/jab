@@ -14,6 +14,7 @@ namespace JabTests
         {
             source = @"
 using System;
+using System.Collections.Generic;
 using Jab;
 " + source;
             var test = new GeneratorAnalyzerTest<TAnalyzer>
