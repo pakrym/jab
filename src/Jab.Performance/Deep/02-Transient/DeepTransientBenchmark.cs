@@ -5,6 +5,7 @@ using Jab.Performance.Deep.Singleton;
 using Microsoft.Extensions.DependencyInjection;
 using MEDI = Microsoft.Extensions.DependencyInjection;
 
+[ShortRunJob]
 [MemoryDiagnoser]
 public class DeepTransientBenchmark
 {

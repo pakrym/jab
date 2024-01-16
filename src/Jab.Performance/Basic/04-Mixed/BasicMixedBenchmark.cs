@@ -6,6 +6,7 @@ using Jab.Performance.Basic.Transient;
 using Microsoft.Extensions.DependencyInjection;
 using MEDI = Microsoft.Extensions.DependencyInjection;
 
+[ShortRunJob]
 [MemoryDiagnoser]
 public class BasicMixedBenchmark
 {

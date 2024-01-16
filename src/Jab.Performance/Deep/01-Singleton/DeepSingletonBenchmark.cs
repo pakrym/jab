@@ -7,6 +7,7 @@ using static System.Formats.Asn1.AsnWriter;
 using MEDI = Microsoft.Extensions.DependencyInjection;
 
 
+[ShortRunJob]
 [MemoryDiagnoser]
 public class DeepSingletonBenchmark
 {
