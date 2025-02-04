@@ -336,7 +336,8 @@ internal class ServiceProviderBuilder
                     registration.Location,
                     memberLocation: registration.MemberLocation,
                     factoryMember: constructedFactoryMethod,
-                    context: context);
+                    context: context,
+                    autoDispose: registration.AutoDispose);
             }
             else if (registration.ImplementationType != null)
             {
@@ -489,7 +490,8 @@ internal class ServiceProviderBuilder
                     registration.Location,
                     registration.MemberLocation,
                     factoryMember,
-                    context);
+                    context,
+                    registration.AutoDispose);
             }
             else
             {
@@ -513,7 +515,8 @@ internal class ServiceProviderBuilder
         Location? registrationLocation,
         MemberLocation memberLocation,
         ISymbol factoryMember,
-        ServiceResolutionContext context)
+        ServiceResolutionContext context,
+        bool autoDispose)
     {
         ImmutableArray<IParameterSymbol> GetDelegateParameters(ITypeSymbol type)
         {
@@ -571,7 +574,7 @@ internal class ServiceProviderBuilder
             parameters.ToArray(),
             namedParameters.ToArray(),
             lifetime,
-            false);
+            autoDispose);
 
         return factoryCallSite;
     }
@@ -974,6 +977,7 @@ internal class ServiceProviderBuilder
         string? registrationName = null;
         string? instanceMemberName = null;
         string? factoryMemberName = null;
+        var autoDispose = false;
         foreach (var namedArgument in attributeData.NamedArguments)
         {
             switch (namedArgument.Key)
@@ -987,6 +991,9 @@ internal class ServiceProviderBuilder
                     break;
                 case KnownTypes.FactoryAttributePropertyName:
                     factoryMemberName = (string?)namedArgument.Value.Value;
+                    break;
+                case KnownTypes.AutoDisposeAttributePropertyName:
+                    autoDispose = namedArgument.Value.Value is true;
                     break;
             }
         }
@@ -1055,7 +1062,8 @@ internal class ServiceProviderBuilder
             instanceMember,
             factoryMember,
             attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
-            memberLocation);
+            memberLocation,
+            autoDispose);
 
         return true;
     }

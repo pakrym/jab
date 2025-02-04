@@ -68,6 +68,14 @@ namespace Jab
 
         public string? Factory { get; set; }
 
+        /// <summary>
+        /// If true, the service is considered to be owned by the service provider even though
+        /// it was created by a factory method. The service provider will dispose the service
+        /// automatically when it is disposed. If false, the service provider will not dispose
+        /// the service. The default is false for backwards compatibility reasons.
+        /// </summary>
+        public bool AutoDispose { get; set; }
+
         public SingletonAttribute(Type serviceType)
         {
             ServiceType = serviceType;
@@ -90,11 +98,20 @@ namespace Jab
     class TransientAttribute : Attribute
     {
         public Type ServiceType { get; }
+
         public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
 
         public string? Factory { get; set; }
+
+        /// <summary>
+        /// If true, the service is considered to be owned by the service provider even though
+        /// it was created by a factory method. The service provider will dispose the service
+        /// automatically when it is disposed. If false, the service provider will not dispose
+        /// the service. The default is false for backwards compatibility reasons.
+        /// </summary>
+        public bool AutoDispose { get; set; }
 
         public TransientAttribute(Type serviceType)
         {
@@ -118,11 +135,20 @@ namespace Jab
     class ScopedAttribute : Attribute
     {
         public Type ServiceType { get; }
+
         public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
 
         public string? Factory { get; set; }
+
+        /// <summary>
+        /// If true, the service is considered to be owned by the service provider even though
+        /// it was created by a factory method. The service provider will dispose the service
+        /// automatically when it is disposed. If false, the service provider will not dispose
+        /// the service. The default is false for backwards compatibility reasons.
+        /// </summary>
+        public bool AutoDispose { get; set; }
 
         public ScopedAttribute(Type serviceType)
         {

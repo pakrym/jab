@@ -43,6 +43,7 @@ internal class KnownTypes
     public const string InstanceAttributePropertyName = "Instance";
     public const string FactoryAttributePropertyName = "Factory";
     public const string RootServicesAttributePropertyName = "RootServices";
+    public const string AutoDisposeAttributePropertyName = "AutoDispose";
 
     private const string IAsyncDisposableMetadataName = "System.IAsyncDisposable";
     private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
