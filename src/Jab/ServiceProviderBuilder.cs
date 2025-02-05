@@ -329,15 +329,14 @@ internal class ServiceProviderBuilder
             {
                 var constructedFactoryMethod = factoryMethod.ConstructedFrom.Construct(genericType.TypeArguments,
                     genericType.TypeArgumentNullableAnnotations);
-                callSite =  CreateFactoryCallSite(
+                callSite = CreateFactoryCallSite(
                     identity,
                     genericType,
                     registration.Lifetime,
                     registration.Location,
                     memberLocation: registration.MemberLocation,
                     factoryMember: constructedFactoryMethod,
-                    context: context,
-                    autoDispose: registration.AutoDispose);
+                    context: context);
             }
             else if (registration.ImplementationType != null)
             {
@@ -490,8 +489,7 @@ internal class ServiceProviderBuilder
                     registration.Location,
                     registration.MemberLocation,
                     factoryMember,
-                    context,
-                    registration.AutoDispose);
+                    context);
             }
             else
             {
@@ -515,8 +513,7 @@ internal class ServiceProviderBuilder
         Location? registrationLocation,
         MemberLocation memberLocation,
         ISymbol factoryMember,
-        ServiceResolutionContext context,
-        bool autoDispose)
+        ServiceResolutionContext context)
     {
         ImmutableArray<IParameterSymbol> GetDelegateParameters(ITypeSymbol type)
         {
@@ -574,7 +571,7 @@ internal class ServiceProviderBuilder
             parameters.ToArray(),
             namedParameters.ToArray(),
             lifetime,
-            autoDispose);
+            true);
 
         return factoryCallSite;
     }
@@ -977,7 +974,6 @@ internal class ServiceProviderBuilder
         string? registrationName = null;
         string? instanceMemberName = null;
         string? factoryMemberName = null;
-        var autoDispose = false;
         foreach (var namedArgument in attributeData.NamedArguments)
         {
             switch (namedArgument.Key)
@@ -991,9 +987,6 @@ internal class ServiceProviderBuilder
                     break;
                 case KnownTypes.FactoryAttributePropertyName:
                     factoryMemberName = (string?)namedArgument.Value.Value;
-                    break;
-                case KnownTypes.AutoDisposeAttributePropertyName:
-                    autoDispose = namedArgument.Value.Value is true;
                     break;
             }
         }
@@ -1062,8 +1055,7 @@ internal class ServiceProviderBuilder
             instanceMember,
             factoryMember,
             attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation(),
-            memberLocation,
-            autoDispose);
+            memberLocation);
 
         return true;
     }

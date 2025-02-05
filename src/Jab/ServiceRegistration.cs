@@ -8,7 +8,6 @@ internal record ServiceRegistration(
     ISymbol? InstanceMember,
     ISymbol? FactoryMember,
     Location? Location,
-    MemberLocation MemberLocation,
-    bool AutoDispose);
+    MemberLocation MemberLocation);
 
 internal record RootService(INamedTypeSymbol Service, Location? Location);
