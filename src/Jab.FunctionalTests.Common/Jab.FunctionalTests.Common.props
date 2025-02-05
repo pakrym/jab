@@ -4,18 +4,18 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.0" Condition="'$(TargetFramework)' != 'netstandard2.0'">
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1" Condition="'$(TargetFramework)' != 'netstandard2.0'">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="6.0.2">
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.1.2" />
 	<!-- Override transitive package version System.Formats.Asn1 to address vulnerability: https://github.com/advisories/GHSA-447r-wph3-92pm -->
-	<PackageReference Include="System.Formats.Asn1" Version="9.0.0" />
+	<PackageReference Include="System.Formats.Asn1" Version="9.0.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" />
 	  <ProjectReference Include="..\Jab.FunctionalTests.Module\Jab.FunctionalTests.Module.csproj" />
     <Compile Include="$(MSBuildThisFileDirectory)\**\*.cs" />
