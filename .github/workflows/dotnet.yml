@@ -13,17 +13,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
           3.1.x
           6.0.x
           7.0.x
           8.0.x
+          9.0.x
     - name: Build
       run: dotnet build src
     - name: Test
@@ -44,7 +45,7 @@ jobs:
         npm version ${{ steps.vars.outputs.PackageVersion }} --allow-same-version
         npm pack --pack-destination=../../nuget
     - name: 'Upload Artifact'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: nuget
         path: nuget/
@@ -56,27 +57,28 @@ jobs:
       matrix:
         sdk: 
           - 6.0.x
-          - 7.x
-          - 8.x
-        # https://github.com/microsoft/MSBuildSdks/issues/412
-        # sdk: [6.0.x, 7.0.x]
+          - 7.0.x
+          - 8.0.x
+          - 9.0.x
         include:
           - sdk: 6.0.x
             tfm: net6.0
-          - sdk: 7.x
+          - sdk: 7.0.x
             tfm: net7.0
-          - sdk: 8.x
+          - sdk: 8.0.x
             tfm: net8.0
-    runs-on: ubuntu-latest
+          - sdk: 9.0.x
+            tfm: net9.0
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: nuget
         path: nuget
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ matrix.sdk }}
     - name: Get package version
@@ -92,15 +94,15 @@ jobs:
   publish:
     if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: [build, test]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: nuget
         path: nuget
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
     - name: Publish unity packages to npm
@@ -116,14 +118,14 @@ jobs:
 
   update_versions:
     needs: [build, publish]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Update package versions in the repo
         shell: pwsh
         run: ./eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }} ${{ github.workspace }}
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v4
         with:
           title: Update sample versions
           branch: update-versions
