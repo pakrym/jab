@@ -13,7 +13,7 @@
         <BeforePack>$(BeforePack);ResolveProjectReferences</BeforePack>
         <BuildProjectReferences Condition="'$(NoBuild)' == 'true'">false</BuildProjectReferences>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>
