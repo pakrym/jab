@@ -15,9 +15,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
           3.1.x
@@ -44,7 +44,7 @@ jobs:
         npm version ${{ steps.vars.outputs.PackageVersion }} --allow-same-version
         npm pack --pack-destination=../../nuget
     - name: 'Upload Artifact'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: nuget
         path: nuget/
@@ -69,14 +69,14 @@ jobs:
             tfm: net8.0
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: nuget
         path: nuget
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ matrix.sdk }}
     - name: Get package version
@@ -95,12 +95,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: nuget
         path: nuget
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
     - name: Publish unity packages to npm
@@ -118,12 +118,12 @@ jobs:
     needs: [build, publish]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Update package versions in the repo
         shell: pwsh
         run: ./eng/UpdateAllVersions.ps1 ${{ needs.build.outputs.PackageVersion }} ${{ github.workspace }}
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v4
         with:
           title: Update sample versions
           branch: update-versions
