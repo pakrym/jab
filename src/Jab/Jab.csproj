@@ -13,6 +13,7 @@
         <BeforePack>$(BeforePack);ResolveProjectReferences</BeforePack>
         <BuildProjectReferences Condition="'$(NoBuild)' == 'true'">false</BuildProjectReferences>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -32,6 +33,7 @@
         <!-- Package the generator in the analyzer directory of the nuget package -->
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/roslyn4.0" Visible="false" />
         <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" Visible="false" />
         <Content Include="build\Jab.targets" Pack="True" PackagePath="build" />
     </ItemGroup>
 
