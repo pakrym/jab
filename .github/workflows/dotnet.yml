@@ -13,7 +13,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -24,6 +24,7 @@ jobs:
           6.0.x
           7.0.x
           8.0.x
+          9.0.x
     - name: Build
       run: dotnet build src
     - name: Test
@@ -56,18 +57,19 @@ jobs:
       matrix:
         sdk: 
           - 6.0.x
-          - 7.x
-          - 8.x
-        # https://github.com/microsoft/MSBuildSdks/issues/412
-        # sdk: [6.0.x, 7.0.x]
+          - 7.0.x
+          - 8.0.x
+          - 9.0.x
         include:
           - sdk: 6.0.x
             tfm: net6.0
-          - sdk: 7.x
+          - sdk: 7.0.x
             tfm: net7.0
-          - sdk: 8.x
+          - sdk: 8.0.x
             tfm: net8.0
-    runs-on: ubuntu-latest
+          - sdk: 9.0.x
+            tfm: net9.0
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Download all workflow run artifacts
@@ -92,7 +94,7 @@ jobs:
   publish:
     if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: [build, test]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Download all workflow run artifacts
       uses: actions/download-artifact@v4
@@ -116,7 +118,7 @@ jobs:
 
   update_versions:
     needs: [build, publish]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Update package versions in the repo
