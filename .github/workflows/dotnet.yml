@@ -23,9 +23,9 @@ jobs:
           8.0.x
           9.0.x
     - name: Build
-      run: dotnet build src
+      run: dotnet build src --configuration Release
     - name: Test
-      run: dotnet test src --no-build --verbosity normal
+      run: dotnet test src --no-build --configuration Release --verbosity normal
     - name: Pack
       run: dotnet pack src --output nuget /p:ReleaseVersion=${{ github.event.inputs.ReleaseVersion }}
     - name: Get package version
@@ -81,7 +81,7 @@ jobs:
         $version = $version.Substring(0, $version.LastIndexOf("."))
         Write-Output "FunctionalTestPackageVersion=$version" | Out-File "${env:GITHUB_OUTPUT}" -Append
     - name: Test
-      run: dotnet test eng/FunctionaTests.proj /p:FunctionalTestTargetFrameworks=${{ matrix.tfm }} /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
+      run: dotnet test eng/FunctionaTests.proj --configuration Release /p:FunctionalTestTargetFrameworks=${{ matrix.tfm }} /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
   publish:
     if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: [build, test]
