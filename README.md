@@ -18,7 +18,7 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 Add Jab package reference:
 ```xml
 <ItemGroup>
-    <PackageReference Include="Jab" Version="0.10.2" PrivateAssets="all" />
+    <PackageReference Include="Jab" Version="0.11.0" PrivateAssets="all" />
 </ItemGroup>
 ```
 
@@ -283,7 +283,7 @@ A minimal example ends up looking like this:
     }
   ],
   "dependencies": {
-    "com.pakrym.jab": "0.10.2",
+    "com.pakrym.jab": "0.11.0",
     ...
   }
 }
