@@ -11,7 +11,7 @@ Jab provides a [C# Source Generator](https://devblogs.microsoft.com/dotnet/intro
 - Clean stack traces: <br> ![stacktrace](https://raw.githubusercontent.com/pakrym/jab/main/doc/stacktrace.png)
 - Readable generated code: <br> ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/generatedcode.png)
 - Registration validation. Container configuration issues become compiler errors: <br> ![generated code](https://raw.githubusercontent.com/pakrym/jab/main/doc/errors.png)
-- Incremental generation, .NET 5/6/7/8 SDK support, .NET Standard 2.0 support, [Unity support](README.md#Unity-installation)
+- Incremental generation, Modern .NET SDK support, .NET Standard 2.0 support, [Unity support](README.md#Unity-installation)
 
 ## Example
 
@@ -169,18 +169,10 @@ When the scope is disposed all `IDisposable` and `IAsyncDisposable` services tha
 
 ### Generic registration attributes 
 
-You can use generic attributes to register services if your project targets `net7.0` or `net6.0` and has `LangVersion` set to preview.
 
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
+You can use generic attributes to register services if your project targets a framework compatible with C# 11 or greater. See [C# language versioning](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-versioning#defaults) for more details.
 
-  <PropertyGroup>
-    <TargetFrameworks>net7.0</TargetFrameworks>
-  </PropertyGroup>
 
-</Project>
-
-```
 
 Generic attributes allow declaration to be more compact by avoiding the `typeof` calls:
 
