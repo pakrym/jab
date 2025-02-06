@@ -13,7 +13,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -60,7 +60,7 @@ jobs:
             tfm: net8.0
           - sdk: 9.0.x
             tfm: net9.0
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
     - name: Download all workflow run artifacts
@@ -85,7 +85,7 @@ jobs:
   publish:
     if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: [build, test]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Download all workflow run artifacts
       uses: actions/download-artifact@v4
@@ -109,7 +109,7 @@ jobs:
 
   update_versions:
     needs: [build, publish]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Update package versions in the repo
