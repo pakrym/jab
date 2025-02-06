@@ -8,10 +8,16 @@
         <DefineConstants>$(DefineConstants);JAB_ATTRIBUTES_PACKAGE;GENERIC_ATTRIBUTES</DefineConstants>
         <Version>0.11.0</Version>
         <Version Condition="'$(ReleaseVersion)' != ''">$(ReleaseVersion)</Version>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>
         <Compile Include="$(MSBuildThisFileDirectory)/../Jab/Attributes.cs" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
     </ItemGroup>
 
 </Project>
