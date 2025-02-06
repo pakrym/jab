@@ -1,10 +1,8 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp.Testing.XUnit;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
-
-using Jab;
+using Microsoft.CodeAnalysis.CSharp.Testing;
 
 namespace JabTests
 {
@@ -26,6 +24,6 @@ using Jab;
             return test.RunAsync(CancellationToken.None);
         }
 
-        public static DiagnosticResult Diagnostic(string expectedDescriptor) => AnalyzerVerifier<TAnalyzer>.Diagnostic(expectedDescriptor);
+        public static DiagnosticResult Diagnostic(string expectedDescriptor) => CSharpAnalyzerVerifier<TAnalyzer, DefaultVerifier>.Diagnostic(expectedDescriptor);
     }
 }

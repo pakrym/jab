@@ -90,6 +90,7 @@ namespace Jab
     class TransientAttribute : Attribute
     {
         public Type ServiceType { get; }
+
         public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
@@ -118,6 +119,7 @@ namespace Jab
     class ScopedAttribute : Attribute
     {
         public Type ServiceType { get; }
+
         public string? Name { get; set; }
 
         public Type? ImplementationType { get; }
