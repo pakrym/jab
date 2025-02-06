@@ -81,7 +81,7 @@ jobs:
         $version = $version.Substring(0, $version.LastIndexOf("."))
         Write-Output "FunctionalTestPackageVersion=$version" | Out-File "${env:GITHUB_OUTPUT}" -Append
     - name: Test
-      run: dotnet test eng/FunctionaTests.proj --configuration Release /p:FunctionalTestTargetFrameworks=${{ matrix.tfm }} /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
+      run: dotnet test eng/FunctionalTests.proj --configuration Release /p:FunctionalTestTargetFrameworks=${{ matrix.tfm }} /p:RestoreAdditionalProjectSources=${{ github.workspace }}/nuget /p:FunctionalTestPackageVersion=${{ needs.build.outputs.PackageVersion }}
   publish:
     if: (github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: [build, test]
