@@ -46,6 +46,7 @@ internal class KnownTypes
 
     private const string IAsyncDisposableMetadataName = "System.IAsyncDisposable";
     private const string IEnumerableMetadataName = "System.Collections.Generic.IEnumerable`1";
+    private const string FuncMetadataName = "System.Func`1";
     private const string IServiceProviderMetadataName = "System.IServiceProvider";
     private const string IServiceScopeMetadataName = "Microsoft.Extensions.DependencyInjection.IServiceScope";
     private const string IKeyedServiceProviderMetadataName = "Microsoft.Extensions.DependencyInjection.IKeyedServiceProvider";
@@ -59,6 +60,7 @@ internal class KnownTypes
         "Microsoft.Extensions.DependencyInjection.IServiceProviderIsService";
 
     public INamedTypeSymbol IEnumerableType { get; }
+    public INamedTypeSymbol FuncType { get; }
     public INamedTypeSymbol IServiceProviderType { get; }
     public INamedTypeSymbol CompositionRootAttributeType { get; }
     public INamedTypeSymbol TransientAttributeType { get; }
@@ -102,6 +104,7 @@ internal class KnownTypes
             ?? throw new InvalidOperationException($"Type with metadata '{fullyQualifiedMetadataName}' not found");
 
         IEnumerableType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IEnumerableMetadataName);
+        FuncType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, FuncMetadataName);
         IServiceProviderType = GetTypeFromCompilationByMetadataNameOrThrow(compilation, IServiceProviderMetadataName);
         IServiceScopeType = compilation.GetTypeByMetadataName(IServiceScopeMetadataName);
         IAsyncDisposableType = compilation.GetTypeByMetadataName(IAsyncDisposableMetadataName);
