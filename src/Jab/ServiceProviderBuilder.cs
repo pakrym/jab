@@ -329,7 +329,7 @@ internal class ServiceProviderBuilder
             {
                 var constructedFactoryMethod = factoryMethod.ConstructedFrom.Construct(genericType.TypeArguments,
                     genericType.TypeArgumentNullableAnnotations);
-                callSite =  CreateFactoryCallSite(
+                callSite = CreateFactoryCallSite(
                     identity,
                     genericType,
                     registration.Lifetime,
@@ -571,7 +571,7 @@ internal class ServiceProviderBuilder
             parameters.ToArray(),
             namedParameters.ToArray(),
             lifetime,
-            false);
+            true);
 
         return factoryCallSite;
     }

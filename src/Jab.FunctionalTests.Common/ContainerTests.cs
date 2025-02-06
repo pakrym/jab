@@ -547,6 +547,25 @@ namespace JabTests
         [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
         internal partial class DisposingScopeDisposesServicesContainer { }
 
+        [Fact]
+        public void DisposingScopeDisposesFactoryGeneratedServices()
+        {
+            DisposingScopeDisposesFactoryGeneratedServicesContainer c = new();
+            var scope = c.CreateScope();
+            var service = Assert.IsType<DisposableServiceImplementation>(scope.GetService<IService>());
+
+            scope.Dispose();
+
+            Assert.Equal(1, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), Factory = nameof(CreateDisposableService))]
+        internal partial class DisposingScopeDisposesFactoryGeneratedServicesContainer
+        {
+            private static IService CreateDisposableService() => new DisposableServiceImplementation();
+        }
+
 #if NETCOREAPP
         [Fact]
         public async Task DisposingScopeDisposesAsyncServices()
@@ -572,6 +591,34 @@ namespace JabTests
         [ServiceProvider]
         [Scoped(typeof(IService), typeof(AsyncDisposableServiceImplementation))]
         internal partial class DisposingScopeDisposesAsyncServicesContainer { }
+
+        [Fact]
+        public async Task DisposingScopeDisposesFactoryGeneratedAsyncServices()
+        {
+            DisposingScopeDisposesFactoryGeneratedAsyncServicesContainer c = new();
+            var scope = c.CreateScope();
+            var service = Assert.IsType<AsyncDisposableServiceImplementation>(scope.GetService<IService>());
+
+            await scope.DisposeAsync();
+
+            Assert.Equal(1, service.AsyncDisposalCount);
+            Assert.Equal(0, service.DisposalCount);
+
+            scope = c.CreateScope();
+            service = Assert.IsType<AsyncDisposableServiceImplementation>(scope.GetService<IService>());
+
+            scope.Dispose();
+
+            Assert.Equal(0, service.AsyncDisposalCount);
+            Assert.Equal(1, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), Factory = nameof(CreateService))]
+        internal partial class DisposingScopeDisposesFactoryGeneratedAsyncServicesContainer
+        {
+            private static IService CreateService() => new AsyncDisposableServiceImplementation();
+        }
 #endif
 
         [Fact]
@@ -590,6 +637,24 @@ namespace JabTests
         internal partial class DisposingProviderDisposesRootScopedServicesContainer { }
 
         [Fact]
+        public void DisposingProviderDisposesFactoryGeneratedRootScopedServicesIfInstructedTo()
+        {
+            DisposingProviderDisposesFactoryGeneratedRootScopedServicesContainer c = new();
+            var service = Assert.IsType<DisposableServiceImplementation>(c.GetService<IService>());
+
+            c.Dispose();
+
+            Assert.Equal(1, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), Factory = nameof(GenerateService))]
+        internal partial class DisposingProviderDisposesFactoryGeneratedRootScopedServicesContainer
+        {
+            private static IService GenerateService() => new DisposableServiceImplementation();
+        }
+
+        [Fact]
         public void DisposingProviderDisposesRootSingletonServices()
         {
             DisposingProviderDisposesRootSingletonServicesContainer c = new();
@@ -603,6 +668,24 @@ namespace JabTests
         [ServiceProvider]
         [Singleton(typeof(IService), typeof(DisposableServiceImplementation))]
         internal partial class DisposingProviderDisposesRootSingletonServicesContainer { }
+
+        [Fact]
+        public void DisposingProviderDisposesFactoryGeneratedRootSingletonServices()
+        {
+            DisposingProviderDisposesFactoryGeneratedRootSingletonServicesContainer c = new();
+            var service = Assert.IsType<DisposableServiceImplementation>(c.GetService<IService>());
+
+            c.Dispose();
+
+            Assert.Equal(1, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Singleton(typeof(IService), Factory = nameof(GetService))]
+        internal partial class DisposingProviderDisposesFactoryGeneratedRootSingletonServicesContainer
+        {
+            private static IService GetService() => new DisposableServiceImplementation();
+        }
 
 #if NETCOREAPP
         [Fact]
@@ -620,6 +703,25 @@ namespace JabTests
         [ServiceProvider]
         [Scoped(typeof(IService), typeof(AsyncDisposableServiceImplementation))]
         internal partial class DisposingProviderDisposesRootSingAsyncServicesContainer { }
+
+        [Fact]
+        public async Task DisposingProviderDisposesFactoryGeneratedRootSingAsyncServices()
+        {
+            DisposingProviderDisposesFactoryGeneratedRootSingAsyncServicesContainer c = new();
+            var service = Assert.IsType<AsyncDisposableServiceImplementation>(c.GetService<IService>());
+
+            await c.DisposeAsync();
+
+            Assert.Equal(1, service.AsyncDisposalCount);
+            Assert.Equal(0, service.DisposalCount);
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), Factory = nameof(CreateService))]
+        internal partial class DisposingProviderDisposesFactoryGeneratedRootSingAsyncServicesContainer
+        {
+            private static IService CreateService() => new AsyncDisposableServiceImplementation();
+        }
 #endif
 
 #if NETCOREAPP
@@ -643,6 +745,30 @@ namespace JabTests
         [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
         [Scoped(typeof(IService), typeof(DisposableServiceImplementation))]
         internal partial class DisposingProviderDisposesAllSingletonEnumerableServicesContainer { }
+
+        [Fact]
+        public async Task DisposingProviderDisposesAllFactoryGeneratedSingletonEnumerableServicesWhenInstructedTo()
+        {
+            DisposingProviderDisposesAllFactoryGeneratedSingletonEnumerableServicesContainer c = new();
+            var services = Assert.IsType<IService[]>(c.GetService<IEnumerable<IService>>());
+
+            await c.DisposeAsync();
+
+            foreach (var service in services)
+            {
+                var disposableService = Assert.IsType<DisposableServiceImplementation>(service);
+                Assert.Equal(1, disposableService.DisposalCount);
+            }
+        }
+
+        [ServiceProvider]
+        [Scoped(typeof(IService), Factory = nameof(CreateService))]
+        [Scoped(typeof(IService), Factory = nameof(CreateService))]
+        [Scoped(typeof(IService), Factory = nameof(CreateService))]
+        internal partial class DisposingProviderDisposesAllFactoryGeneratedSingletonEnumerableServicesContainer
+        {
+            private static IService CreateService() => new DisposableServiceImplementation();
+        }
 #endif
 
         [Fact]
@@ -667,6 +793,32 @@ namespace JabTests
         [ServiceProvider]
         [Transient(typeof(IService), typeof(DisposableServiceImplementation))]
         internal partial class DisposingProviderDisposesTransientsContainer { }
+
+        [Fact]
+        public void DisposingProviderDisposesFactoryGeneratedTransients()
+        {
+            DisposingProviderDisposesFactoryGeneratedTransientsContainer c = new();
+            List<IService> services = new();
+            for (int i = 0; i < 5; i++)
+            {
+                services.Add(c.GetService<IService>());
+            }
+
+            c.Dispose();
+
+            foreach (var service in services)
+            {
+                var disposableService = Assert.IsType<DisposableServiceImplementation>(service);
+                Assert.Equal(1, disposableService.DisposalCount);
+            }
+        }
+
+        [ServiceProvider]
+        [Transient(typeof(IService), Factory = nameof(CreateService))]
+        internal partial class DisposingProviderDisposesFactoryGeneratedTransientsContainer
+        {
+            private static IService CreateService() => new DisposableServiceImplementation();
+        }
 
         [Fact]
         public void DisposingScopeDisposesTransients()
@@ -694,24 +846,31 @@ namespace JabTests
         internal partial class DisposingScopeDisposesTransientsContainer { }
 
         [Fact]
-        public void DisposingProviderDisposesRootSingletonFactoryServices()
+        public void DisposingScopeDisposesFactoryGeneratedTransients()
         {
-            DisposingProviderDisposesRootSingletonServicesContainer c = new();
-            var service = Assert.IsType<DisposableServiceImplementation>(c.GetService<IService>());
+            DisposingScopeDisposesFactoryGeneratedTransientsContainer c = new();
+            var scope = c.CreateScope();
 
-            c.Dispose();
+            List<IService> services = new();
+            for (int i = 0; i < 5; i++)
+            {
+                services.Add(scope.GetService<IService>());
+            }
 
-            Assert.Equal(1, service.DisposalCount);
+            scope.Dispose();
+
+            foreach (var service in services)
+            {
+                var disposableService = Assert.IsType<DisposableServiceImplementation>(service);
+                Assert.Equal(1, disposableService.DisposalCount);
+            }
         }
 
         [ServiceProvider]
-        [Singleton(typeof(IService), Factory = nameof(CreateDisposableServiceImplementation))]
-        internal partial class DisposingProviderDisposesRootSingletonFactoryServicesContainer
+        [Transient(typeof(IService), Factory = nameof(CreateService))]
+        internal partial class DisposingScopeDisposesFactoryGeneratedTransientsContainer
         {
-            internal IService CreateDisposableServiceImplementation()
-            {
-                return new DisposableServiceImplementation();
-            }
+            private IService CreateService() => new DisposableServiceImplementation();
         }
 
         [Fact]
