@@ -1,3 +1,6 @@
+## 0.11.0
+- Factory-created services are not correctly disposed (https://github.com/pakrym/jab/pull/179).
+
 ## 0.10.2
 - Support value-typed services (https://github.com/pakrym/jab/pull/163).
 
