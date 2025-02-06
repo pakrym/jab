@@ -1,6 +1,6 @@
 {
   "name": "com.pakrym.jab",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "description": "C# Source Generator based dependency injection container implementation.",
   "licensesUrl": "https://github.com/pakrym/jab/blob/main/LICENSE",
   "repository": {
