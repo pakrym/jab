@@ -23,6 +23,25 @@ internal class ServiceProviderBuilder
         }
     }
 
+    /// <summary>
+    /// Keeps a diagnostic location inside the compilation being analyzed.
+    /// </summary>
+    /// <remarks>
+    /// Locations taken from symbols can point into a different compilation: a registration
+    /// declared on a <c>[ServiceProviderModule]</c> in a referenced project, or a constructor
+    /// parameter of an implementation type that lives there. Roslyn rejects a diagnostic whose
+    /// location is outside the compilation being analyzed (ArgumentException from
+    /// <c>VerifyDiagnosticLocationInCompilation</c>) on the paths that validate locations —
+    /// notably .NET Hot Reload / EnC. <see cref="ContainerGenerator.Execute"/>'s catch-all then
+    /// turns that into JAB0001, no container is generated, and <c>dotnet watch</c> reports
+    /// "Further changes won't be applied to this process".
+    /// Ordinary builds do not validate locations, so this goes unnoticed there.
+    /// </remarks>
+    private Location? InCurrentCompilation(Location? location) =>
+        location?.SourceTree is { } tree && !_context.Compilation.ContainsSyntaxTree(tree)
+            ? null
+            : location;
+
     public ServiceProvider[] BuildRoots()
     {
         List<GetServiceCallCandidate> getServiceCallCandidates = new();
@@ -147,7 +166,7 @@ internal class ServiceProviderBuilder
             {
                 _context.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.NoServiceTypeRegistered,
-                    rootService.Location,
+                    InCurrentCompilation(rootService.Location),
                     serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat)
                 ));
             }
@@ -213,7 +232,7 @@ internal class ServiceProviderBuilder
         if (!context.TryAdd(serviceType))
         {
             var diagnostic = Diagnostic.Create(DiagnosticDescriptors.CyclicDependencyDetected,
-                context.RequestLocation,
+                InCurrentCompilation(context.RequestLocation),
                 serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
                 context.ToString(serviceType));
 
@@ -243,7 +262,7 @@ internal class ServiceProviderBuilder
             if (name == null) return null;
 
             var diagnostic = Diagnostic.Create(DiagnosticDescriptors.BuiltInServicesAreNotNamed,
-                context.RequestLocation,
+                InCurrentCompilation(context.RequestLocation),
                 serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
             _context.ReportDiagnostic(
@@ -384,7 +403,7 @@ internal class ServiceProviderBuilder
             if (name != null)
             {
                 var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ImplicitIEnumerableNotNamed,
-                    context.RequestLocation,
+                    InCurrentCompilation(context.RequestLocation),
                     serviceType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
                 _context.ReportDiagnostic(
@@ -550,7 +569,7 @@ internal class ServiceProviderBuilder
             default:
                 var diagnostic = Diagnostic.Create(
                     DiagnosticDescriptors.FactoryMemberMustBeAMethodOrHaveDelegateType,
-                    ExtractMemberTypeLocation(factoryMember),
+                    InCurrentCompilation(ExtractMemberTypeLocation(factoryMember)),
                     factoryMember.Name,
                     identity.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
                 _context.ReportDiagnostic(diagnostic);
@@ -589,7 +608,7 @@ internal class ServiceProviderBuilder
             if (ctor == null)
             {
                 var diagnostic = Diagnostic.Create(DiagnosticDescriptors.ImplementationTypeRequiresPublicConstructor,
-                    registration.Location,
+                    InCurrentCompilation(registration.Location),
                     implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
                 _context.ReportDiagnostic(
@@ -686,14 +705,14 @@ internal class ServiceProviderBuilder
                     {
                         diagnostic = Diagnostic.Create(
                             isNullable ? DiagnosticDescriptors.NullableServiceNotRegistered : DiagnosticDescriptors.ServiceRequiredToConstructNotRegistered,
-                            registrationLocation,
+                            InCurrentCompilation(registrationLocation),
                             parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
                             implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
                     }
                     else
                     {
                         diagnostic = Diagnostic.Create(DiagnosticDescriptors.NamedServiceRequiredToConstructNotRegistered,
-                            registrationLocation,
+                            InCurrentCompilation(registrationLocation),
                             parameterSymbol.Type.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
                             registrationName,
                             implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
@@ -708,7 +727,7 @@ internal class ServiceProviderBuilder
                     {
                         var diagnostic = Diagnostic.Create(
                                 DiagnosticDescriptors.NullableServiceRegistered,
-                                registrationLocation,
+                                InCurrentCompilation(registrationLocation),
                                 parameterSymbol.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat),
                                 implementationType.ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
 
